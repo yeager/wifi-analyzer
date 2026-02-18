@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wifi-analyzer"
+version = "0.1.0"
+description = "WiFi Analyzer — GTK4/Adwaita app for WiFi network analysis"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.10"
+authors = [{ name = "Daniel Nylander" }]
+dependencies = ["PyGObject>=3.42"]
+
+[project.scripts]
+wifi-analyzer = "wifi_analyzer.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
