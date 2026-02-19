@@ -78,4 +78,4 @@ jobs:
           VER="${{ steps.version.outputs.version }}"
           DEB="wifi-analyzer_${VER}-1_all.deb"
           gh release upload "v${VER}" "$DEB" --clobber 2>/dev/null || \
-          gh release upload "${GITHUB_REF_NAME}" "$DEB" --clobber 2>/dev/null || true
+          gh release upload "${{ github.ref_name }}" "$DEB" --clobber 2>/dev/null || true
