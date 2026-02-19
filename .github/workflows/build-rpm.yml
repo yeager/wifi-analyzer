@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install tools
-        run: dnf install -y rpm-build python3 gettext
+        run: dnf install -y rpm-build python3 gettext findutils
 
       - name: Get version
         id: version
@@ -31,12 +31,16 @@ jobs:
           VER="${{ steps.version.outputs.version }}"
 
           mkdir -p ~/rpmbuild/{SOURCES,SPECS}
-          tar czf ~/rpmbuild/SOURCES/${{PKG}}-${{VER}}.tar.gz --transform "s,^,${{PKG}}-${{VER}}/," \
-            $(ls -d src/${{PYNAME}} ${{PYNAME}} po data pyproject.toml *.desktop *.metainfo.xml 2>/dev/null)
 
-          cat > ~/rpmbuild/SPECS/${{PKG}}.spec << 'SPEC'
+          # Create tarball
+          tar czf ~/rpmbuild/SOURCES/${PKG}-${VER}.tar.gz \
+            --transform "s,^,${PKG}-${VER}/," \
+            $(ls -d src/${PYNAME} ${PYNAME} po data pyproject.toml *.desktop *.metainfo.xml 2>/dev/null)
+
+          # Write spec file using printf (no heredoc issues)
+          cat > ~/rpmbuild/SPECS/${PKG}.spec << 'ENDSPEC'
 Name:           wifi-analyzer
-Version:        VPLACEHOLDER
+Version:        __VER_PLACEHOLDER__
 Release:        1
 Summary:        WiFi network analyzer
 License:        GPL-3.0
@@ -63,12 +67,7 @@ elif [ -d "$PYNAME" ]; then
 fi
 
 mkdir -p %{buildroot}/usr/bin
-cat > %{buildroot}/usr/bin/%{name} << 'WRAPPER'
-#!/usr/bin/python3
-import sys
-from wifi_analyzer.main import main
-sys.exit(main())
-WRAPPER
+printf '#!/usr/bin/python3\nimport sys\nfrom wifi_analyzer.main import main\nsys.exit(main())\n' > %{buildroot}/usr/bin/%{name}
 chmod 755 %{buildroot}/usr/bin/%{name}
 
 mkdir -p %{buildroot}/usr/share/applications
@@ -96,17 +95,19 @@ done
 /usr/share/metainfo/
 /usr/share/icons/
 /usr/share/%{name}/
-SPEC
-          sed -i "s/VPLACEHOLDER/$VER/" ~/rpmbuild/SPECS/${{PKG}}.spec
+ENDSPEC
 
-          rpmbuild -bb ~/rpmbuild/SPECS/${{PKG}}.spec
+          # Replace version placeholder
+          sed -i "s/__VER_PLACEHOLDER__/${VER}/" ~/rpmbuild/SPECS/${PKG}.spec
+
+          rpmbuild -bb ~/rpmbuild/SPECS/${PKG}.spec
           cp ~/rpmbuild/RPMS/noarch/*.rpm .
 
       - name: Upload RPM to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VER=${{ steps.version.outputs.version }}
+          VER="${{ steps.version.outputs.version }}"
           RPM=$(ls *.rpm | head -1)
-          gh release upload "v${{VER}}" "$RPM" --clobber 2>/dev/null || \
-          gh release upload "${{GITHUB_REF_NAME}}" "$RPM" --clobber 2>/dev/null || true
+          gh release upload "v${VER}" "$RPM" --clobber 2>/dev/null || \
+          gh release upload "${GITHUB_REF_NAME}" "$RPM" --clobber 2>/dev/null || true
