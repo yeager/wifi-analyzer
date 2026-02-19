@@ -117,4 +117,4 @@ jobs:
           VER="${{ steps.version.outputs.version }}"
           RPM=$(ls *.rpm | head -1)
           gh release upload "v${VER}" "$RPM" --clobber 2>/dev/null || \
-          gh release upload "${{GITHUB_REF_NAME}}" "$RPM" --clobber 2>/dev/null || true
+          gh release upload "${{ github.ref_name }}" "$RPM" --clobber 2>/dev/null || true
