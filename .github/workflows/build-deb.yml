@@ -28,69 +28,54 @@ jobs:
           PKG="wifi-analyzer"
           PYNAME="wifi_analyzer"
           VER="${{ steps.version.outputs.version }}"
-          ROOT=pkg-deb/${{PKG}}_${{VER}}-1_all
-          mkdir -p ${{ROOT}}/DEBIAN
-          mkdir -p ${{ROOT}}/usr/lib/python3/dist-packages/${{PYNAME}}
-          mkdir -p ${{ROOT}}/usr/bin
-          mkdir -p ${{ROOT}}/usr/share/${{PKG}}/locale
-          mkdir -p ${{ROOT}}/usr/share/applications
-          mkdir -p ${{ROOT}}/usr/share/metainfo
-          mkdir -p ${{ROOT}}/usr/share/icons/hicolor/scalable/apps
+          ROOT=pkg-deb/${PKG}_${VER}-1_all
+          mkdir -p ${ROOT}/DEBIAN
+          mkdir -p ${ROOT}/usr/lib/python3/dist-packages/${PYNAME}
+          mkdir -p ${ROOT}/usr/bin
+          mkdir -p ${ROOT}/usr/share/${PKG}/locale
+          mkdir -p ${ROOT}/usr/share/applications
+          mkdir -p ${ROOT}/usr/share/metainfo
+          mkdir -p ${ROOT}/usr/share/icons/hicolor/scalable/apps
 
           # Python package
-          if [ -d "src/${{PYNAME}}" ]; then
-            cp -r src/${{PYNAME}}/* ${{ROOT}}/usr/lib/python3/dist-packages/${{PYNAME}}/
-          elif [ -d "${{PYNAME}}" ]; then
-            cp -r ${{PYNAME}}/* ${{ROOT}}/usr/lib/python3/dist-packages/${{PYNAME}}/
+          if [ -d "src/${PYNAME}" ]; then
+            cp -r src/${PYNAME}/* ${ROOT}/usr/lib/python3/dist-packages/${PYNAME}/
+          elif [ -d "${PYNAME}" ]; then
+            cp -r ${PYNAME}/* ${ROOT}/usr/lib/python3/dist-packages/${PYNAME}/
           fi
 
-          # Launcher
-          cat > ${{ROOT}}/usr/bin/${{PKG}} << 'WRAPPER'
-#!/usr/bin/python3
-import sys
-from wifi_analyzer.main import main
-sys.exit(main())
-WRAPPER
-          chmod 755 ${{ROOT}}/usr/bin/${{PKG}}
+          # Launcher script
+          printf '#!/usr/bin/python3\nimport sys\nfrom wifi_analyzer.main import main\nsys.exit(main())\n' > ${ROOT}/usr/bin/${PKG}
+          chmod 755 ${ROOT}/usr/bin/${PKG}
 
           # Desktop + metainfo + icons
-          for f in data/*.desktop io.github.yeager.*.desktop ${{PKG}}.desktop; do
-            [ -f "$f" ] && cp "$f" ${{ROOT}}/usr/share/applications/
+          for f in data/*.desktop io.github.yeager.*.desktop ${PKG}.desktop; do
+            [ -f "$f" ] && cp "$f" ${ROOT}/usr/share/applications/
           done
           for f in data/*.metainfo.xml io.github.yeager.*.metainfo.xml; do
-            [ -f "$f" ] && cp "$f" ${{ROOT}}/usr/share/metainfo/
+            [ -f "$f" ] && cp "$f" ${ROOT}/usr/share/metainfo/
           done
-          find data/icons -name "*.svg" -exec cp {} ${{ROOT}}/usr/share/icons/hicolor/scalable/apps/ \; 2>/dev/null || true
+          find data/icons -name "*.svg" -exec cp {} ${ROOT}/usr/share/icons/hicolor/scalable/apps/ \; 2>/dev/null || true
 
           # Translations
           for po in po/*.po; do
             [ -f "$po" ] || continue
             lang=$(basename "$po" .po)
-            mkdir -p ${{ROOT}}/usr/share/${{PKG}}/locale/$lang/LC_MESSAGES
-            msgfmt -o ${{ROOT}}/usr/share/${{PKG}}/locale/$lang/LC_MESSAGES/${{PKG}}.mo "$po"
+            mkdir -p ${ROOT}/usr/share/${PKG}/locale/${lang}/LC_MESSAGES
+            msgfmt -o ${ROOT}/usr/share/${PKG}/locale/${lang}/LC_MESSAGES/${PKG}.mo "$po"
           done
 
           # DEBIAN/control
-          cat > ${{ROOT}}/DEBIAN/control << CTRL
-Package: ${{PKG}}
-Version: ${{VER}}-1
-Architecture: all
-Maintainer: Daniel Nylander <daniel@danielnylander.se>
-Depends: python3 (>= 3.9), python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1
-Section: utils
-Priority: optional
-Homepage: https://github.com/yeager/wifi-analyzer
-Description: WiFi network analyzer
-CTRL
+          printf 'Package: %s\nVersion: %s-1\nArchitecture: all\nMaintainer: Daniel Nylander <daniel@danielnylander.se>\nDepends: python3 (>= 3.9), python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1\nSection: utils\nPriority: optional\nHomepage: https://github.com/yeager/wifi-analyzer\nDescription: WiFi network analyzer\n' "${PKG}" "${VER}" > ${ROOT}/DEBIAN/control
 
-          dpkg-deb --build --root-owner-group ${{ROOT}}
+          dpkg-deb --build --root-owner-group ${ROOT}
           mv pkg-deb/*.deb .
 
       - name: Upload .deb to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VER=${{ steps.version.outputs.version }}
-          DEB="wifi-analyzer_${{VER}}-1_all.deb"
-          gh release upload "v${{VER}}" "$DEB" --clobber 2>/dev/null || \
-          gh release upload "${{GITHUB_REF_NAME}}" "$DEB" --clobber 2>/dev/null || true
+          VER="${{ steps.version.outputs.version }}"
+          DEB="wifi-analyzer_${VER}-1_all.deb"
+          gh release upload "v${VER}" "$DEB" --clobber 2>/dev/null || \
+          gh release upload "${GITHUB_REF_NAME}" "$DEB" --clobber 2>/dev/null || true
