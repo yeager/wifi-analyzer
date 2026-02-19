@@ -25,87 +25,16 @@ jobs:
           echo "version=$VER" >> $GITHUB_OUTPUT
 
       - name: Build RPM
-        env:
-          PKG: "wifi-analyzer"
-          PYNAME: "wifi_analyzer"
-          DESC: "WiFi network analyzer"
-          REPO: "wifi-analyzer"
-          VER: ${{ steps.version.outputs.version }}
         run: |
+          PKG="wifi-analyzer"
+          VER="${{ steps.version.outputs.version }}"
+
           mkdir -p ~/rpmbuild/{SOURCES,SPECS}
           tar czf ~/rpmbuild/SOURCES/${PKG}-${VER}.tar.gz \
             --transform "s,^,${PKG}-${VER}/," \
-            $(ls -d src/${PYNAME} ${PYNAME} po data pyproject.toml *.desktop *.metainfo.xml 2>/dev/null)
+            $(ls -d src/wifi_analyzer wifi_analyzer po data pyproject.toml *.desktop *.metainfo.xml 2>/dev/null)
 
-          python3 << 'PYEOF'
-          import os, textwrap
-          pkg = os.environ["PKG"]
-          pyname = os.environ["PYNAME"]
-          ver = os.environ["VER"]
-          desc = os.environ["DESC"]
-          repo = os.environ["REPO"]
-          spec = textwrap.dedent(f"""\
-              Name:           {pkg}
-              Version:        {ver}
-              Release:        1
-              Summary:        {desc}
-              License:        GPL-3.0
-              URL:            https://github.com/yeager/{repo}
-              Source0:        %{name}-%{version}.tar.gz
-              BuildArch:      noarch
-              Requires:       python3 >= 3.9
-              Requires:       gtk4
-              Requires:       libadwaita
-
-              %description
-              {desc}
-
-              %prep
-              %setup -q
-
-              %install
-              mkdir -p %{buildroot}/usr/lib/python3/dist-packages/{pyname}
-              if [ -d "src/{pyname}" ]; then
-                cp -r src/{pyname}/* %{buildroot}/usr/lib/python3/dist-packages/{pyname}/
-              elif [ -d "{pyname}" ]; then
-                cp -r {pyname}/* %{buildroot}/usr/lib/python3/dist-packages/{pyname}/
-              fi
-
-              mkdir -p %{buildroot}/usr/bin
-              printf '#!/usr/bin/python3\nimport sys\nfrom {pyname}.main import main\nsys.exit(main())\n' > %{buildroot}/usr/bin/%{name}
-              chmod 755 %{buildroot}/usr/bin/%{name}
-
-              mkdir -p %{buildroot}/usr/share/applications
-              mkdir -p %{buildroot}/usr/share/metainfo
-              mkdir -p %{buildroot}/usr/share/icons/hicolor/scalable/apps
-              for f in data/*.desktop *.desktop; do
-                [ -f "$f" ] && install -m 644 "$f" %{buildroot}/usr/share/applications/
-              done
-              for f in data/*.metainfo.xml *.metainfo.xml; do
-                [ -f "$f" ] && install -m 644 "$f" %{buildroot}/usr/share/metainfo/
-              done
-              find data/icons -name "*.svg" -exec install -m 644 {} %{buildroot}/usr/share/icons/hicolor/scalable/apps/ \\; 2>/dev/null || true
-
-              for po in po/*.po; do
-                [ -f "$po" ] || continue
-                lang=$(basename "$po" .po)
-                mkdir -p %{buildroot}/usr/share/%{name}/locale/$lang/LC_MESSAGES
-                msgfmt -o %{buildroot}/usr/share/%{name}/locale/$lang/LC_MESSAGES/%{name}.mo "$po"
-              done
-
-              %files
-              /usr/bin/%{name}
-              /usr/lib/python3/dist-packages/{pyname}/
-              /usr/share/applications/
-              /usr/share/metainfo/
-              /usr/share/icons/
-              /usr/share/%{name}/
-          """)
-          spec_path = os.path.expanduser(f"~/rpmbuild/SPECS/{pkg}.spec")
-          with open(spec_path, "w") as f:
-              f.write(spec)
-          print(f"Wrote spec to {spec_path}")
-          PYEOF
+          echo "TmFtZTogICAgICAgICAgIHdpZmktYW5hbHl6ZXIKVmVyc2lvbjogICAgICAgIFZFUlNJT05QTEFDRUhPTERFUgpSZWxlYXNlOiAgICAgICAgMQpTdW1tYXJ5OiAgICAgICAgV2lGaSBuZXR3b3JrIGFuYWx5emVyCkxpY2Vuc2U6ICAgICAgICBHUEwtMy4wClVSTDogICAgICAgICAgICBodHRwczovL2dpdGh1Yi5jb20veWVhZ2VyL3dpZmktYW5hbHl6ZXIKU291cmNlMDogICAgICAgICV7bmFtZX0tJXt2ZXJzaW9ufS50YXIuZ3oKQnVpbGRBcmNoOiAgICAgIG5vYXJjaApSZXF1aXJlczogICAgICAgcHl0aG9uMyA+PSAzLjkKUmVxdWlyZXM6ICAgICAgIGd0azQKUmVxdWlyZXM6ICAgICAgIGxpYmFkd2FpdGEKCiVkZXNjcmlwdGlvbgpXaUZpIG5ldHdvcmsgYW5hbHl6ZXIKCiVwcmVwCiVzZXR1cCAtcQoKJWluc3RhbGwKUFlOQU1FPSJ3aWZpX2FuYWx5emVyIgpta2RpciAtcCAle2J1aWxkcm9vdH0vdXNyL2xpYi9weXRob24zL2Rpc3QtcGFja2FnZXMvJFBZTkFNRQppZiBbIC1kICJzcmMvJFBZTkFNRSIgXTsgdGhlbgogIGNwIC1yIHNyYy8kUFlOQU1FLyogJXtidWlsZHJvb3R9L3Vzci9saWIvcHl0aG9uMy9kaXN0LXBhY2thZ2VzLyRQWU5BTUUvCmVsaWYgWyAtZCAiJFBZTkFNRSIgXTsgdGhlbgogIGNwIC1yICRQWU5BTUUvKiAle2J1aWxkcm9vdH0vdXNyL2xpYi9weXRob24zL2Rpc3QtcGFja2FnZXMvJFBZTkFNRS8KZmkKCm1rZGlyIC1wICV7YnVpbGRyb290fS91c3IvYmluCmNhdCA+ICV7YnVpbGRyb290fS91c3IvYmluLyV7bmFtZX0gPDwgJ0xBVU5DSEVSJwojIS91c3IvYmluL3B5dGhvbjMKaW1wb3J0IHN5cwpmcm9tIHdpZmlfYW5hbHl6ZXIubWFpbiBpbXBvcnQgbWFpbgpzeXMuZXhpdChtYWluKCkpCkxBVU5DSEVSCmNobW9kIDc1NSAle2J1aWxkcm9vdH0vdXNyL2Jpbi8le25hbWV9Cgpta2RpciAtcCAle2J1aWxkcm9vdH0vdXNyL3NoYXJlL2FwcGxpY2F0aW9ucwpta2RpciAtcCAle2J1aWxkcm9vdH0vdXNyL3NoYXJlL21ldGFpbmZvCm1rZGlyIC1wICV7YnVpbGRyb290fS91c3Ivc2hhcmUvaWNvbnMvaGljb2xvci9zY2FsYWJsZS9hcHBzCmZvciBmIGluIGRhdGEvKi5kZXNrdG9wICouZGVza3RvcDsgZG8KICBbIC1mICIkZiIgXSAmJiBpbnN0YWxsIC1tIDY0NCAiJGYiICV7YnVpbGRyb290fS91c3Ivc2hhcmUvYXBwbGljYXRpb25zLwpkb25lCmZvciBmIGluIGRhdGEvKi5tZXRhaW5mby54bWwgKi5tZXRhaW5mby54bWw7IGRvCiAgWyAtZiAiJGYiIF0gJiYgaW5zdGFsbCAtbSA2NDQgIiRmIiAle2J1aWxkcm9vdH0vdXNyL3NoYXJlL21ldGFpbmZvLwpkb25lCmZpbmQgZGF0YS9pY29ucyAtbmFtZSAiKi5zdmciIC1wcmludDAgMj4vZGV2L251bGwgfCB4YXJncyAtMCAtSXt9IGluc3RhbGwgLW0gNjQ0IHt9ICV7YnVpbGRyb290fS91c3Ivc2hhcmUvaWNvbnMvaGljb2xvci9zY2FsYWJsZS9hcHBzLyAyPi9kZXYvbnVsbCB8fCB0cnVlCgpmb3IgcG8gaW4gcG8vKi5wbzsgZG8KICBbIC1mICIkcG8iIF0gfHwgY29udGludWUKICBsYW5nPSQoYmFzZW5hbWUgIiRwbyIgLnBvKQogIG1rZGlyIC1wICV7YnVpbGRyb290fS91c3Ivc2hhcmUvJXtuYW1lfS9sb2NhbGUvJGxhbmcvTENfTUVTU0FHRVMKICBtc2dmbXQgLW8gJXtidWlsZHJvb3R9L3Vzci9zaGFyZS8le25hbWV9L2xvY2FsZS8kbGFuZy9MQ19NRVNTQUdFUy8le25hbWV9Lm1vICIkcG8iCmRvbmUKCiVmaWxlcwovdXNyL2Jpbi8le25hbWV9Ci91c3IvbGliL3B5dGhvbjMvZGlzdC1wYWNrYWdlcy93aWZpX2FuYWx5emVyLwovdXNyL3NoYXJlL2FwcGxpY2F0aW9ucy8KL3Vzci9zaGFyZS9tZXRhaW5mby8KL3Vzci9zaGFyZS9pY29ucy8KL3Vzci9zaGFyZS8le25hbWV9Lwo=" | base64 -d | sed "s/VERSIONPLACEHOLDER/$VER/" > ~/rpmbuild/SPECS/${PKG}.spec
 
           rpmbuild -bb ~/rpmbuild/SPECS/${PKG}.spec
           cp ~/rpmbuild/RPMS/noarch/*.rpm .
