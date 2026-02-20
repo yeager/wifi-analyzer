@@ -1,0 +1,53 @@
+name: Sync Transifex Translations
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and upload .pot
+        env:
+          TX_TOKEN: ${{ secrets.TX_TOKEN }}
+        run: |
+          sudo apt-get install -y gettext
+          MODULE=$(find src -mindepth 1 -maxdepth 1 -type d | head -1 | xargs basename)
+          REPO=$(basename $GITHUB_REPOSITORY)
+          xgettext --language=Python --keyword=_ --from-code=UTF-8 -o po/${REPO}.pot src/${MODULE}/*.py
+          pip install transifex-python
+          pip install transifex-cli || true
+          curl -s -X POST "https://rest.api.transifex.com/resource_strings_async_uploads" \
+            -H "Authorization: Bearer $TX_TOKEN" \
+            -F "resource=o:danielnylander:p:${REPO}:r:${REPO}-pot" \
+            -F "content=@po/${REPO}.pot"
+      - name: Download translations
+        env:
+          TX_TOKEN: ${{ secrets.TX_TOKEN }}
+        run: |
+          REPO=$(basename $GITHUB_REPOSITORY)
+          for lang in sv; do
+            RESP=$(curl -s -X POST "https://rest.api.transifex.com/resource_translations_async_downloads" \
+              -H "Authorization: Bearer $TX_TOKEN" \
+              -H "Content-Type: application/vnd.api+json" \
+              -d "{\"data\":{\"type\":\"resource_translations_async_downloads\",\"attributes\":{\"content_encoding\":\"text\",\"file_type\":\"default\"},\"relationships\":{\"resource\":{\"data\":{\"type\":\"resources\",\"id\":\"o:danielnylander:p:${REPO}:r:${REPO}-pot\"}},\"language\":{\"data\":{\"type\":\"languages\",\"id\":\"l:${lang}\"}}}}}")
+            DL_ID=$(echo "$RESP" | python3 -c "import json,sys; print(json.load(sys.stdin).get('data',{}).get('id',''))")
+            sleep 10
+            curl -s -L -H "Authorization: Bearer $TX_TOKEN" \
+              "https://rest.api.transifex.com/resource_translations_async_downloads/$DL_ID" \
+              -o "po/${lang}.po"
+            if head -1 "po/${lang}.po" | grep -q "^#"; then
+              echo "Downloaded ${lang}.po"
+            else
+              rm -f "po/${lang}.po"
+            fi
+          done
+      - name: Commit translations
+        run: |
+          git config user.name "Daniel Nylander"
+          git config user.email "daniel@danielnylander.se"
+          git add po/*.po
+          git diff --cached --quiet || git commit -m "Update translations from Transifex"
+          git push
