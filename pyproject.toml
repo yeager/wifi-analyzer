@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wifi-analyzer"
-version = "0.1.1"
+version = "0.1.2"
 description = "WiFi Analyzer — GTK4/Adwaita app for WiFi network analysis"
 readme = "README.md"
 license = "GPL-3.0-or-later"

@@ -73,6 +73,27 @@ def parse_nmcli():
     return networks
 
 
+
+def _wlc_settings_path():
+    import os
+    xdg = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+    d = os.path.join(xdg, "wifi-analyzer")
+    os.makedirs(d, exist_ok=True)
+    return os.path.join(d, "welcome.json")
+
+def _load_wlc_settings():
+    import os, json
+    p = _wlc_settings_path()
+    if os.path.exists(p):
+        with open(p) as f:
+            return json.load(f)
+    return {"welcome_shown": False}
+
+def _save_wlc_settings(s):
+    import json
+    with open(_wlc_settings_path(), "w") as f:
+        json.dump(s, f, indent=2)
+
 class ChannelDrawingArea(Gtk.DrawingArea):
     """Custom drawing area for channel overlap visualization."""
     def __init__(self):
@@ -369,6 +390,11 @@ class WifiAnalyzerApp(Adw.Application):
         if not win:
             win = WifiAnalyzerWindow(self)
         win.present()
+        # Welcome dialog
+        self._wlc_settings = _load_wlc_settings()
+        if not self._wlc_settings.get("welcome_shown"):
+            self._show_welcome(self.props.active_window or self)
+
 
     def do_startup(self):
         Adw.Application.do_startup(self)
@@ -384,3 +410,33 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    def _show_welcome(self, win):
+        dialog = Adw.Dialog()
+        dialog.set_title(_("Welcome"))
+        dialog.set_content_width(420)
+        dialog.set_content_height(480)
+        page = Adw.StatusPage()
+        page.set_icon_name("network-wireless-symbolic")
+        page.set_title(_("Welcome to WiFi Analyzer"))
+        page.set_description(_("Analyze WiFi networks.\n\n✓ Scan nearby networks\n✓ Signal strength monitoring\n✓ Channel overlap detection"))
+        btn = Gtk.Button(label=_("Get Started"))
+        btn.add_css_class("suggested-action")
+        btn.add_css_class("pill")
+        btn.set_halign(Gtk.Align.CENTER)
+        btn.set_margin_top(12)
+        btn.connect("clicked", self._on_welcome_close, dialog)
+        page.set_child(btn)
+        box = Adw.ToolbarView()
+        hb = Adw.HeaderBar()
+        hb.set_show_title(False)
+        box.add_top_bar(hb)
+        box.set_content(page)
+        dialog.set_child(box)
+        dialog.present(win)
+
+    def _on_welcome_close(self, btn, dialog):
+        self._wlc_settings["welcome_shown"] = True
+        _save_wlc_settings(self._wlc_settings)
+        dialog.close()
+
