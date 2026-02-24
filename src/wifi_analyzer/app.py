@@ -384,6 +384,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
 class WifiAnalyzerApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
+        GLib.set_application_name(_("WiFi Analyzer"))
 
     def do_activate(self):
         win = self.get_active_window()

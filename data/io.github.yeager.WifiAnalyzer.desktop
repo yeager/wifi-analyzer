@@ -5,5 +5,6 @@ Exec=wifi-analyzer
 Icon=io.github.yeager.WifiAnalyzer
 Terminal=false
 Type=Application
+StartupWMClass=io.github.yeager.WifiAnalyzer
 Categories=Network;GTK;
 Keywords=wifi;wireless;network;analyzer;channel;
