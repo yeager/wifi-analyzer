@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.1
+Type=Application
+Name=WiFi Analyzer
+Name[sv]=WiFi-analysator
+Comment=Wireless network analyzer and scanner
+Comment[sv]=Analys och skanning av trådlösa nätverk
+Exec=wifi-analyzer
+Icon=wifi-analyzer
+Categories=Network;GTK;
+Terminal=false
+StartupNotify=true
+StartupWMClass=se.danielnylander.wifi-analyzer
