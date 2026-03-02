@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-22 06:25+0100\n"
+"POT-Creation-Date: 2026-03-02 05:44+0000\n"
 "PO-Revision-Date: 2026-02-18 09:21+0000\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>, 2026\n"
 "Language-Team: Swedish (https://app.transifex.com/danielnylander/teams/304963/sv/)\n"
@@ -53,15 +53,19 @@ msgstr "Söker..."
 msgid "WiFi Network Analysis Tool"
 msgstr "Analysverktyg för WiFi-nätverk"
 
-#: src/wifi_analyzer/app.py:416
+#: src/wifi_analyzer/app.py:387
+msgid "WiFi Analyzer"
+msgstr ""
+
+#: src/wifi_analyzer/app.py:417
 msgid "Welcome"
 msgstr "Välkommen"
 
-#: src/wifi_analyzer/app.py:421
+#: src/wifi_analyzer/app.py:422
 msgid "Welcome to WiFi Analyzer"
 msgstr "Välkommen till WiFi-analysator"
 
-#: src/wifi_analyzer/app.py:422
+#: src/wifi_analyzer/app.py:423
 msgid ""
 "Analyze WiFi networks.\n"
 "\n"
@@ -75,6 +79,6 @@ msgstr ""
 "✓ Övervakning av signalstyrka\n"
 "✓ Detektering av kanalöverlappning"
 
-#: src/wifi_analyzer/app.py:423
+#: src/wifi_analyzer/app.py:424
 msgid "Get Started"
 msgstr "Kom igång"
