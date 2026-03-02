@@ -6,6 +6,8 @@ on:
 
 jobs:
   sync:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,7 +16,7 @@ jobs:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
         run: |
           sudo apt-get install -y gettext
-          MODULE=$(find src -mindepth 1 -maxdepth 1 -type d | head -1 | xargs basename)
+          MODULE=$(find src -mindepth 1 -maxdepth 1 -type d ! -name "*.egg-info" | head -1 | xargs basename)
           REPO=$(basename $GITHUB_REPOSITORY)
           xgettext --language=Python --keyword=_ --from-code=UTF-8 -o po/${REPO}.pot src/${MODULE}/*.py
           pip install transifex-python
