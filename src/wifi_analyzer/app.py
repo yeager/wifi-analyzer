@@ -28,46 +28,104 @@ def freq_to_channel(freq):
         return (freq - 5000) // 5
     return 0
 
-def parse_nmcli():
-    """Parse nmcli dev wifi list output."""
+NM_BUS_NAME = "org.freedesktop.NetworkManager"
+NM_OBJ_PATH = "/org/freedesktop/NetworkManager"
+NM_IFACE = "org.freedesktop.NetworkManager"
+NM_DEVICE_IFACE = "org.freedesktop.NetworkManager.Device"
+NM_WIRELESS_IFACE = "org.freedesktop.NetworkManager.Device.Wireless"
+NM_AP_IFACE = "org.freedesktop.NetworkManager.AccessPoint"
+NM_DEVICE_TYPE_WIFI = 2
+
+def _security_string(flags, wpa_flags, rsn_flags):
+    if rsn_flags & 0x400:
+        return "WPA3"
+    if rsn_flags:
+        if rsn_flags & 0x200:
+            return "WPA2 Enterprise"
+        return "WPA2"
+    if wpa_flags:
+        if wpa_flags & 0x200:
+            return "WPA Enterprise"
+        return "WPA1"
+    if flags & 0x1:
+        return "WEP"
+    return ""
+
+def _find_wifi_device_path(nm_proxy):
+    devices = nm_proxy.call_sync(
+        "GetDevices", None, Gio.DBusCallFlags.NONE, -1, None
+    ).unpack()[0]
+    for path in devices:
+        dev_props = Gio.DBusProxy.new_for_bus_sync(
+            Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
+            NM_BUS_NAME, path, "org.freedesktop.DBus.Properties", None
+        )
+        device_type = dev_props.call_sync(
+            "Get", GLib.Variant("(ss)", (NM_DEVICE_IFACE, "DeviceType")),
+            Gio.DBusCallFlags.NONE, -1, None
+        ).unpack()[0]
+        if device_type == NM_DEVICE_TYPE_WIFI:
+            return path
+    return None
+
+
+def scan_networks_dbus():
+    """Scan WiFi networks via NetworkManager D-Bus"""
     networks = []
     try:
-        result = subprocess.run(
-            ["nmcli", "-t", "-f", "SSID,BSSID,FREQ,SIGNAL,SECURITY,CHAN,BARS,MODE", "dev", "wifi", "list", "--rescan", "yes"],
-            capture_output=True, text=True, timeout=15
+        nm_proxy = Gio.DBusProxy.new_for_bus_sync(
+            Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
+            NM_BUS_NAME, NM_OBJ_PATH, NM_IFACE, None
         )
-        for line in result.stdout.strip().split("\n"):
-            if not line.strip():
-                continue
-            # nmcli -t uses : as separator but BSSID contains colons
-            # Format: SSID:BSSID:FREQ:SIGNAL:SECURITY:CHAN:BARS:MODE
-            # BSSID is like AA\:BB\:CC\:DD\:EE\:FF (escaped)
-            parts = line.replace("\\:", "§").split(":")
-            parts = [p.replace("§", ":") for p in parts]
-            if len(parts) >= 6:
-                ssid = parts[0] or _("<Hidden>")
-                bssid = parts[1]
-                try:
-                    freq = int(parts[2].strip().split()[0])
-                except (ValueError, IndexError):
-                    freq = 0
-                try:
-                    signal_pct = int(parts[3])
-                except ValueError:
-                    signal_pct = 0
-                security = parts[4] if len(parts) > 4 else ""
-                try:
-                    channel = int(parts[5])
-                except (ValueError, IndexError):
-                    channel = freq_to_channel(freq)
-                # Convert signal % to approximate dBm
-                dbm = int(signal_pct / 2 - 100) if signal_pct else -100
-                networks.append({
-                    "ssid": ssid, "bssid": bssid, "freq": freq, "channel": channel,
-                    "signal_pct": signal_pct, "dbm": dbm, "security": security,
-                    "band": "5 GHz" if freq >= 5000 else "2.4 GHz"
-                })
-    except Exception as e:
+        wifi_path = _find_wifi_device_path(nm_proxy)
+        if not wifi_path:
+            networks.append({"ssid": _("Error: no WiFi device found"), "bssid": "", "freq": 0,
+                             "channel": 0, "signal_pct": 0, "dbm": -100, "security": "", "band": ""})
+            return networks
+
+        wireless_proxy = Gio.DBusProxy.new_for_bus_sync(
+            Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
+            NM_BUS_NAME, wifi_path, NM_WIRELESS_IFACE, None
+        )
+
+        wireless_proxy.call_sync(
+            "RequestScan", GLib.Variant("(a{sv})", ({},)),
+            Gio.DBusCallFlags.NONE, 5000, None
+        )
+
+        ap_paths = wireless_proxy.call_sync(
+            "GetAllAccessPoints", None, Gio.DBusCallFlags.NONE, -1, None
+        ).unpack()[0]
+
+        for ap_path in ap_paths:
+            ap_props_proxy = Gio.DBusProxy.new_for_bus_sync(
+                Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
+                NM_BUS_NAME, ap_path, "org.freedesktop.DBus.Properties", None
+            )
+            props = ap_props_proxy.call_sync(
+                "GetAll", GLib.Variant("(s)", (NM_AP_IFACE,)),
+                Gio.DBusCallFlags.NONE, -1, None
+            ).unpack()[0]
+
+            ssid_bytes = bytes(props.get("Ssid", []))
+            ssid = ssid_bytes.decode("utf-8", errors="replace") or _("<Hidden>")
+            bssid = props.get("HwAddress", "")
+            freq = props.get("Frequency", 0)
+            signal_pct = props.get("Strength", 0)
+            flags = props.get("Flags", 0)
+            wpa_flags = props.get("WpaFlags", 0)
+            rsn_flags = props.get("RsnFlags", 0)
+            security = _security_string(flags, wpa_flags, rsn_flags)
+            channel = freq_to_channel(freq)
+            # Convert signal % to approximate dBm
+            dbm = int(signal_pct / 2 - 100) if signal_pct else -100
+
+            networks.append({
+                "ssid": ssid, "bssid": bssid, "freq": freq, "channel": channel,
+                "signal_pct": signal_pct, "dbm": dbm, "security": security,
+                "band": "5 GHz" if freq >= 5000 else "2.4 GHz"
+            })
+    except GLib.Error as e:
         networks.append({"ssid": f"Error: {e}", "bssid": "", "freq": 0, "channel": 0,
                          "signal_pct": 0, "dbm": -100, "security": "", "band": ""})
     return networks
@@ -341,7 +399,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
     def _scan(self):
         self._set_status(_("Scanning..."))
         def worker():
-            nets = parse_nmcli()
+            nets = scan_networks_dbus()
             GLib.idle_add(self._on_scan_done, nets)
         threading.Thread(target=worker, daemon=True).start()
 
@@ -385,6 +443,7 @@ class WifiAnalyzerApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
         GLib.set_application_name(_("WiFi Analyzer"))
+        self._wlc_settings = {}
 
     def do_activate(self):
         win = self.get_active_window()
@@ -403,14 +462,6 @@ class WifiAnalyzerApp(Adw.Application):
         quit_action.connect("activate", lambda *a: self.quit())
         self.add_action(quit_action)
         self.set_accels_for_action("app.quit", ["<Control>q"])
-
-
-def main():
-    app = WifiAnalyzerApp()
-    app.run()
-
-if __name__ == "__main__":
-    main()
 
     def _show_welcome(self, win):
         dialog = Adw.Dialog()
@@ -441,3 +492,10 @@ if __name__ == "__main__":
         _save_wlc_settings(self._wlc_settings)
         dialog.close()
 
+
+def main():
+    app = WifiAnalyzerApp()
+    app.run()
+
+if __name__ == "__main__":
+    main()
