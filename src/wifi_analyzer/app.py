@@ -481,12 +481,17 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         super().__init__()
         self.networks = []
         self.band_filter = "2.4 GHz"
+        self.zoom = 1.0
         self.on_channel_selected = None
         self.set_draw_func(self._draw)
         self.set_content_height(220)
         click = Gtk.GestureClick.new()
         click.connect("pressed", self._on_click)
         self.add_controller(click)
+        scroll = Gtk.EventControllerScroll.new(Gtk.EventControllerScrollFlags.VERTICAL)
+        scroll.connect("scroll", self._on_scroll)
+        self.add_controller(scroll)
+        self.set_tooltip_text(_("Click a channel to filter the list. Scroll to zoom the channel view."))
 
     def set_networks(self, networks, band="2.4 GHz"):
         self.networks = networks
@@ -496,9 +501,18 @@ class ChannelDrawingArea(Gtk.DrawingArea):
     def _channel_bounds(self):
         filtered = [n for n in self.networks if n["band"] == self.band_filter and n["channel"] > 0]
         if self.band_filter == "2.4 GHz":
-            return 0, 14
-        channels = sorted({n["channel"] for n in filtered})
-        return (min(channels) - 4, max(channels) + 4) if channels else (0, 1)
+            low, high = 0, 14
+        else:
+            channels = sorted({n["channel"] for n in filtered})
+            low, high = (min(channels) - 4, max(channels) + 4) if channels else (0, 1)
+        center = (low + high) / 2
+        half_span = (high - low) / (2 * self.zoom)
+        return center - half_span, center + half_span
+
+    def _on_scroll(self, _controller, _dx, dy):
+        self.zoom = max(1.0, min(8.0, self.zoom * (1.25 if dy < 0 else 0.8)))
+        self.queue_draw()
+        return True
 
     def _on_click(self, _gesture, _presses, x, _y):
         width = self.get_allocated_width()
