@@ -30,6 +30,11 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 sudo apt install wifi-analyzer
 ```
 
+## Translations
+
+The user interface has gettext catalogues for 20 languages, including Swedish.
+See [`po/README.md`](po/README.md) to contribute or validate a translation.
+
 ### Flatpak
 
 Flatpak-paketet byggs från

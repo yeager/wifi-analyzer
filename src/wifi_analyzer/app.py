@@ -8,6 +8,12 @@ from datetime import datetime
 from .export_helper import export_csv, export_json, export_html_report, get_export_path
 
 APP_ID = "io.github.yeager.WifiAnalyzer"
+GETTEXT_DOMAIN = "wifi-analyzer"
+_locale_dir = os.environ.get("WIFI_ANALYZER_LOCALE_DIR", "/app/share/locale")
+if not os.path.isdir(_locale_dir):
+    _locale_dir = "/usr/share/locale"
+gettext.bindtextdomain(GETTEXT_DOMAIN, _locale_dir)
+gettext.textdomain(GETTEXT_DOMAIN)
 _ = gettext.gettext
 
 # 2.4 GHz channel center frequencies
@@ -864,7 +870,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about = Adw.AboutDialog(
             application_name="WiFi Analyzer",
             application_icon=APP_ID,
-            version="0.1.10",
+            version="0.1.11",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
             website="https://github.com/yeager/wifi-analyzer",
@@ -874,6 +880,11 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             copyright="© 2026 Daniel Nylander",
             comments=_("WiFi Network Analysis Tool"),
         )
+        about.add_credit_section(_("Created by"), ["Daniel Nylander"])
+        about.add_credit_section(_("With thanks to"), [
+            "GTK", "libadwaita", "NetworkManager", "Flatpak", "GNU gettext",
+        ])
+        about.add_link(_("Project on GitHub"), "https://github.com/yeager/wifi-analyzer")
         about.present(self)
 
 

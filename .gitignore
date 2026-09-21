@@ -1,3 +1,4 @@
 *.mo
 build/
 *.egg-info/
+locale/
