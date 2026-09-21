@@ -873,7 +873,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             version="0.1.11",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
-            website="https://github.com/yeager/wifi-analyzer",
+            website="https://www.danielnylander.se",
             issue_url="https://github.com/yeager/wifi-analyzer/issues",
             translator_credits="https://www.transifex.com/danielnylander/wifi-analyzer/",
             developers=["Daniel Nylander"],
