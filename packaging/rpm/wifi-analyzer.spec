@@ -10,6 +10,8 @@ BuildArch:       noarch
 BuildRequires:   appstream
 BuildRequires:   desktop-file-utils
 BuildRequires:   gettext
+BuildRequires:   gtk4
+BuildRequires:   libadwaita
 BuildRequires:   python3-devel
 BuildRequires:   python3-pytest
 BuildRequires:   python3dist(setuptools)

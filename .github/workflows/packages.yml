@@ -42,7 +42,8 @@ jobs:
         run: |
           dnf -y install git rpm-build rpmdevtools rpm-devel \
             python3-devel python3-setuptools python3-pytest \
-            python3-gobject python3-cairo gettext desktop-file-utils appstream
+            python3-gobject python3-cairo gettext desktop-file-utils appstream \
+            gtk4 libadwaita
       - uses: actions/checkout@v4
       - name: Prepare RPM source archive
         run: |
