@@ -1,5 +1,5 @@
-wifi-analyzer (0.1.15) unstable; urgency=medium
+wifi-analyzer (0.1.16) unstable; urgency=medium
 
-  * Add profile-scoped signal history graph.
+  * Add interactive channel filtering and expanded connection diagnostics.
 
  -- Daniel Nylander <po@danielnylander.se>  Sun, 21 Sep 2026 18:00:00 +0200
