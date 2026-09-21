@@ -1086,7 +1086,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about = Adw.AboutDialog(
             application_name="WiFi Analyzer",
             application_icon=APP_ID,
-            version="0.1.16",
+            version="0.1.17",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
             website="https://www.danielnylander.se",

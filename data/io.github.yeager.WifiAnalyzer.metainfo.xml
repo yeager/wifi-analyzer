@@ -19,6 +19,9 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.17" date="2026-09-21">
+      <description><p>Add zoom and guidance to the interactive channel view.</p></description>
+    </release>
     <release version="0.1.16" date="2026-09-21">
       <description><p>Add interactive channel filtering and expanded connection diagnostics.</p></description>
     </release>
