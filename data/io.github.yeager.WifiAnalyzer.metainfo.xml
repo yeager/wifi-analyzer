@@ -19,6 +19,9 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.15" date="2026-09-21">
+      <description><p>Add a profile-scoped local signal history graph for selected access points.</p></description>
+    </release>
     <release version="0.1.14" date="2026-09-21">
       <description><p>Show the measured active-link Wi-Fi generation in the network list.</p></description>
     </release>

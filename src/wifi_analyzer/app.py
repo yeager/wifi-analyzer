@@ -646,6 +646,43 @@ class NetworkRow(Gtk.ListBoxRow):
         self.set_child(box)
 
 
+class SignalHistoryDrawingArea(Gtk.DrawingArea):
+    """Render locally stored signal points for one selected access point."""
+    def __init__(self, points):
+        super().__init__()
+        self.points = points
+        self.set_content_height(220)
+        self.set_draw_func(self._draw)
+
+    def _draw(self, _area, cr, width, height):
+        cr.set_source_rgb(0.15, 0.15, 0.18)
+        cr.paint()
+        if not self.points:
+            cr.set_source_rgb(0.7, 0.7, 0.7)
+            cr.set_font_size(14)
+            cr.move_to(20, height / 2)
+            cr.show_text(_("No local signal history yet"))
+            return
+        left, right, top, bottom = 42, 18, 18, 30
+        plot_w, plot_h = width - left - right, height - top - bottom
+        def point(index, signal):
+            x = left + index / max(len(self.points) - 1, 1) * plot_w
+            y = top + plot_h - max(0, min(100, signal or 0)) / 100 * plot_h
+            return x, y
+        cr.set_source_rgba(0.55, 0.55, 0.55, 0.35)
+        for signal in range(0, 101, 25):
+            y = top + plot_h - signal / 100 * plot_h
+            cr.move_to(left, y); cr.line_to(width - right, y); cr.stroke()
+            cr.set_source_rgb(0.7, 0.7, 0.7); cr.move_to(4, y + 4); cr.show_text(f"{signal}%")
+            cr.set_source_rgba(0.55, 0.55, 0.55, 0.35)
+        cr.set_source_rgb(0.25, 0.65, 1.0); cr.set_line_width(2)
+        for index, item in enumerate(self.points):
+            x, y = point(index, item.get("signal_pct"))
+            if index: cr.line_to(x, y)
+            else: cr.move_to(x, y)
+        cr.stroke()
+
+
 class WifiAnalyzerWindow(Adw.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title=_("WiFi Analyzer"), default_width=950, default_height=750)
@@ -806,12 +843,27 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
     def _on_network_selected(self, _listbox, row):
         if not row:
             return
+        self._show_signal_history(row.net)
         contributors = interference_contributors(row.net, self.networks)
         if contributors:
             names = ", ".join(f"{ssid} ({impact})" for ssid, _bssid, impact in contributors[:3])
             self._set_status(_("Main overlapping access points: {names}").format(names=names))
         else:
             self._set_status(_("No overlapping access points detected"))
+
+    def _show_signal_history(self, network):
+        """Show the selected AP's private, profile-scoped local signal graph."""
+        profile = self.profile_entry.get_text().strip() or "Default"
+        points = load_signal_history(network.get("bssid", ""), profile)
+        dialog = Adw.Dialog()
+        dialog.set_title(_("Signal history"))
+        dialog.set_content_width(600)
+        page = Adw.StatusPage()
+        page.set_title(network.get("ssid") or _("<Hidden>"))
+        page.set_description(_("Local history for profile: {profile}").format(profile=profile))
+        page.set_child(SignalHistoryDrawingArea(points))
+        dialog.set_child(page)
+        dialog.present(self)
 
     def _scan(self):
         if self._scanning:
@@ -986,7 +1038,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about = Adw.AboutDialog(
             application_name="WiFi Analyzer",
             application_icon=APP_ID,
-            version="0.1.14",
+            version="0.1.15",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
             website="https://www.danielnylander.se",

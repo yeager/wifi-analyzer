@@ -1,5 +1,5 @@
-wifi-analyzer (0.1.14) unstable; urgency=medium
+wifi-analyzer (0.1.15) unstable; urgency=medium
 
-  * Display active-link Wi-Fi PHY diagnostics in the network list.
+  * Add profile-scoped signal history graph.
 
  -- Daniel Nylander <po@danielnylander.se>  Sun, 21 Sep 2026 18:00:00 +0200

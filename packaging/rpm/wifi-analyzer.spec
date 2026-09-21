@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.14
+Version:        0.1.15
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -68,5 +68,5 @@ PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
-* Mon Sep 21 2026 Daniel Nylander <po@danielnylander.se> - 0.1.14-1
-- Display active-link Wi-Fi PHY diagnostics in the network list.
+* Mon Sep 21 2026 Daniel Nylander <po@danielnylander.se> - 0.1.15-1
+- Add profile-scoped signal history graph.
