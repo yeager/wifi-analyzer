@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=wifi-analyzer
+
+%:
+	dh $@ --buildsystem=pybuild
+
+override_dh_auto_build:
+	python3 scripts/compile_translations.py
+	dh_auto_build
+
+override_dh_auto_install:
+	dh_auto_install
+	install -Dm644 data/io.github.yeager.WifiAnalyzer.desktop \
+		debian/wifi-analyzer/usr/share/applications/io.github.yeager.WifiAnalyzer.desktop
+	install -Dm644 data/io.github.yeager.WifiAnalyzer.metainfo.xml \
+		debian/wifi-analyzer/usr/share/metainfo/io.github.yeager.WifiAnalyzer.metainfo.xml
+	install -Dm644 docs/man/wifi-analyzer.1 \
+		debian/wifi-analyzer/usr/share/man/man1/wifi-analyzer.1
+	install -Dm644 docs/man/sv/wifi-analyzer.1 \
+		debian/wifi-analyzer/usr/share/man/sv/man1/wifi-analyzer.1
+	install -Dm644 data/icons/hicolor/256x256/apps/io.github.yeager.WifiAnalyzer.png \
+		debian/wifi-analyzer/usr/share/icons/hicolor/256x256/apps/io.github.yeager.WifiAnalyzer.png
+	install -Dm644 data/icons/hicolor/512x512/apps/io.github.yeager.WifiAnalyzer.png \
+		debian/wifi-analyzer/usr/share/icons/hicolor/512x512/apps/io.github.yeager.WifiAnalyzer.png
+	for mo in locale/*/LC_MESSAGES/wifi-analyzer.mo; do \
+		lang=$$(basename $$(dirname $$(dirname $$mo))); \
+		install -Dm644 $$mo debian/wifi-analyzer/usr/share/locale/$$lang/LC_MESSAGES/wifi-analyzer.mo; \
+	done
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf locale

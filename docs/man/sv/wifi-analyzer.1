@@ -1,0 +1,29 @@
+.TH WIFI-ANALYZER 1 "2026-09-21" "WiFi Analyzer 0.1.13" "Användarkommandon"
+.SH NAMN
+wifi-analyzer \- granska närliggande Wi-Fi-nätverk och kanalanvändning
+.SH SYNOPSIS
+.B wifi-analyzer
+.SH BESKRIVNING
+.B wifi-analyzer
+använder NetworkManager för att visa närliggande åtkomstpunkter. Programmet
+visar signalstyrka, frekvens, kanal, säkerhet, kanalöverlappning och lokala
+regleringsupplysningar.
+.PP
+Programmet sparar sökhistorik lokalt. Vid export måste du alltid välja en
+målfil.
+.SH WI-FI-GENERATIONER
+För en aktiv anslutning kan WiFi Analyzer identifiera PHY-markörerna HT, VHT,
+HE och EHT som rapporteras av
+.BR iw (8),
+och visa dem som Wi-Fi 4, 5, 6/6E respektive 7. Ett sökresultat för en ej
+ansluten åtkomstpunkt kan inte användas för att pålitligt fastställa dess
+Wi-Fi-generation.
+.SH FILER
+.TP
+.I $XDG_DATA_HOME/wifi-analyzer/history.json
+Privat lokal sökhistorik.
+.SH SE ÄVEN
+.BR nmcli (1),
+.BR iw (8)
+.SH UPPHOVSMAN
+Daniel Nylander.

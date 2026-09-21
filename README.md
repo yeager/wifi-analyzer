@@ -34,7 +34,8 @@ sudo apt install wifi-analyzer
 
 ## Translations
 
-The user interface has gettext catalogues for 20 languages, including Swedish.
+The user interface uses gettext catalogues for 20 languages. Swedish is
+translated and reviewed; the remaining catalogues are ready for translation.
 See [`po/README.md`](po/README.md) to contribute or validate a translation.
 
 ### Flatpak

@@ -1,7 +1,6 @@
-"""Extended export: CSV, JSON, ODS, PDF."""
+"""Safe local export helpers for CSV, JSON, and HTML reports."""
 import csv
 import json
-import os
 import time
 from html import escape
 
@@ -44,35 +43,3 @@ def export_html_report(networks, recommendations, filepath):
     with open(filepath, "w", encoding="utf-8") as handle:
         handle.write(document)
     return filepath
-
-
-def export_ods(data, headers, filepath):
-    """Export data as ODS (simple XML)."""
-    xml = ['<?xml version="1.0" encoding="UTF-8"?>']
-    xml.append('<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
-               'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" '
-               'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">')
-    xml.append('<office:body><office:spreadsheet><table:table table:name="Sheet1">')
-    if headers:
-        xml.append('<table:table-row>')
-        for h in headers:
-            xml.append(f'<table:table-cell><text:p>{h}</text:p></table:table-cell>')
-        xml.append('</table:table-row>')
-    for row in data:
-        xml.append('<table:table-row>')
-        for cell in row:
-            xml.append(f'<table:table-cell><text:p>{cell}</text:p></table:table-cell>')
-        xml.append('</table:table-row>')
-    xml.append('</table:table></office:spreadsheet></office:body></office:document-content>')
-    with open(filepath, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(xml))
-    return filepath
-
-
-def get_export_path(title, fmt, output_dir=None):
-    """Generate export file path."""
-    if output_dir is None:
-        output_dir = os.path.expanduser("~")
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    ext = {'csv': '.csv', 'json': '.json', 'ods': '.ods', 'pdf': '.pdf', 'html': '.html'}.get(fmt, '.txt')
-    return os.path.join(output_dir, f"{title}_{timestamp}{ext}")

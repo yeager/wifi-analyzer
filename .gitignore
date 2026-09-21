@@ -1,4 +1,6 @@
 *.mo
+__pycache__/
+*.py[cod]
 build/
 *.egg-info/
 locale/

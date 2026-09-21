@@ -1,0 +1,58 @@
+name: Build distribution packages
+
+on:
+  pull_request:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debian:
+    name: Debian package
+    runs-on: ubuntu-latest
+    container: debian:stable
+    steps:
+      - name: Install build tools
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y git ca-certificates \
+            devscripts dpkg-dev debhelper dh-python gettext \
+            pybuild-plugin-pyproject python3-all python3-setuptools \
+            python3-gi python3-cairo python3-pytest
+      - uses: actions/checkout@v4
+      - name: Build Debian package
+        run: dpkg-buildpackage -us -uc -b
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wifi-analyzer-deb
+          path: |
+            ../*.deb
+            ../*.buildinfo
+            ../*.changes
+
+  rpm:
+    name: RPM package
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - name: Install build tools
+        run: |
+          dnf -y install git rpm-build rpmdevtools rpm-devel \
+            python3-devel python3-setuptools python3-pytest \
+            python3-gobject python3-cairo gettext desktop-file-utils appstream
+      - uses: actions/checkout@v4
+      - name: Prepare RPM source archive
+        run: |
+          version=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          mkdir -p "$HOME/rpmbuild/SOURCES"
+          git archive --format=tar.gz --prefix="wifi-analyzer-$version/" HEAD \
+            > "$HOME/rpmbuild/SOURCES/wifi-analyzer-$version.tar.gz"
+      - name: Build RPM package
+        run: rpmbuild -ba packaging/rpm/wifi-analyzer.spec
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wifi-analyzer-rpm
+          path: ~/rpmbuild/RPMS/**/*.rpm

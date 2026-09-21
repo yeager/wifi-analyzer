@@ -1,0 +1,27 @@
+.TH WIFI-ANALYZER 1 "2026-09-21" "WiFi Analyzer 0.1.13" "User Commands"
+.SH NAME
+wifi-analyzer \- inspect nearby Wi-Fi networks and channel use
+.SH SYNOPSIS
+.B wifi-analyzer
+.SH DESCRIPTION
+.B wifi-analyzer
+uses NetworkManager to list nearby access points. It shows signal strength,
+frequency, channel, security, channel overlap and local regulatory hints.
+.PP
+The application keeps scan history locally. Exporting a scan always requires
+choosing a destination file.
+.SH WI-FI GENERATIONS
+For an active connection, WiFi Analyzer can identify HT, VHT, HE and EHT PHY
+markers reported by
+.BR iw (8),
+and presents them as Wi-Fi 4, 5, 6/6E and 7. A scan result for an unconnected
+access point does not reliably identify its Wi-Fi generation.
+.SH FILES
+.TP
+.I $XDG_DATA_HOME/wifi-analyzer/history.json
+Private local scan history.
+.SH SEE ALSO
+.BR nmcli (1),
+.BR iw (8)
+.SH AUTHOR
+Daniel Nylander.

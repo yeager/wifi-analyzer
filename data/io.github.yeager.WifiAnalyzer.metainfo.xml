@@ -19,6 +19,11 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.13" date="2026-09-21">
+      <description>
+        <p>Fix channel detection, safe scan handling, filtered exports, package support, a Swedish manual, and active-link Wi-Fi generation identification.</p>
+      </description>
+    </release>
     <release version="0.1.12" date="2026-09-21">
       <description>
         <p>Add a new WiFi Analyzer logo and desktop application icon.</p>
