@@ -11,10 +11,11 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 sudo apt install wifi-analyzer
 ```
 
-### Fedora/RPM
-```bash
-sudo dnf install wifi-analyzer
-```
+### Flatpak
+
+Flatpak-paketet byggs från
+[`build-aux/io.github.yeager.WifiAnalyzer.json`](build-aux/io.github.yeager.WifiAnalyzer.json).
+Det kan installeras med Flatpak Builder tills paketet har publicerats på Flathub.
 
 ## License
 

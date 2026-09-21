@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.yeager.WifiAnalyzer</id>
+  <name>WiFi Analyzer</name>
+  <summary>Inspect nearby Wi-Fi networks and channels</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  <developer id="io.github.yeager">
+    <name>Daniel Nylander</name>
+  </developer>
+  <launchable type="desktop-id">io.github.yeager.WifiAnalyzer.desktop</launchable>
+  <provides>
+    <binary>wifi-analyzer</binary>
+  </provides>
+  <description>
+    <p>WiFi Analyzer shows nearby wireless networks, their signal strength, channel and security mode.</p>
+  </description>
+  <url type="homepage">https://github.com/yeager/wifi-analyzer</url>
+  <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.4" date="2026-09-21"/>
+  </releases>
+</component>

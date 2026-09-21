@@ -26,7 +26,10 @@
             "name": "wifi-analyzer",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --no-index --no-build-isolation --prefix=/app ."
+                "pip3 install --no-index --no-build-isolation --prefix=/app .",
+                "install -Dm644 data/io.github.yeager.WifiAnalyzer.desktop /app/share/applications/io.github.yeager.WifiAnalyzer.desktop",
+                "install -Dm644 data/icons/io.github.yeager.WifiAnalyzer.svg /app/share/icons/hicolor/scalable/apps/io.github.yeager.WifiAnalyzer.svg",
+                "install -Dm644 data/io.github.yeager.WifiAnalyzer.metainfo.xml /app/share/metainfo/io.github.yeager.WifiAnalyzer.metainfo.xml"
             ],
             "sources": [
                 {
