@@ -1,5 +1,7 @@
 # Wi-Fi Analyzer
 
+![WiFi Analyzer logo](assets/wifi-analyzer-logo.png)
+
 Wi-Fi signal analyzer and channel scanner.
 
 Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeager/debian-repo).

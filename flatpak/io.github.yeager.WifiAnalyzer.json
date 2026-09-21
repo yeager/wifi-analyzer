@@ -20,7 +20,8 @@
         "pip3 install --no-index --no-build-isolation --prefix=/app .",
         "for mo in locale/*/LC_MESSAGES/wifi-analyzer.mo; do lang=$(basename $(dirname $(dirname $mo))); install -Dm644 $mo /app/share/locale/$lang/LC_MESSAGES/wifi-analyzer.mo; done",
         "install -Dm644 data/io.github.yeager.WifiAnalyzer.desktop /app/share/applications/io.github.yeager.WifiAnalyzer.desktop",
-        "install -Dm644 data/icons/io.github.yeager.WifiAnalyzer.svg /app/share/icons/hicolor/scalable/apps/io.github.yeager.WifiAnalyzer.svg",
+        "install -Dm644 data/icons/hicolor/512x512/apps/io.github.yeager.WifiAnalyzer.png /app/share/icons/hicolor/512x512/apps/io.github.yeager.WifiAnalyzer.png",
+        "install -Dm644 data/icons/hicolor/256x256/apps/io.github.yeager.WifiAnalyzer.png /app/share/icons/hicolor/256x256/apps/io.github.yeager.WifiAnalyzer.png",
         "install -Dm644 data/io.github.yeager.WifiAnalyzer.metainfo.xml /app/share/metainfo/io.github.yeager.WifiAnalyzer.metainfo.xml"
       ],
       "sources": [
