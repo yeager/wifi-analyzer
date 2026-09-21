@@ -624,13 +624,14 @@ class NetworkRow(Gtk.ListBoxRow):
         width = net.get("width_mhz", 0)
         width_source = _("measured") if net.get("width_source") == "measured" else _("estimated")
         width_detail = f" · {width} MHz {width_source}" if width else ""
+        standard_detail = f" · {net['wifi_standard']}" if net.get("wifi_standard") else ""
         dfs_detail = f" · {net['channel_status']}" if net.get("channel_status") else ""
         last_seen = net.get("last_seen", -1)
         seen_detail = _(" · seen {seconds}s ago").format(seconds=last_seen) if isinstance(last_seen, int) and last_seen >= 0 else ""
         active_detail = _(" · Connected") if net.get("connected") else ""
         detail = (_("Ch {channel} · {band} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · {bssid}{seen}{dfs}").format(
             channel=net["channel"], band=net["band"], frequency=net.get("freq", 0), width=width_detail,
-            active=active_detail, dbm=net["dbm"], security=net["security"] or _("Open"),
+            active=active_detail + standard_detail, dbm=net["dbm"], security=net["security"] or _("Open"),
             bssid=net.get("bssid", ""), seen=seen_detail, dfs=dfs_detail))
         sub = Gtk.Label(label=detail, xalign=0)
         sub.add_css_class("dim-label")
@@ -985,7 +986,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about = Adw.AboutDialog(
             application_name="WiFi Analyzer",
             application_icon=APP_ID,
-            version="0.1.13",
+            version="0.1.14",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
             website="https://www.danielnylander.se",

@@ -1,5 +1,5 @@
-wifi-analyzer (0.1.13) unstable; urgency=medium
+wifi-analyzer (0.1.14) unstable; urgency=medium
 
-  * Add distribution packaging, a Swedish manual and Wi-Fi PHY diagnostics.
+  * Display active-link Wi-Fi PHY diagnostics in the network list.
 
  -- Daniel Nylander <po@danielnylander.se>  Sun, 21 Sep 2026 18:00:00 +0200

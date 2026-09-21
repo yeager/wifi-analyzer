@@ -83,6 +83,7 @@ def test_scan_comparison_width_parsing_and_anonymization():
     assert anonymize_network({"ssid": "Private", "bssid": "aa:bb"})["ssid"] == "hidden"
     assert parse_iw_wifi_standard("rx bitrate: 1200 MBit/s HE-MCS 11") == "Wi-Fi 6/6E (802.11ax)"
     assert parse_iw_wifi_standard("tx bitrate: 2882 MBit/s EHT-MCS 13") == "Wi-Fi 7 (802.11be)"
+    assert parse_iw_wifi_standard("tx bitrate: 866.7 MBit/s VHT-MCS 9") == "Wi-Fi 5 (802.11ac)"
 
 
 def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
