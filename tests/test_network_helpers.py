@@ -90,8 +90,11 @@ def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
     target = {"ssid": "Target", "bssid": "a", "band": "5 GHz", "channel": 36, "width_mhz": 20}
     other = {"ssid": "Neighbour", "bssid": "b", "band": "5 GHz", "channel": 36, "width_mhz": 20, "signal_pct": 70}
     assert interference_contributors(target, [target, other])[0][0] == "Neighbour"
-    assert parse_connection_diagnostics("default via 192.0.2.1 dev wlan0", "Link 2: 1.1.1.1 2001:db8::1") == {
-        "gateway": "192.0.2.1", "dns_servers": ["1.1.1.1", "2001:db8::1"]}
+    assert parse_connection_diagnostics("default via 192.0.2.1 dev wlan0", "Link 2: 1.1.1.1 2001:db8::1",
+                                        "wlan0 UP 192.0.2.10/24 2001:db8::2/64",
+                                        "rx bitrate: 866.7 MBit/s") == {
+        "gateway": "192.0.2.1", "dns_servers": ["1.1.1.1", "2001:db8::1"],
+        "ip_addresses": ["192.0.2.10/24", "2001:db8::2/64"], "link_rates": ["866.7 MBit/s"]}
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     save_history_snapshot([{"ssid": "AP", "bssid": "a", "signal_pct": 42, "channel": 6}], now="now", profile="Home")
     assert load_signal_history("a", "Home") == [{"scanned_at": "now", "signal_pct": 42, "channel": 6}]

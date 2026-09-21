@@ -211,21 +211,29 @@ def interference_contributors(network, networks):
     return sorted(contributors, key=lambda item: item[2], reverse=True)
 
 
-def parse_connection_diagnostics(route_output, dns_output):
+def parse_connection_diagnostics(route_output, dns_output, address_output="", link_output=""):
     """Extract gateway and DNS servers without retaining unrelated system data."""
     gateway = next((line.split()[2] for line in route_output.splitlines()
                     if line.startswith("default ") and len(line.split()) >= 3), "")
     servers = re.findall(r"(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{3,}", dns_output)
-    return {"gateway": gateway, "dns_servers": list(dict.fromkeys(servers))}
+    addresses = re.findall(r"(?:\d{1,3}\.){3}\d{1,3}(?:/\d{1,2})?|[0-9a-fA-F:]{3,}(?:/\d{1,3})?", address_output)
+    rates = re.findall(r"(?:tx|rx) bitrate:\s*([^\n]+)", link_output, re.IGNORECASE)
+    return {"gateway": gateway, "dns_servers": list(dict.fromkeys(servers)),
+            "ip_addresses": list(dict.fromkeys(addresses)), "link_rates": rates}
 
 
 def connection_diagnostics():
     try:
         route = subprocess.run(["ip", "route"], capture_output=True, text=True, timeout=2, check=False).stdout
         dns = subprocess.run(["resolvectl", "dns"], capture_output=True, text=True, timeout=2, check=False).stdout
+        addresses = subprocess.run(["ip", "-brief", "address"], capture_output=True, text=True, timeout=2, check=False).stdout
+        device = subprocess.run(["iw", "dev"], capture_output=True, text=True, timeout=2, check=False).stdout
+        interface = re.search(r"^\s*Interface\s+(\S+)", device, re.MULTILINE)
+        link = subprocess.run(["iw", "dev", interface.group(1), "link"], capture_output=True,
+                              text=True, timeout=2, check=False).stdout if interface else ""
     except (FileNotFoundError, subprocess.SubprocessError):
-        return {"gateway": "", "dns_servers": []}
-    return parse_connection_diagnostics(route, dns)
+        return {"gateway": "", "dns_servers": [], "ip_addresses": [], "link_rates": []}
+    return parse_connection_diagnostics(route, dns, addresses, link)
 
 
 def wifi_problem(networks, previous=()):
@@ -1048,8 +1056,13 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
     def _show_connection_diagnostics(self, *_args):
         info = connection_diagnostics()
         dns = ", ".join(info["dns_servers"]) or _("unavailable")
-        self._set_status(_("Gateway: {gateway} · DNS: {dns}").format(
-            gateway=info["gateway"] or _("unavailable"), dns=dns))
+        addresses = ", ".join(info["ip_addresses"]) or _("unavailable")
+        rates = "; ".join(info["link_rates"]) or _("unavailable")
+        dialog = Adw.AlertDialog.new(_("Connection diagnostics"), None)
+        dialog.set_body(_("Gateway: {gateway}\nDNS: {dns}\nIP addresses: {addresses}\nLink rate: {rates}").format(
+            gateway=info["gateway"] or _("unavailable"), dns=dns, addresses=addresses, rates=rates))
+        dialog.add_response("close", _("Close"))
+        dialog.present(self)
 
     def _clear_history(self, *_args):
         clear_history()
