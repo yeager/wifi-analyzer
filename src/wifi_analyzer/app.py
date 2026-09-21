@@ -169,6 +169,25 @@ def connection_diagnostics():
     return parse_connection_diagnostics(route, dns)
 
 
+def wifi_problem(networks, previous=()):
+    """Return one actionable problem code and remedy, or ``None``."""
+    if not networks or any(str(net.get("ssid", "")).startswith("Error:") for net in networks):
+        return ("no-device", _("No Wi-Fi device found"),
+                _("Enable Wi-Fi in system settings, disable airplane mode, and check the adapter driver."))
+    connected = next((net for net in networks if net.get("connected")), None)
+    if connected and connected.get("signal_pct", 0) < 25:
+        return ("weak-signal", _("Wi-Fi signal is weak"),
+                _("Move closer to the access point, reduce obstructions, or select a less congested channel."))
+    old_connected = next((net for net in previous if net.get("connected")), None)
+    if old_connected and not connected:
+        return ("connection-lost", _("Wi-Fi connection was lost"),
+                _("Check the access point, reconnect from system settings, and inspect the gateway and DNS diagnostics."))
+    if old_connected and connected and old_connected.get("bssid") != connected.get("bssid"):
+        return ("roamed", _("Wi-Fi access point changed"),
+                _("Roaming can be normal. If it causes interruptions, compare signal history and access-point overlap."))
+    return None
+
+
 def _history_path():
     base = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
     directory = os.path.join(base, "wifi-analyzer")
@@ -555,6 +574,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         super().__init__(application=app, title="WiFi Analyzer", default_width=950, default_height=750)
         self.networks = []
         self.dark_mode = False
+        self._last_problem_code = None
 
         header = Adw.HeaderBar()
         # Theme toggle
@@ -754,6 +774,17 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             notification.set_body(_("{new} new, {gone} gone, {changed} changed access points").format(
                 new=len(changes["new"]), gone=len(changes["gone"]), changed=len(changes["changed"])))
             self.get_application().send_notification("wifi-scan-change", notification)
+        problem = wifi_problem(self.networks, previous)
+        if problem:
+            code, title, remedy = problem
+            if code != self._last_problem_code:
+                notification = Gio.Notification.new(title)
+                notification.set_body(remedy)
+                notification.set_priority(Gio.NotificationPriority.URGENT)
+                self.get_application().send_notification("wifi-problem", notification)
+            self._last_problem_code = code
+        else:
+            self._last_problem_code = None
 
     def _update_ui(self):
         band = self._get_band()
@@ -833,7 +864,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about = Adw.AboutDialog(
             application_name="WiFi Analyzer",
             application_icon=APP_ID,
-            version="0.1.9",
+            version="0.1.10",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
             website="https://github.com/yeager/wifi-analyzer",

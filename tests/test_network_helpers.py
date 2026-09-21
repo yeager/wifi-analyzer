@@ -14,6 +14,7 @@ from wifi_analyzer.app import (
     interference_contributors,
     parse_connection_diagnostics,
     load_signal_history,
+    wifi_problem,
 )
 
 
@@ -85,3 +86,11 @@ def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     save_history_snapshot([{"ssid": "AP", "bssid": "a", "signal_pct": 42, "channel": 6}], now="now", profile="Home")
     assert load_signal_history("a", "Home") == [{"scanned_at": "now", "signal_pct": 42, "channel": 6}]
+
+
+def test_wifi_problem_includes_a_remedy():
+    code, title, remedy = wifi_problem([{"ssid": "Office", "connected": True, "signal_pct": 20}])
+    assert code == "weak-signal"
+    assert "weak" in title.lower()
+    assert "closer" in remedy.lower()
+    assert wifi_problem([{"ssid": "Office", "connected": True, "signal_pct": 70}]) is None
