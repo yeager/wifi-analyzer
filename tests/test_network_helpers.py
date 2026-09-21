@@ -11,6 +11,9 @@ from wifi_analyzer.app import (
     compare_scans,
     parse_iw_channel_width,
     anonymize_network,
+    interference_contributors,
+    parse_connection_diagnostics,
+    load_signal_history,
 )
 
 
@@ -71,3 +74,14 @@ def test_scan_comparison_width_parsing_and_anonymization():
                             [{"bssid": "old", "channel": 6, "signal_pct": 30}, {"bssid": "new"}])
     assert changes == {"new": ["new"], "gone": [], "changed": ["old"]}
     assert anonymize_network({"ssid": "Private", "bssid": "aa:bb"})["ssid"] == "hidden"
+
+
+def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
+    target = {"ssid": "Target", "bssid": "a", "band": "5 GHz", "channel": 36, "width_mhz": 20}
+    other = {"ssid": "Neighbour", "bssid": "b", "band": "5 GHz", "channel": 36, "width_mhz": 20, "signal_pct": 70}
+    assert interference_contributors(target, [target, other])[0][0] == "Neighbour"
+    assert parse_connection_diagnostics("default via 192.0.2.1 dev wlan0", "Link 2: 1.1.1.1 2001:db8::1") == {
+        "gateway": "192.0.2.1", "dns_servers": ["1.1.1.1", "2001:db8::1"]}
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    save_history_snapshot([{"ssid": "AP", "bssid": "a", "signal_pct": 42, "channel": 6}], now="now", profile="Home")
+    assert load_signal_history("a", "Home") == [{"scanned_at": "now", "signal_pct": 42, "channel": 6}]

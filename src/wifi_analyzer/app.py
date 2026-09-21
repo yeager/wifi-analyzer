@@ -138,6 +138,37 @@ def recommend_channels(networks, band):
     return sorted(scored, key=lambda item: (item[1], item[0]))
 
 
+def interference_contributors(network, networks):
+    """Explain which observed APs overlap the selected AP most."""
+    contributors = []
+    for other in networks:
+        if other is network or other.get("band") != network.get("band"):
+            continue
+        distance = abs(other.get("channel", 0) - network.get("channel", 0))
+        span = max(other.get("width_mhz", 20) / 5, 1)
+        if distance < span:
+            impact = round(other.get("signal_pct", 0) * (1 - distance / span), 1)
+            contributors.append((other.get("ssid", "<Hidden>"), other.get("bssid", ""), impact))
+    return sorted(contributors, key=lambda item: item[2], reverse=True)
+
+
+def parse_connection_diagnostics(route_output, dns_output):
+    """Extract gateway and DNS servers without retaining unrelated system data."""
+    gateway = next((line.split()[2] for line in route_output.splitlines()
+                    if line.startswith("default ") and len(line.split()) >= 3), "")
+    servers = re.findall(r"(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{3,}", dns_output)
+    return {"gateway": gateway, "dns_servers": list(dict.fromkeys(servers))}
+
+
+def connection_diagnostics():
+    try:
+        route = subprocess.run(["ip", "route"], capture_output=True, text=True, timeout=2, check=False).stdout
+        dns = subprocess.run(["resolvectl", "dns"], capture_output=True, text=True, timeout=2, check=False).stdout
+    except (FileNotFoundError, subprocess.SubprocessError):
+        return {"gateway": "", "dns_servers": []}
+    return parse_connection_diagnostics(route, dns)
+
+
 def _history_path():
     base = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
     directory = os.path.join(base, "wifi-analyzer")
@@ -536,6 +567,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         menu.append(_("Export JSON"), "win.export-json")
         menu.append(_("Export anonymized JSON"), "win.export-anonymous-json")
         menu.append(_("Export diagnostic report"), "win.export-report")
+        menu.append(_("Connection diagnostics"), "win.connection-diagnostics")
         menu.append(_("Clear local history"), "win.clear-history")
         menu.append(_("About"), "win.about")
         menu_btn = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu)
@@ -555,6 +587,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
                                       ("export-json", self._export_json),
                                       ("export-anonymous-json", self._export_anonymous_json),
                                       ("export-report", self._export_report),
+                                      ("connection-diagnostics", self._show_connection_diagnostics),
                                       ("clear-history", self._clear_history)):
             action = Gio.SimpleAction.new(action_name, None)
             action.connect("activate", callback)
@@ -634,7 +667,8 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         sw = Gtk.ScrolledWindow(vexpand=True)
         sw.set_margin_start(12); sw.set_margin_end(12); sw.set_margin_top(8); sw.set_margin_bottom(4)
         self.listbox = Gtk.ListBox()
-        self.listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.listbox.connect("row-selected", self._on_network_selected)
         self.listbox.add_css_class("boxed-list")
         sw.set_child(self.listbox)
         main_box.append(sw)
@@ -669,6 +703,16 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
 
     def _on_filter_changed(self, *_args):
         self._update_ui()
+
+    def _on_network_selected(self, _listbox, row):
+        if not row:
+            return
+        contributors = interference_contributors(row.net, self.networks)
+        if contributors:
+            names = ", ".join(f"{ssid} ({impact})" for ssid, _bssid, impact in contributors[:3])
+            self._set_status(_("Main overlapping access points: {names}").format(names=names))
+        else:
+            self._set_status(_("No overlapping access points detected"))
 
     def _scan(self):
         self._set_status(_("Scanning..."))
@@ -775,6 +819,12 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         export_html_report([net for net in self.networks if net.get("bssid")], recommendations, path)
         self._set_status(_("Exported diagnostic report to {path}").format(path=path))
 
+    def _show_connection_diagnostics(self, *_args):
+        info = connection_diagnostics()
+        dns = ", ".join(info["dns_servers"]) or _("unavailable")
+        self._set_status(_("Gateway: {gateway} · DNS: {dns}").format(
+            gateway=info["gateway"] or _("unavailable"), dns=dns))
+
     def _clear_history(self, *_args):
         clear_history()
         self._set_status(_("Cleared local scan history"))
@@ -783,7 +833,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about = Adw.AboutDialog(
             application_name="WiFi Analyzer",
             application_icon=APP_ID,
-            version="0.1.8",
+            version="0.1.9",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
             website="https://github.com/yeager/wifi-analyzer",
@@ -819,6 +869,8 @@ class WifiAnalyzerApp(Adw.Application):
         quit_action.connect("activate", lambda *a: self.quit())
         self.add_action(quit_action)
         self.set_accels_for_action("app.quit", ["<Control>q"])
+        self.set_accels_for_action("win.export-csv", ["<Control><Shift>e"])
+        self.set_accels_for_action("win.connection-diagnostics", ["<Control>d"])
 
     def _show_welcome(self, win):
         dialog = Adw.Dialog()

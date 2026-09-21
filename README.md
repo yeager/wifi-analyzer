@@ -19,6 +19,9 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 - Mark the active access point and use the actual channel width reported by `iw` for that radio when available.
 - Compare consecutive scans to identify new, missing, or materially changed access points.
 - Create a self-contained HTML diagnostic report or an anonymized JSON export for safe sharing.
+- Select an access point to identify the strongest overlapping neighbours.
+- Show the active connection's gateway and DNS servers from local system diagnostics.
+- Use optional 60-second monitoring and location profiles for private local scan history.
 
 ## Installation
 
