@@ -5,7 +5,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, GLib, Gio, Gdk, Pango
 import subprocess, threading, re, gettext, math, cairo, json, os
 from datetime import datetime
-from .export_helper import export_csv, export_json, get_export_path
+from .export_helper import export_csv, export_json, export_html_report, get_export_path
 
 APP_ID = "io.github.yeager.WifiAnalyzer"
 _ = gettext.gettext
@@ -52,6 +52,20 @@ def channel_width_mhz(freq):
     so the UI does not present an estimate as a measurement.
     """
     return 20 if band_for_frequency(freq) else 0
+
+
+def parse_iw_channel_width(output):
+    """Read the connected radio's actual width from ``iw dev`` output."""
+    match = re.search(r"width:\s*(\d+)\s*MHz", output, re.IGNORECASE)
+    return int(match.group(1)) if match else None
+
+
+def connected_radio_width():
+    try:
+        result = subprocess.run(["iw", "dev"], capture_output=True, text=True, timeout=2, check=False)
+    except (FileNotFoundError, subprocess.SubprocessError):
+        return None
+    return parse_iw_channel_width(result.stdout) if result.returncode == 0 else None
 
 
 def parse_regulatory_ranges(output):
@@ -154,6 +168,27 @@ def clear_history():
     except FileNotFoundError:
         pass
 
+
+def compare_scans(previous, current):
+    """Return APs that appeared, disappeared, or changed channel/signal."""
+    before = {net.get("bssid"): net for net in previous if net.get("bssid")}
+    after = {net.get("bssid"): net for net in current if net.get("bssid")}
+    return {
+        "new": sorted(set(after) - set(before)),
+        "gone": sorted(set(before) - set(after)),
+        "changed": sorted(bssid for bssid in set(before) & set(after)
+                          if before[bssid].get("channel") != after[bssid].get("channel")
+                          or abs(before[bssid].get("signal_pct", 0) - after[bssid].get("signal_pct", 0)) >= 15),
+    }
+
+
+def anonymize_network(network):
+    """Return an export-safe record without SSID/BSSID identifiers."""
+    record = dict(network)
+    record["ssid"] = "hidden"
+    record["bssid"] = "hidden"
+    return record
+
 NM_BUS_NAME = "org.freedesktop.NetworkManager"
 NM_OBJ_PATH = "/org/freedesktop/NetworkManager"
 NM_IFACE = "org.freedesktop.NetworkManager"
@@ -210,6 +245,16 @@ def scan_networks_dbus():
                              "channel": 0, "signal_pct": 0, "dbm": -100, "security": "", "band": ""})
             return networks
 
+        wifi_props = Gio.DBusProxy.new_for_bus_sync(
+            Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None, NM_BUS_NAME, wifi_path,
+            "org.freedesktop.DBus.Properties", None
+        )
+        active_ap = wifi_props.call_sync(
+            "Get", GLib.Variant("(ss)", (NM_WIRELESS_IFACE, "ActiveAccessPoint")),
+            Gio.DBusCallFlags.NONE, -1, None
+        ).unpack()[0]
+        actual_width = connected_radio_width()
+
         wireless_proxy = Gio.DBusProxy.new_for_bus_sync(
             Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
             NM_BUS_NAME, wifi_path, NM_WIRELESS_IFACE, None
@@ -246,7 +291,8 @@ def scan_networks_dbus():
             security = _security_string(flags, wpa_flags, rsn_flags)
             channel = freq_to_channel(freq)
             band = band_for_frequency(freq)
-            width_mhz = channel_width_mhz(freq)
+            connected = ap_path == active_ap
+            width_mhz = actual_width if connected and actual_width else channel_width_mhz(freq)
             # Convert signal % to approximate dBm
             dbm = int(signal_pct / 2 - 100) if signal_pct else -100
 
@@ -256,6 +302,8 @@ def scan_networks_dbus():
                 "band": band, "width_mhz": width_mhz,
                 "channel_status": channel_status(freq, channel, regulatory_ranges),
                 "last_seen": last_seen,
+                "connected": connected,
+                "width_source": "measured" if connected and actual_width else "estimated",
             })
     except GLib.Error as e:
         networks.append({"ssid": f"Error: {e}", "bssid": "", "freq": 0, "channel": 0,
@@ -439,11 +487,12 @@ class NetworkRow(Gtk.ListBoxRow):
         ssid_label.set_tooltip_text(net.get("bssid", ""))
         vbox.append(ssid_label)
         width = net.get("width_mhz", 0)
-        width_detail = f" · {width} MHz estimated" if width else ""
+        width_detail = f" · {width} MHz {net.get('width_source', 'estimated')}" if width else ""
         dfs_detail = f" · {net['channel_status']}" if net.get("channel_status") else ""
         last_seen = net.get("last_seen", -1)
         seen_detail = f" · seen {last_seen}s ago" if isinstance(last_seen, int) and last_seen >= 0 else ""
-        detail = (f"Ch {net['channel']} · {net['band']} · {net.get('freq', 0)} MHz{width_detail} · "
+        active_detail = " · Connected" if net.get("connected") else ""
+        detail = (f"Ch {net['channel']} · {net['band']} · {net.get('freq', 0)} MHz{width_detail}{active_detail} · "
                   f"{net['dbm']} dBm · {net['security'] or 'Open'} · {net.get('bssid', '')}{seen_detail}{dfs_detail}")
         sub = Gtk.Label(label=detail, xalign=0)
         sub.add_css_class("dim-label")
@@ -473,6 +522,8 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         menu = Gio.Menu()
         menu.append(_("Export CSV"), "win.export-csv")
         menu.append(_("Export JSON"), "win.export-json")
+        menu.append(_("Export anonymized JSON"), "win.export-anonymous-json")
+        menu.append(_("Export diagnostic report"), "win.export-report")
         menu.append(_("Clear local history"), "win.clear-history")
         menu.append(_("About"), "win.about")
         menu_btn = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu)
@@ -487,6 +538,8 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self.add_action(about_action)
         for action_name, callback in (("export-csv", self._export_csv),
                                       ("export-json", self._export_json),
+                                      ("export-anonymous-json", self._export_anonymous_json),
+                                      ("export-report", self._export_report),
                                       ("clear-history", self._clear_history)):
             action = Gio.SimpleAction.new(action_name, None)
             action.connect("activate", callback)
@@ -606,6 +659,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         threading.Thread(target=worker, daemon=True).start()
 
     def _on_scan_done(self, nets):
+        previous = self.networks
         counts = {}
         for net in nets:
             if net.get("ssid"):
@@ -616,7 +670,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         if any(net.get("bssid") for net in self.networks):
             save_history_snapshot(self.networks)
         self._update_ui()
-        self._set_status(f"Found {len(self.networks)} networks")
+        changes = compare_scans(previous, self.networks) if previous else None
+        suffix = f" · {len(changes['new'])} new, {len(changes['gone'])} gone" if changes else ""
+        self._set_status(f"Found {len(self.networks)} networks{suffix}")
 
     def _update_ui(self):
         band = self._get_band()
@@ -666,6 +722,21 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         export_json(self._export_rows(), ["ssid", "bssid", "band", "frequency_mhz", "channel", "width_mhz", "signal_percent", "estimated_dbm", "security", "channel_status", "last_seen_seconds"], path)
         self._set_status(_("Exported JSON to {path}").format(path=path))
 
+    def _export_anonymous_json(self, *_args):
+        path = get_export_path("wifi-analyzer-anonymous", "json")
+        records = [anonymize_network(net) for net in self.networks if net.get("bssid")]
+        export_json(records, None, path)
+        self._set_status(_("Exported anonymized JSON to {path}").format(path=path))
+
+    def _export_report(self, *_args):
+        path = get_export_path("wifi-analyzer-report", "html")
+        recommendations = {}
+        for band in ("2.4 GHz", "5 GHz", "6 GHz"):
+            ranked = recommend_channels(self.networks, band)
+            recommendations[band] = ranked[0] if ranked else (None, None)
+        export_html_report([net for net in self.networks if net.get("bssid")], recommendations, path)
+        self._set_status(_("Exported diagnostic report to {path}").format(path=path))
+
     def _clear_history(self, *_args):
         clear_history()
         self._set_status(_("Cleared local scan history"))
@@ -674,7 +745,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about = Adw.AboutDialog(
             application_name="WiFi Analyzer",
             application_icon=APP_ID,
-            version="0.1.6",
+            version="0.1.7",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
             website="https://github.com/yeager/wifi-analyzer",

@@ -16,6 +16,9 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 - Sort results by signal, channel, or security and group repeated SSIDs by access-point count.
 - Export scan results as CSV or JSON from the application menu.
 - Keep up to 100 local scan summaries for future history views. Scan data never leaves the device and can be cleared from the menu.
+- Mark the active access point and use the actual channel width reported by `iw` for that radio when available.
+- Compare consecutive scans to identify new, missing, or materially changed access points.
+- Create a self-contained HTML diagnostic report or an anonymized JSON export for safe sharing.
 
 ## Installation
 

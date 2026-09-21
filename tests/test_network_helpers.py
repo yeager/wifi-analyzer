@@ -8,6 +8,9 @@ from wifi_analyzer.app import (
     recommend_channels,
     save_history_snapshot,
     clear_history,
+    compare_scans,
+    parse_iw_channel_width,
+    anonymize_network,
 )
 
 
@@ -60,3 +63,11 @@ def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):
     assert "Office" in history.read_text()
     clear_history()
     assert not history.exists()
+
+
+def test_scan_comparison_width_parsing_and_anonymization():
+    assert parse_iw_channel_width("channel 36 (5180 MHz), width: 80 MHz") == 80
+    changes = compare_scans([{"bssid": "old", "channel": 1, "signal_pct": 30}],
+                            [{"bssid": "old", "channel": 6, "signal_pct": 30}, {"bssid": "new"}])
+    assert changes == {"new": ["new"], "gone": [], "changed": ["old"]}
+    assert anonymize_network({"ssid": "Private", "bssid": "aa:bb"})["ssid"] == "hidden"
