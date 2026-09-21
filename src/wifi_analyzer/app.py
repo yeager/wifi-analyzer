@@ -473,13 +473,31 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         super().__init__()
         self.networks = []
         self.band_filter = "2.4 GHz"
+        self.on_channel_selected = None
         self.set_draw_func(self._draw)
         self.set_content_height(220)
+        click = Gtk.GestureClick.new()
+        click.connect("pressed", self._on_click)
+        self.add_controller(click)
 
     def set_networks(self, networks, band="2.4 GHz"):
         self.networks = networks
         self.band_filter = band
         self.queue_draw()
+
+    def _channel_bounds(self):
+        filtered = [n for n in self.networks if n["band"] == self.band_filter and n["channel"] > 0]
+        if self.band_filter == "2.4 GHz":
+            return 0, 14
+        channels = sorted({n["channel"] for n in filtered})
+        return (min(channels) - 4, max(channels) + 4) if channels else (0, 1)
+
+    def _on_click(self, _gesture, _presses, x, _y):
+        width = self.get_allocated_width()
+        ch_min, ch_max = self._channel_bounds()
+        channel = round(ch_min + (x - 50) / max(width - 70, 1) * (ch_max - ch_min))
+        if self.on_channel_selected and channel > 0:
+            self.on_channel_selected(channel)
 
     def _draw(self, area, cr, width, height):
         # Background
@@ -500,12 +518,7 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         plot_w = width - margin_left - margin_right
         plot_h = height - margin_top - margin_bottom
 
-        if self.band_filter == "2.4 GHz":
-            ch_min, ch_max = 0, 14
-        else:
-            channels = sorted(set(n["channel"] for n in filtered))
-            ch_min = min(channels) - 4 if channels else 30
-            ch_max = max(channels) + 4 if channels else 170
+        ch_min, ch_max = self._channel_bounds()
 
         dbm_min, dbm_max = -100, -20
 
@@ -690,6 +703,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self.dark_mode = False
         self._last_problem_code = None
         self._scanning = False
+        self.selected_channel = None
 
         header = Adw.HeaderBar()
         # Theme toggle
@@ -795,6 +809,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         frame = Gtk.Frame()
         frame.set_margin_start(12); frame.set_margin_end(12); frame.set_margin_top(8)
         self.channel_chart = ChannelDrawingArea()
+        self.channel_chart.on_channel_selected = self._select_channel
         frame.set_child(self.channel_chart)
         main_box.append(frame)
 
@@ -838,6 +853,11 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self._update_ui()
 
     def _on_filter_changed(self, *_args):
+        self._update_ui()
+
+    def _select_channel(self, channel):
+        """Filter visible APs by a clicked channel; click it again to clear."""
+        self.selected_channel = None if self.selected_channel == channel else channel
         self._update_ui()
 
     def _on_network_selected(self, _listbox, row):
@@ -941,6 +961,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         selected_security = self.security_filter.get_selected_item().get_string()
         filtered = [n for n in self.networks
                     if n["band"] == band
+                    and (self.selected_channel is None or n["channel"] == self.selected_channel)
                     and n["dbm"] >= self.signal_threshold.get_value_as_int()
                     and (selected_security == _("All security")
                          or (selected_security == _("Open") and not n["security"])
