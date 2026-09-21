@@ -3,8 +3,9 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, GLib, Gio, Gdk, Pango
-import subprocess, threading, re, gettext, math, cairo
+import subprocess, threading, re, gettext, math, cairo, json, os
 from datetime import datetime
+from .export_helper import export_csv, export_json, get_export_path
 
 APP_ID = "io.github.yeager.WifiAnalyzer"
 _ = gettext.gettext
@@ -103,6 +104,56 @@ def network_matches_query(network, query):
     )).casefold()
     return query in haystack
 
+
+def recommend_channels(networks, band):
+    """Rank channels by observed overlap; lower scores are less congested."""
+    candidates = [1, 6, 11] if band == "2.4 GHz" else sorted({
+        net["channel"] for net in networks if net.get("band") == band and net.get("channel", 0) > 0
+    })
+    scored = []
+    for candidate in candidates:
+        score = 0.0
+        for net in networks:
+            if net.get("band") != band or not net.get("channel"):
+                continue
+            distance = abs(candidate - net["channel"])
+            span = max(net.get("width_mhz", 20) / 5, 1)
+            if distance < span:
+                score += net.get("signal_pct", 0) * (1 - distance / span)
+        scored.append((candidate, round(score, 1)))
+    return sorted(scored, key=lambda item: (item[1], item[0]))
+
+
+def _history_path():
+    base = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
+    directory = os.path.join(base, "wifi-analyzer")
+    os.makedirs(directory, exist_ok=True)
+    return os.path.join(directory, "history.json")
+
+
+def save_history_snapshot(networks, now=None):
+    """Keep local, bounded scan summaries. No scan data leaves the device."""
+    now = now or datetime.now().isoformat(timespec="seconds")
+    path = _history_path()
+    try:
+        with open(path, encoding="utf-8") as handle:
+            history = json.load(handle)
+    except (OSError, ValueError):
+        history = []
+    history.append({"scanned_at": now, "networks": [
+        {key: net.get(key) for key in ("ssid", "bssid", "band", "channel", "signal_pct", "dbm", "security")}
+        for net in networks if net.get("bssid")
+    ]})
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(history[-100:], handle, ensure_ascii=False, indent=2)
+
+
+def clear_history():
+    try:
+        os.unlink(_history_path())
+    except FileNotFoundError:
+        pass
+
 NM_BUS_NAME = "org.freedesktop.NetworkManager"
 NM_OBJ_PATH = "/org/freedesktop/NetworkManager"
 NM_IFACE = "org.freedesktop.NetworkManager"
@@ -191,6 +242,7 @@ def scan_networks_dbus():
             flags = props.get("Flags", 0)
             wpa_flags = props.get("WpaFlags", 0)
             rsn_flags = props.get("RsnFlags", 0)
+            last_seen = props.get("LastSeen", -1)
             security = _security_string(flags, wpa_flags, rsn_flags)
             channel = freq_to_channel(freq)
             band = band_for_frequency(freq)
@@ -203,6 +255,7 @@ def scan_networks_dbus():
                 "signal_pct": signal_pct, "dbm": dbm, "security": security,
                 "band": band, "width_mhz": width_mhz,
                 "channel_status": channel_status(freq, channel, regulatory_ranges),
+                "last_seen": last_seen,
             })
     except GLib.Error as e:
         networks.append({"ssid": f"Error: {e}", "bssid": "", "freq": 0, "channel": 0,
@@ -379,14 +432,19 @@ class NetworkRow(Gtk.ListBoxRow):
 
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         vbox.set_hexpand(True)
-        ssid_label = Gtk.Label(label=net["ssid"], xalign=0)
+        ap_count = net.get("access_point_count", 1)
+        title = f"{net['ssid']} ({ap_count} APs)" if ap_count > 1 else net["ssid"]
+        ssid_label = Gtk.Label(label=title, xalign=0)
         ssid_label.add_css_class("heading")
+        ssid_label.set_tooltip_text(net.get("bssid", ""))
         vbox.append(ssid_label)
         width = net.get("width_mhz", 0)
         width_detail = f" · {width} MHz estimated" if width else ""
         dfs_detail = f" · {net['channel_status']}" if net.get("channel_status") else ""
-        detail = (f"Ch {net['channel']} · {net['band']}{width_detail} · "
-                  f"{net['dbm']} dBm · {net['security'] or 'Open'}{dfs_detail}")
+        last_seen = net.get("last_seen", -1)
+        seen_detail = f" · seen {last_seen}s ago" if isinstance(last_seen, int) and last_seen >= 0 else ""
+        detail = (f"Ch {net['channel']} · {net['band']} · {net.get('freq', 0)} MHz{width_detail} · "
+                  f"{net['dbm']} dBm · {net['security'] or 'Open'} · {net.get('bssid', '')}{seen_detail}{dfs_detail}")
         sub = Gtk.Label(label=detail, xalign=0)
         sub.add_css_class("dim-label")
         vbox.append(sub)
@@ -413,6 +471,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         header.pack_end(theme_btn)
         # Menu
         menu = Gio.Menu()
+        menu.append(_("Export CSV"), "win.export-csv")
+        menu.append(_("Export JSON"), "win.export-json")
+        menu.append(_("Clear local history"), "win.clear-history")
         menu.append(_("About"), "win.about")
         menu_btn = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu)
         header.pack_end(menu_btn)
@@ -424,6 +485,12 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about_action = Gio.SimpleAction.new("about", None)
         about_action.connect("activate", self._show_about)
         self.add_action(about_action)
+        for action_name, callback in (("export-csv", self._export_csv),
+                                      ("export-json", self._export_json),
+                                      ("clear-history", self._clear_history)):
+            action = Gio.SimpleAction.new(action_name, None)
+            action.connect("activate", callback)
+            self.add_action(action)
 
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         main_box.append(header)
@@ -471,7 +538,18 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self.hidden_filter = Gtk.CheckButton(label=_("Hidden SSIDs only"))
         self.hidden_filter.connect("toggled", self._on_filter_changed)
         filter_box.append(self.hidden_filter)
+
+        filter_box.append(Gtk.Label(label=_("Sort")))
+        self.sort_filter = Gtk.DropDown.new_from_strings([_("Signal"), _("Channel"), _("Security")])
+        self.sort_filter.connect("notify::selected", self._on_filter_changed)
+        filter_box.append(self.sort_filter)
         main_box.append(filter_box)
+
+        self.recommendation = Gtk.Label(xalign=0)
+        self.recommendation.set_margin_start(12); self.recommendation.set_margin_end(12)
+        self.recommendation.set_margin_top(6)
+        self.recommendation.add_css_class("dim-label")
+        main_box.append(self.recommendation)
 
         # Channel overlap visualization
         frame = Gtk.Frame()
@@ -528,7 +606,15 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         threading.Thread(target=worker, daemon=True).start()
 
     def _on_scan_done(self, nets):
+        counts = {}
+        for net in nets:
+            if net.get("ssid"):
+                counts[net["ssid"]] = counts.get(net["ssid"], 0) + 1
+        for net in nets:
+            net["access_point_count"] = counts.get(net.get("ssid"), 1)
         self.networks = sorted(nets, key=lambda n: n["signal_pct"], reverse=True)
+        if any(net.get("bssid") for net in self.networks):
+            save_history_snapshot(self.networks)
         self._update_ui()
         self._set_status(f"Found {len(self.networks)} networks")
 
@@ -547,10 +633,42 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
                     and (selected_security == _("All security") or n["security"] == selected_security)
                     and (not self.hidden_filter.get_active() or n["ssid"] == _("<Hidden>"))
                     and network_matches_query(n, self.search_entry.get_text())]
+        sort_name = self.sort_filter.get_selected_item().get_string()
+        if sort_name == _("Channel"):
+            filtered.sort(key=lambda net: (net.get("channel", 0), -net.get("signal_pct", 0)))
+        elif sort_name == _("Security"):
+            filtered.sort(key=lambda net: (net.get("security", ""), -net.get("signal_pct", 0)))
+        else:
+            filtered.sort(key=lambda net: net.get("signal_pct", 0), reverse=True)
         for net in filtered:
             self.listbox.append(NetworkRow(net))
         # Update chart
         self.channel_chart.set_networks(filtered, band)
+        recommendations = recommend_channels(self.networks, band)
+        if recommendations:
+            channel, score = recommendations[0]
+            self.recommendation.set_label(_("Least congested channel: {channel} (overlap score {score})").format(
+                channel=channel, score=score))
+        else:
+            self.recommendation.set_label(_("No channel recommendation available"))
+
+    def _export_rows(self):
+        fields = ("ssid", "bssid", "band", "freq", "channel", "width_mhz", "signal_pct", "dbm", "security", "channel_status", "last_seen")
+        return [[net.get(field, "") for field in fields] for net in self.networks if net.get("bssid")]
+
+    def _export_csv(self, *_args):
+        path = get_export_path("wifi-analyzer", "csv")
+        export_csv(self._export_rows(), ["SSID", "BSSID", "Band", "Frequency MHz", "Channel", "Width MHz", "Signal %", "Estimated dBm", "Security", "Channel status", "Last seen s"], path)
+        self._set_status(_("Exported CSV to {path}").format(path=path))
+
+    def _export_json(self, *_args):
+        path = get_export_path("wifi-analyzer", "json")
+        export_json(self._export_rows(), ["ssid", "bssid", "band", "frequency_mhz", "channel", "width_mhz", "signal_percent", "estimated_dbm", "security", "channel_status", "last_seen_seconds"], path)
+        self._set_status(_("Exported JSON to {path}").format(path=path))
+
+    def _clear_history(self, *_args):
+        clear_history()
+        self._set_status(_("Cleared local scan history"))
 
     def _show_about(self, *args):
         about = Adw.AboutDialog(

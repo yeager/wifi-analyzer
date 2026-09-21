@@ -5,6 +5,9 @@ from wifi_analyzer.app import (
     freq_to_channel,
     network_matches_query,
     parse_regulatory_ranges,
+    recommend_channels,
+    save_history_snapshot,
+    clear_history,
 )
 
 
@@ -42,3 +45,18 @@ def test_network_search_matches_displayed_fields_case_insensitively():
     assert network_matches_query(network, "wpa3")
     assert network_matches_query(network, "52")
     assert not network_matches_query(network, "guest")
+
+
+def test_channel_recommendation_avoids_the_strongest_overlap():
+    networks = [{"band": "2.4 GHz", "channel": 1, "signal_pct": 90, "width_mhz": 20}]
+    assert recommend_channels(networks, "2.4 GHz")[0][0] in (6, 11)
+
+
+def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    save_history_snapshot([{"ssid": "Office", "bssid": "aa:bb", "band": "5 GHz", "channel": 36,
+                            "signal_pct": 50, "dbm": -75, "security": "WPA3"}], now="2026-09-21T15:00:00")
+    history = tmp_path / "wifi-analyzer" / "history.json"
+    assert "Office" in history.read_text()
+    clear_history()
+    assert not history.exists()

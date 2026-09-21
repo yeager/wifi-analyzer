@@ -12,6 +12,10 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 - Show the inferred 20 MHz primary-channel width. NetworkManager does not expose
   an access point's negotiated width, so the application labels this value as an estimate.
 - Mark 5 GHz DFS channels. Their availability depends on the local regulatory domain.
+- Recommend less congested channels from observed signal overlap.
+- Sort results by signal, channel, or security and group repeated SSIDs by access-point count.
+- Export scan results as CSV or JSON from the application menu.
+- Keep up to 100 local scan summaries for future history views. Scan data never leaves the device and can be cleared from the menu.
 
 ## Installation
 
