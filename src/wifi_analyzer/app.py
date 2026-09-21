@@ -145,7 +145,7 @@ def _history_path():
     return os.path.join(directory, "history.json")
 
 
-def save_history_snapshot(networks, now=None):
+def save_history_snapshot(networks, now=None, profile="Default"):
     """Keep local, bounded scan summaries. No scan data leaves the device."""
     now = now or datetime.now().isoformat(timespec="seconds")
     path = _history_path()
@@ -154,7 +154,7 @@ def save_history_snapshot(networks, now=None):
             history = json.load(handle)
     except (OSError, ValueError):
         history = []
-    history.append({"scanned_at": now, "networks": [
+    history.append({"scanned_at": now, "profile": profile, "networks": [
         {key: net.get(key) for key in ("ssid", "bssid", "band", "channel", "signal_pct", "dbm", "security")}
         for net in networks if net.get("bssid")
     ]})
@@ -167,6 +167,18 @@ def clear_history():
         os.unlink(_history_path())
     except FileNotFoundError:
         pass
+
+
+def load_signal_history(bssid, profile=None):
+    """Return local time-series points for one AP, optionally per location profile."""
+    try:
+        with open(_history_path(), encoding="utf-8") as handle:
+            history = json.load(handle)
+    except (OSError, ValueError):
+        return []
+    return [{"scanned_at": scan["scanned_at"], "signal_pct": net.get("signal_pct"), "channel": net.get("channel")}
+            for scan in history if profile in (None, scan.get("profile", "Default"))
+            for net in scan.get("networks", []) if net.get("bssid") == bssid]
 
 
 def compare_scans(previous, current):
@@ -532,6 +544,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         refresh_btn = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=_("Scan"))
         refresh_btn.connect("clicked", lambda b: self._scan())
         header.pack_end(refresh_btn)
+        self.monitor_button = Gtk.ToggleButton(label=_("Monitor"), tooltip_text=_("Scan every 60 seconds and notify about changes"))
+        self.monitor_button.connect("toggled", self._toggle_monitor)
+        header.pack_start(self.monitor_button)
 
         about_action = Gio.SimpleAction.new("about", None)
         about_action.connect("activate", self._show_about)
@@ -596,6 +611,10 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self.sort_filter = Gtk.DropDown.new_from_strings([_("Signal"), _("Channel"), _("Security")])
         self.sort_filter.connect("notify::selected", self._on_filter_changed)
         filter_box.append(self.sort_filter)
+        filter_box.append(Gtk.Label(label=_("Profile")))
+        self.profile_entry = Gtk.Entry(text="Default", width_chars=10)
+        self.profile_entry.set_tooltip_text(_("Keep local scan history separate for this location"))
+        filter_box.append(self.profile_entry)
         main_box.append(filter_box)
 
         self.recommendation = Gtk.Label(xalign=0)
@@ -658,6 +677,19 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             GLib.idle_add(self._on_scan_done, nets)
         threading.Thread(target=worker, daemon=True).start()
 
+    def _toggle_monitor(self, button):
+        if button.get_active():
+            self._monitor_source = GLib.timeout_add_seconds(60, self._monitor_scan)
+            self._set_status(_("Monitoring enabled; scanning every 60 seconds"))
+        elif getattr(self, "_monitor_source", None):
+            GLib.source_remove(self._monitor_source)
+            self._monitor_source = None
+            self._set_status(_("Monitoring disabled"))
+
+    def _monitor_scan(self):
+        self._scan()
+        return True
+
     def _on_scan_done(self, nets):
         previous = self.networks
         counts = {}
@@ -668,11 +700,16 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             net["access_point_count"] = counts.get(net.get("ssid"), 1)
         self.networks = sorted(nets, key=lambda n: n["signal_pct"], reverse=True)
         if any(net.get("bssid") for net in self.networks):
-            save_history_snapshot(self.networks)
+            save_history_snapshot(self.networks, profile=self.profile_entry.get_text().strip() or "Default")
         self._update_ui()
         changes = compare_scans(previous, self.networks) if previous else None
         suffix = f" · {len(changes['new'])} new, {len(changes['gone'])} gone" if changes else ""
         self._set_status(f"Found {len(self.networks)} networks{suffix}")
+        if changes and (changes["new"] or changes["gone"] or changes["changed"]):
+            notification = Gio.Notification.new(_("WiFi scan changed"))
+            notification.set_body(_("{new} new, {gone} gone, {changed} changed access points").format(
+                new=len(changes["new"]), gone=len(changes["gone"]), changed=len(changes["changed"])))
+            self.get_application().send_notification("wifi-scan-change", notification)
 
     def _update_ui(self):
         band = self._get_band()
@@ -698,6 +735,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             filtered.sort(key=lambda net: net.get("signal_pct", 0), reverse=True)
         for net in filtered:
             self.listbox.append(NetworkRow(net))
+        self.visible_networks = filtered
         # Update chart
         self.channel_chart.set_networks(filtered, band)
         recommendations = recommend_channels(self.networks, band)
@@ -710,7 +748,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
 
     def _export_rows(self):
         fields = ("ssid", "bssid", "band", "freq", "channel", "width_mhz", "signal_pct", "dbm", "security", "channel_status", "last_seen")
-        return [[net.get(field, "") for field in fields] for net in self.networks if net.get("bssid")]
+        return [[net.get(field, "") for field in fields] for net in getattr(self, "visible_networks", self.networks) if net.get("bssid")]
 
     def _export_csv(self, *_args):
         path = get_export_path("wifi-analyzer", "csv")
@@ -745,7 +783,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         about = Adw.AboutDialog(
             application_name="WiFi Analyzer",
             application_icon=APP_ID,
-            version="0.1.7",
+            version="0.1.8",
             developer_name="Daniel Nylander",
             license_type=Gtk.License.GPL_3_0,
             website="https://github.com/yeager/wifi-analyzer",
