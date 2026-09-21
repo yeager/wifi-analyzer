@@ -24,9 +24,84 @@ def freq_to_channel(freq):
             return ch
     if 2412 <= freq <= 2484:
         return (freq - 2407) // 5
+    if 5925 <= freq <= 7125:
+        return (freq - 5950) // 5
     if freq >= 5000:
         return (freq - 5000) // 5
     return 0
+
+
+def band_for_frequency(freq):
+    """Return the Wi-Fi band containing *freq*, in MHz."""
+    if 2400 <= freq < 2500:
+        return "2.4 GHz"
+    if 5925 <= freq <= 7125:
+        return "6 GHz"
+    if 5000 <= freq < 5925:
+        return "5 GHz"
+    return ""
+
+
+def channel_width_mhz(freq):
+    """Return the width that can safely be inferred from NetworkManager data.
+
+    NetworkManager's AccessPoint D-Bus interface exposes a centre frequency but
+    no channel-width property.  A 20 MHz primary channel is therefore the only
+    non-speculative value we can display.  Keep the source alongside the value
+    so the UI does not present an estimate as a measurement.
+    """
+    return 20 if band_for_frequency(freq) else 0
+
+
+def parse_regulatory_ranges(output):
+    """Parse usable frequency ranges from ``iw reg get`` output."""
+    ranges = []
+    for line in output.splitlines():
+        match = re.search(r"\((\d+)\s*-\s*(\d+)\s*@\s*\d+\).*?(?:,\s*(.*))?$", line)
+        if match:
+            start, end, flags = match.groups()
+            ranges.append((int(start), int(end), flags or ""))
+    return ranges
+
+
+def local_regulatory_ranges():
+    """Read the kernel regulatory database when the host provides ``iw``."""
+    try:
+        result = subprocess.run(
+            ["iw", "reg", "get"], capture_output=True, text=True,
+            timeout=2, check=False,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError):
+        return []
+    return parse_regulatory_ranges(result.stdout) if result.returncode == 0 else []
+
+
+def channel_status(freq, channel, regulatory_ranges=()):
+    """Return a concise regulatory hint for a channel.
+
+    DFS channels are usable, but their availability can change while a radio
+    performs radar detection.  Exact availability remains country dependent,
+    so this intentionally does not claim that a channel is forbidden.
+    """
+    matching_ranges = [flags for start, end, flags in regulatory_ranges if start <= freq <= end]
+    if regulatory_ranges and not matching_ranges:
+        return _("Unavailable in the detected regulatory domain")
+    if any("DFS" in flags for flags in matching_ranges):
+        return _("DFS — radar detection may interrupt this channel")
+    if band_for_frequency(freq) == "5 GHz" and (52 <= channel <= 64 or 100 <= channel <= 144):
+        return _("DFS — availability depends on local regulations")
+    return ""
+
+
+def network_matches_query(network, query):
+    """Match a user search against the fields shown in the network list."""
+    query = query.casefold().strip()
+    if not query:
+        return True
+    haystack = " ".join(str(network.get(field, "")) for field in (
+        "ssid", "bssid", "band", "channel", "security", "width_mhz", "channel_status"
+    )).casefold()
+    return query in haystack
 
 NM_BUS_NAME = "org.freedesktop.NetworkManager"
 NM_OBJ_PATH = "/org/freedesktop/NetworkManager"
@@ -72,6 +147,7 @@ def _find_wifi_device_path(nm_proxy):
 def scan_networks_dbus():
     """Scan WiFi networks via NetworkManager D-Bus"""
     networks = []
+    regulatory_ranges = local_regulatory_ranges()
     try:
         nm_proxy = Gio.DBusProxy.new_for_bus_sync(
             Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
@@ -117,13 +193,16 @@ def scan_networks_dbus():
             rsn_flags = props.get("RsnFlags", 0)
             security = _security_string(flags, wpa_flags, rsn_flags)
             channel = freq_to_channel(freq)
+            band = band_for_frequency(freq)
+            width_mhz = channel_width_mhz(freq)
             # Convert signal % to approximate dBm
             dbm = int(signal_pct / 2 - 100) if signal_pct else -100
 
             networks.append({
                 "ssid": ssid, "bssid": bssid, "freq": freq, "channel": channel,
                 "signal_pct": signal_pct, "dbm": dbm, "security": security,
-                "band": "5 GHz" if freq >= 5000 else "2.4 GHz"
+                "band": band, "width_mhz": width_mhz,
+                "channel_status": channel_status(freq, channel, regulatory_ranges),
             })
     except GLib.Error as e:
         networks.append({"ssid": f"Error: {e}", "bssid": "", "freq": 0, "channel": 0,
@@ -232,14 +311,15 @@ class ChannelDrawingArea(Gtk.DrawingArea):
             (0.2, 0.6, 1.0), (1.0, 0.4, 0.3), (0.3, 0.9, 0.4), (1.0, 0.8, 0.2),
             (0.8, 0.3, 0.9), (0.2, 0.9, 0.9), (1.0, 0.5, 0.0), (0.6, 0.6, 1.0),
         ]
-        bw = 2.5 if self.band_filter == "2.4 GHz" else 2.0  # channel bandwidth
-
         for i, net in enumerate(filtered):
             color = colors[i % len(colors)]
             cr.set_source_rgba(*color, 0.3)
             cr.set_line_width(2)
 
             center = net["channel"]
+            # Channels are 5 MHz apart. The curve reaches its baseline at
+            # approximately the advertised channel width.
+            bw = max(net.get("width_mhz", 20) / 10, 1)
             peak_y = dbm_to_y(net["dbm"])
             base_y = dbm_to_y(-100)
 
@@ -302,7 +382,11 @@ class NetworkRow(Gtk.ListBoxRow):
         ssid_label = Gtk.Label(label=net["ssid"], xalign=0)
         ssid_label.add_css_class("heading")
         vbox.append(ssid_label)
-        detail = f"Ch {net['channel']} · {net['band']} · {net['dbm']} dBm · {net['security'] or 'Open'}"
+        width = net.get("width_mhz", 0)
+        width_detail = f" · {width} MHz estimated" if width else ""
+        dfs_detail = f" · {net['channel_status']}" if net.get("channel_status") else ""
+        detail = (f"Ch {net['channel']} · {net['band']}{width_detail} · "
+                  f"{net['dbm']} dBm · {net['security'] or 'Open'}{dfs_detail}")
         sub = Gtk.Label(label=detail, xalign=0)
         sub.add_css_class("dim-label")
         vbox.append(sub)
@@ -344,16 +428,50 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         main_box.append(header)
 
-        # Band selector
+        # Band selector. Adw.ToggleGroup keeps the choice mutually exclusive
+        # and exposes an accessible active-name for keyboard and assistive use.
         band_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         band_box.set_margin_start(12); band_box.set_margin_end(12); band_box.set_margin_top(8)
-        self.band_24_btn = Gtk.ToggleButton(label="2.4 GHz", active=True)
-        self.band_5_btn = Gtk.ToggleButton(label="5 GHz", group=self.band_24_btn)
-        self.band_24_btn.connect("toggled", self._on_band_toggle)
-        self.band_5_btn.connect("toggled", self._on_band_toggle)
-        band_box.append(self.band_24_btn)
-        band_box.append(self.band_5_btn)
+        self.band_selector = Adw.ToggleGroup()
+        for name, label in (("2.4 GHz", "2.4 GHz"), ("5 GHz", "5 GHz"), ("6 GHz", "6 GHz")):
+            toggle = Adw.Toggle.new()
+            toggle.set_name(name)
+            toggle.set_label(label)
+            self.band_selector.add(toggle)
+        self.band_selector.set_active_name("2.4 GHz")
+        self.band_selector.connect("notify::active-name", self._on_band_changed)
+        band_box.append(self.band_selector)
         main_box.append(band_box)
+
+        self.search_entry = Gtk.SearchEntry(placeholder_text=_("Filter by name, BSSID, channel or security"))
+        self.search_entry.set_margin_start(12); self.search_entry.set_margin_end(12)
+        self.search_entry.set_margin_top(8)
+        self.search_entry.connect("search-changed", self._on_search_changed)
+        main_box.append(self.search_entry)
+
+        filter_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        filter_box.set_margin_start(12); filter_box.set_margin_end(12)
+        filter_box.set_margin_top(6)
+        signal_label = Gtk.Label(label=_("Minimum signal"))
+        filter_box.append(signal_label)
+        self.signal_threshold = Gtk.SpinButton.new_with_range(-100, 0, 5)
+        self.signal_threshold.set_value(-100)
+        self.signal_threshold.set_tooltip_text(_("Only show access points at or above this estimated dBm value"))
+        self.signal_threshold.connect("value-changed", self._on_filter_changed)
+        filter_box.append(self.signal_threshold)
+
+        security_label = Gtk.Label(label=_("Security"))
+        filter_box.append(security_label)
+        self.security_filter = Gtk.DropDown.new_from_strings([
+            _("All security"), "Open", "WEP", "WPA1", "WPA2", "WPA2 Enterprise", "WPA3",
+        ])
+        self.security_filter.connect("notify::selected", self._on_filter_changed)
+        filter_box.append(self.security_filter)
+
+        self.hidden_filter = Gtk.CheckButton(label=_("Hidden SSIDs only"))
+        self.hidden_filter.connect("toggled", self._on_filter_changed)
+        filter_box.append(self.hidden_filter)
+        main_box.append(filter_box)
 
         # Channel overlap visualization
         frame = Gtk.Frame()
@@ -391,9 +509,15 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         mgr.set_color_scheme(Adw.ColorScheme.FORCE_DARK if self.dark_mode else Adw.ColorScheme.FORCE_LIGHT)
 
     def _get_band(self):
-        return "2.4 GHz" if self.band_24_btn.get_active() else "5 GHz"
+        return self.band_selector.get_active_name() or "2.4 GHz"
 
-    def _on_band_toggle(self, btn):
+    def _on_band_changed(self, selector, _param):
+        self._update_ui()
+
+    def _on_search_changed(self, entry):
+        self._update_ui()
+
+    def _on_filter_changed(self, *_args):
         self._update_ui()
 
     def _scan(self):
@@ -416,11 +540,17 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             nxt = child.get_next_sibling()
             self.listbox.remove(child)
             child = nxt
-        filtered = [n for n in self.networks if n["band"] == band]
+        selected_security = self.security_filter.get_selected_item().get_string()
+        filtered = [n for n in self.networks
+                    if n["band"] == band
+                    and n["dbm"] >= self.signal_threshold.get_value_as_int()
+                    and (selected_security == _("All security") or n["security"] == selected_security)
+                    and (not self.hidden_filter.get_active() or n["ssid"] == _("<Hidden>"))
+                    and network_matches_query(n, self.search_entry.get_text())]
         for net in filtered:
             self.listbox.append(NetworkRow(net))
         # Update chart
-        self.channel_chart.set_networks(self.networks, band)
+        self.channel_chart.set_networks(filtered, band)
 
     def _show_about(self, *args):
         about = Adw.AboutDialog(
