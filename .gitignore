@@ -1,1 +1,3 @@
 *.mo
+build/
+*.egg-info/
