@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.17
+Version:        0.1.18
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -68,5 +68,8 @@ PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Tue Sep 22 2026 Daniel Nylander <po@danielnylander.se> - 0.1.18-1
+- Fix direct launch with Python from the source directory.
+
 * Mon Sep 21 2026 Daniel Nylander <po@danielnylander.se> - 0.1.17-1
 - Add zoom and guidance to the interactive channel view.
