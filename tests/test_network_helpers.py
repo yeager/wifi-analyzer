@@ -1,3 +1,7 @@
+import subprocess
+import sys
+from pathlib import Path
+
 from wifi_analyzer.app import (
     band_for_frequency,
     channel_status,
@@ -17,6 +21,17 @@ from wifi_analyzer.app import (
     load_signal_history,
     wifi_problem,
 )
+
+
+def test_app_module_loads_when_executed_as_a_script():
+    app = Path(__file__).parents[1] / "src" / "wifi_analyzer" / "app.py"
+    result = subprocess.run(
+        [sys.executable, "-c", f"import runpy; runpy.run_path({str(app)!r}, run_name='direct_app')"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_frequency_helpers_cover_all_supported_bands():
