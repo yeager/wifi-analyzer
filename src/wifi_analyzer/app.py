@@ -5,9 +5,11 @@ import math
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import threading
 from datetime import datetime
+from pathlib import Path
 
 import cairo
 import gi
@@ -16,8 +18,13 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk
 
-from .accessibility import AccessibilityManager
-from .export_helper import export_csv, export_html_report, export_json
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from wifi_analyzer.accessibility import AccessibilityManager
+    from wifi_analyzer.export_helper import export_csv, export_html_report, export_json
+else:
+    from .accessibility import AccessibilityManager
+    from .export_helper import export_csv, export_html_report, export_json
 
 APP_ID = "io.github.yeager.WifiAnalyzer"
 GETTEXT_DOMAIN = "wifi-analyzer"
