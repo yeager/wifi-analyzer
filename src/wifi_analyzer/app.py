@@ -521,14 +521,29 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         self.queue_draw()
         return True
 
-    def _on_click(self, _gesture, _presses, x, _y):
+    def _on_click(self, _gesture, _presses, x, y):
         width = self.get_allocated_width()
+        plot_left, plot_right = 50, width - 20
+        if not plot_left <= x <= plot_right or not 20 <= y <= self.get_allocated_height() - 40:
+            return
         ch_min, ch_max = self._channel_bounds()
         channel = round(ch_min + (x - 50) / max(width - 70, 1) * (ch_max - ch_min))
-        if self.on_channel_selected and channel > 0:
+        visible_channels = {
+            n["channel"] for n in self.networks
+            if n["band"] == self.band_filter and n["channel"] > 0
+        }
+        if self.on_channel_selected and visible_channels and channel > 0:
+            channel = min(visible_channels, key=lambda candidate: abs(candidate - channel))
             self.on_channel_selected(channel)
 
+    def _font_scale(self):
+        """Follow the desktop text scale for Cairo-drawn chart labels."""
+        settings = Gtk.Settings.get_default()
+        dpi = settings.get_property("gtk-xft-dpi") if settings else -1
+        return dpi / (96 * 1024) if dpi > 0 else 1.0
+
     def _draw(self, area, cr, width, height):
+        font_scale = self._font_scale()
         # Background
         cr.set_source_rgb(0.15, 0.15, 0.18)
         cr.rectangle(0, 0, width, height)
@@ -538,7 +553,7 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         if not filtered:
             cr.set_source_rgb(0.6, 0.6, 0.6)
             cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-            cr.set_font_size(14)
+            cr.set_font_size(14 * font_scale)
             cr.move_to(width / 2 - 60, height / 2)
             cr.show_text(_("No networks found"))
             return
@@ -565,7 +580,7 @@ class ChannelDrawingArea(Gtk.DrawingArea):
             cr.move_to(margin_left, y); cr.line_to(width - margin_right, y)
             cr.stroke()
             cr.set_source_rgb(0.6, 0.6, 0.6)
-            cr.set_font_size(10)
+            cr.set_font_size(10 * font_scale)
             cr.move_to(5, y + 4)
             cr.show_text(f"{dbm}")
             cr.set_source_rgba(0.4, 0.4, 0.4, 0.3)
@@ -580,7 +595,7 @@ class ChannelDrawingArea(Gtk.DrawingArea):
             cr.move_to(x, margin_top); cr.line_to(x, height - margin_bottom)
             cr.stroke()
             cr.set_source_rgb(0.6, 0.6, 0.6)
-            cr.set_font_size(10)
+            cr.set_font_size(10 * font_scale)
             cr.move_to(x - 5, height - margin_bottom + 15)
             cr.show_text(str(ch))
 
@@ -628,7 +643,7 @@ class ChannelDrawingArea(Gtk.DrawingArea):
 
             # Label
             cr.set_source_rgb(*color)
-            cr.set_font_size(9)
+            cr.set_font_size(9 * font_scale)
             label = net["ssid"][:18]
             tx = ch_to_x(center)
             cr.move_to(tx - len(label) * 2.5, peak_y - 6)
@@ -657,9 +672,7 @@ class NetworkRow(Gtk.ListBoxRow):
 
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         vbox.set_hexpand(True)
-        ap_count = net.get("access_point_count", 1)
-        title = f"{net['ssid']} ({ap_count} APs)" if ap_count > 1 else net["ssid"]
-        ssid_label = Gtk.Label(label=title, xalign=0)
+        ssid_label = Gtk.Label(label=net["ssid"], xalign=0)
         ssid_label.add_css_class("heading")
         ssid_label.set_tooltip_text(net.get("bssid", ""))
         vbox.append(ssid_label)
@@ -667,17 +680,19 @@ class NetworkRow(Gtk.ListBoxRow):
         width_source = _("measured") if net.get("width_source") == "measured" else _("estimated")
         width_detail = f" · {width} MHz {width_source}" if width else ""
         standard_detail = f" · {net['wifi_standard']}" if net.get("wifi_standard") else ""
-        dfs_detail = f" · {net['channel_status']}" if net.get("channel_status") else ""
-        last_seen = net.get("last_seen", -1)
-        seen_detail = _(" · seen {seconds}s ago").format(seconds=last_seen) if isinstance(last_seen, int) and last_seen >= 0 else ""
         active_detail = _(" · Connected") if net.get("connected") else ""
-        detail = (_("Ch {channel} · {band} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · {bssid}{seen}{dfs}").format(
-            channel=net["channel"], band=net["band"], frequency=net.get("freq", 0), width=width_detail,
+        detail = (_("Ch {channel} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · {bssid}").format(
+            channel=net["channel"], frequency=net.get("freq", 0), width=width_detail,
             active=active_detail + standard_detail, dbm=net["dbm"], security=net["security"] or _("Open"),
-            bssid=net.get("bssid", ""), seen=seen_detail, dfs=dfs_detail))
+            bssid=net.get("bssid", "")))
         sub = Gtk.Label(label=detail, xalign=0)
         sub.add_css_class("dim-label")
         vbox.append(sub)
+        if net.get("channel_status"):
+            status = Gtk.Label(label=net["channel_status"], xalign=0)
+            status.add_css_class("warning")
+            status.set_wrap(True)
+            vbox.append(status)
         box.append(vbox)
 
         # Signal bar
