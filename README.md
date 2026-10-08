@@ -45,8 +45,10 @@ sudo apt install wifi-analyzer
 ```
 
 If APT still cannot find the package, check that the repository appears in
-`apt update` and run `apt-cache policy wifi-analyzer`. The APT package may lag
-behind the latest source release.
+`apt update` and run `apt-cache policy wifi-analyzer`. The signed APT index may
+lag behind the latest release. To install the current version, download the
+`.deb` from [GitHub Releases](https://github.com/yeager/wifi-analyzer/releases/latest)
+and install the downloaded file with `sudo apt install ./wifi-analyzer_*.deb`.
 
 Source packages follow Debian policy and can be built with:
 
@@ -55,6 +57,10 @@ dpkg-buildpackage -us -uc -b
 ```
 
 ### Fedora/RPM distributions
+
+The release includes an RPM built on Fedora 44. Download it from
+[GitHub Releases](https://github.com/yeager/wifi-analyzer/releases/latest)
+and install it on Fedora 44 with `sudo dnf install ./wifi-analyzer-*.rpm`.
 
 Build the source RPM with:
 
