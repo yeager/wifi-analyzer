@@ -33,9 +33,20 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 ## Installation
 
 ### Debian/Ubuntu
+
+`wifi-analyzer` is distributed through the [Danne L10n Suite APT repository](https://github.com/yeager/debian-repo), not the default Debian or Ubuntu repositories. Add the repository before installing:
+
 ```bash
+wget -qO /tmp/yeager-repo-key.asc https://yeager.github.io/debian-repo/yeager-repo-key.asc
+sudo install -m 0644 /tmp/yeager-repo-key.asc /usr/share/keyrings/yeager-repo.asc
+echo 'deb [signed-by=/usr/share/keyrings/yeager-repo.asc] https://yeager.github.io/debian-repo ./' | sudo tee /etc/apt/sources.list.d/yeager.list
+sudo apt update
 sudo apt install wifi-analyzer
 ```
+
+If APT still cannot find the package, check that the repository appears in
+`apt update` and run `apt-cache policy wifi-analyzer`. The APT package may lag
+behind the latest source release.
 
 Source packages follow Debian policy and can be built with:
 
