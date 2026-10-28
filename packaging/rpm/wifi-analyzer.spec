@@ -15,6 +15,7 @@ BuildRequires:   libadwaita
 BuildRequires:   python3-devel
 BuildRequires:   python3-pytest
 BuildRequires:   python3dist(setuptools)
+BuildRequires:   xorg-x11-server-Xvfb
 Requires:        NetworkManager
 Requires:        iw
 Requires:        libadwaita
@@ -52,7 +53,7 @@ for mo in locale/*/LC_MESSAGES/wifi-analyzer.mo; do
 done
 
 %check
-PYTHONPATH=src pytest -q
+xvfb-run -a env PYTHONPATH=src pytest -q
 
 %files
 %license LICENSE
