@@ -10,6 +10,21 @@ permissions:
   contents: read
 
 jobs:
+  flatpak:
+    name: Flatpak build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flatpak build tools
+        run: sudo apt-get update && sudo apt-get install -y flatpak flatpak-builder
+      - name: Add Flathub runtime source
+        run: flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      - name: Build against the GNOME runtime
+        run: >-
+          flatpak-builder --user --install-deps-from=flathub
+          --disable-rofiles-fuse --force-clean --repo=repo
+          build-dir build-aux/io.github.yeager.WifiAnalyzer.json
+
   debian:
     name: Debian package
     runs-on: ubuntu-latest
