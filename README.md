@@ -13,6 +13,7 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 - Scan access points through NetworkManager D-Bus; no privileged shell command is required.
 - Filter results by network name, BSSID, channel or security type.
 - Inspect 2.4, 5 and 6 GHz bands with a channel-overlap graph.
+- Navigate the channel graph with the keyboard and hear channel selections read by screen readers.
 - Show NetworkManager's announced AP bandwidth when available, with a clearly
   marked estimate as a fallback.
 - Mark 5 GHz DFS channels. Their availability depends on the local regulatory domain.

@@ -15,8 +15,9 @@ import cairo
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -498,27 +499,87 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         self.band_filter = "2.4 GHz"
         self.zoom = 1.0
         self.on_channel_selected = None
+        self.selectable_channels = []
+        self.focused_channel = None
         self.set_draw_func(self._draw)
         self.set_content_height(220)
+        self.set_focusable(True)
+        self.set_accessible_role(Gtk.AccessibleRole.IMG)
+        instructions = _("Focus the chart and use the Left and Right Arrow keys to choose a channel. Press Enter or Space to filter the network list. Scroll to zoom.")
+        self.update_property(
+            [Gtk.AccessibleProperty.LABEL, Gtk.AccessibleProperty.DESCRIPTION],
+            [_("Channel overlap chart"), instructions],
+        )
+        keys = Gtk.EventControllerKey.new()
+        keys.connect("key-pressed", self._on_key_pressed)
+        self.add_controller(keys)
         click = Gtk.GestureClick.new()
         click.connect("pressed", self._on_click)
         self.add_controller(click)
         scroll = Gtk.EventControllerScroll.new(Gtk.EventControllerScrollFlags.VERTICAL)
         scroll.connect("scroll", self._on_scroll)
         self.add_controller(scroll)
-        self.set_tooltip_text(_("Click a channel to filter the list. Scroll to zoom the channel view."))
+        self.set_tooltip_text(instructions)
 
-    def set_networks(self, networks, band="2.4 GHz"):
+    def set_networks(self, networks, band="2.4 GHz", selectable_channels=None):
         self.networks = networks
         self.band_filter = band
+        if selectable_channels is None:
+            selectable_channels = [
+                net["channel"] for net in networks
+                if net["band"] == band and net["channel"] > 0
+            ]
+        self.selectable_channels = sorted(set(selectable_channels))
+        if self.focused_channel not in self.selectable_channels:
+            self.focused_channel = None
         self.queue_draw()
+
+    def _announce(self, message):
+        Gtk.Accessible.announce(
+            self, message, Gtk.AccessibleAnnouncementPriority.MEDIUM,
+        )
+
+    def _on_key_pressed(self, _controller, keyval, _keycode, _state):
+        if keyval in (Gdk.KEY_Left, Gdk.KEY_Right):
+            if not self.selectable_channels:
+                return False
+            direction = 1 if keyval == Gdk.KEY_Right else -1
+            if self.focused_channel in self.selectable_channels:
+                index = self.selectable_channels.index(self.focused_channel)
+            else:
+                index = -1 if direction > 0 else 0
+            index = (index + direction) % len(self.selectable_channels)
+            self.focused_channel = self.selectable_channels[index]
+            self.queue_draw()
+            self._announce(_("Channel {channel}. Press Enter to filter the network list.").format(
+                channel=self.focused_channel,
+            ))
+            return True
+
+        if keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter, Gdk.KEY_space):
+            if self.focused_channel is None or self.on_channel_selected is None:
+                return False
+            selected = self.on_channel_selected(self.focused_channel)
+            if selected is False:
+                message = _("Channel filter cleared.")
+            else:
+                message = _("Filtering access points by channel {channel}.").format(
+                    channel=self.focused_channel,
+                )
+            self._announce(message)
+            return True
+
+        return False
 
     def _channel_bounds(self):
         filtered = [n for n in self.networks if n["band"] == self.band_filter and n["channel"] > 0]
         if self.band_filter == "2.4 GHz":
             low, high = 0, 14
         else:
-            channels = sorted({n["channel"] for n in filtered})
+            channels = sorted(
+                {n["channel"] for n in filtered}
+                | set(self.selectable_channels)
+            )
             low, high = (min(channels) - 4, max(channels) + 4) if channels else (0, 1)
         center = (low + high) / 2
         half_span = (high - low) / (2 * self.zoom)
@@ -656,6 +717,17 @@ class ChannelDrawingArea(Gtk.DrawingArea):
             tx = ch_to_x(center)
             cr.move_to(tx - len(label) * 2.5, peak_y - 6)
             cr.show_text(label)
+
+        if self.focused_channel is not None:
+            x = ch_to_x(self.focused_channel)
+            if margin_left <= x <= width - margin_right:
+                cr.set_source_rgb(1.0, 0.85, 0.1)
+                cr.set_line_width(3 * font_scale)
+                cr.set_dash([5 * font_scale, 3 * font_scale])
+                cr.move_to(x, margin_top)
+                cr.line_to(x, height - margin_bottom)
+                cr.stroke()
+                cr.set_dash([])
 
 
 class NetworkRow(Gtk.ListBoxRow):
@@ -911,6 +983,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         """Filter visible APs by a clicked channel; click it again to clear."""
         self.selected_channel = None if self.selected_channel == channel else channel
         self._update_ui()
+        return self.selected_channel == channel
 
     def _on_network_selected(self, _listbox, row):
         if not row:
@@ -1031,7 +1104,11 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             self.listbox.append(NetworkRow(net))
         self.visible_networks = filtered
         # Update chart
-        self.channel_chart.set_networks(filtered, band)
+        selectable_channels = [
+            net["channel"] for net in self.networks
+            if net["band"] == band and net["channel"] > 0
+        ]
+        self.channel_chart.set_networks(filtered, band, selectable_channels)
         recommendations = recommend_channels(self.networks, band)
         if recommendations:
             channel, score = recommendations[0]
