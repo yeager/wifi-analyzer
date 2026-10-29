@@ -69,20 +69,27 @@ def main():
     (config_dir / "welcome.json").write_text(
         json.dumps({"welcome_shown": True}), encoding="utf-8"
     )
-    # The demo must never issue a real scan; populate its UI after the window
+    # The demo must never issue a real scan; populate the UI after its window
     # has been presented so GTK has a mapped surface before the screenshot.
     app.WifiAnalyzerWindow._scan = lambda _window: None
 
-    def activate_demo(application):
-        window = application.get_active_window()
-        if not window:
-            window = app.WifiAnalyzerWindow(application)
-        application._wlc_settings = {"welcome_shown": True}
-        window.present()
-        window._on_scan_done(DEMO_NETWORKS)
+    class DemoApp(app.WifiAnalyzerApp):
+        def do_activate(self):
+            window = self.get_active_window()
+            if not window:
+                window = app.WifiAnalyzerWindow(self)
+            self._wlc_settings = {"welcome_shown": True}
+            window.present()
+            GLib.idle_add(self._populate_demo_networks, window)
 
-    app.WifiAnalyzerApp.do_activate = activate_demo
-    application = app.WifiAnalyzerApp()
+        @staticmethod
+        def _populate_demo_networks(window):
+            window.networks = [dict(network) for network in DEMO_NETWORKS]
+            window._update_ui()
+            window._set_status("Found 3 networks")
+            return GLib.SOURCE_REMOVE
+
+    application = DemoApp()
     result = {"status": 0}
 
     def capture(_app):

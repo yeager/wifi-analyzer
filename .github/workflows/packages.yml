@@ -15,6 +15,7 @@ jobs:
     name: Capture the demo screenshot
     runs-on: ubuntu-latest
     container: debian:stable
+    timeout-minutes: 5
     steps:
       - name: Install GTK screenshot tools
         run: |
@@ -34,7 +35,7 @@ jobs:
         run: |
           mkdir -p "$XDG_CONFIG_HOME/wifi-analyzer" "$XDG_DATA_HOME" screenshots
           printf '{"welcome_shown": true}\n' > "$XDG_CONFIG_HOME/wifi-analyzer/welcome.json"
-          xvfb-run -a -s '-screen 0 1000x800x24' dbus-run-session -- \
+          timeout 30s xvfb-run -a -s '-screen 0 1000x800x24' dbus-run-session -- \
             python3 scripts/capture_demo_screenshot.py screenshots/main.png
       - uses: actions/upload-artifact@v4
         with:
