@@ -189,8 +189,8 @@ def network_matches_query(network, query):
     return query in haystack
 
 
-def recommend_channels(networks, band):
-    """Rank channels by observed overlap; lower scores are less congested."""
+def recommend_channels(networks, band, regulatory_ranges=()):
+    """Rank channels by observed overlap, excluding out-of-range channels."""
     candidates_by_band = {
         "2.4 GHz": [1, 6, 11],
         "5 GHz": sorted(CHANNEL_FREQ_5),
@@ -201,6 +201,17 @@ def recommend_channels(networks, band):
     candidates = candidates_by_band.get(band, [])
     scored = []
     for candidate in candidates:
+        if regulatory_ranges:
+            if band == "2.4 GHz":
+                frequency = CHANNEL_FREQ_24.get(candidate)
+            elif band == "5 GHz":
+                frequency = CHANNEL_FREQ_5.get(candidate)
+            else:
+                frequency = 5950 + candidate * 5
+            if frequency is None or not any(
+                start <= frequency <= end for start, end, _flags in regulatory_ranges
+            ):
+                continue
         score = 0.0
         for net in networks:
             if net.get("band") != band or not net.get("channel"):
@@ -1178,11 +1189,12 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self._choose_export_path(_("Export anonymized JSON"), "wifi-analyzer-anonymous.json", write)
 
     def _export_report(self, *_args):
-        recommendations = {}
-        for band in ("2.4 GHz", "5 GHz", "6 GHz"):
-            ranked = recommend_channels(self.networks, band)
-            recommendations[band] = ranked[0] if ranked else (None, None)
         def write(path):
+            regulatory_ranges = local_regulatory_ranges()
+            recommendations = {}
+            for band in ("2.4 GHz", "5 GHz", "6 GHz"):
+                ranked = recommend_channels(self.networks, band, regulatory_ranges)
+                recommendations[band] = ranked[0] if ranked else (None, None)
             export_html_report([net for net in getattr(self, "visible_networks", self.networks) if net.get("bssid")], recommendations, path)
             self._set_status(_("Exported diagnostic report to {path}").format(path=path))
         self._choose_export_path(_("Export diagnostic report"), "wifi-analyzer-report.html", write)

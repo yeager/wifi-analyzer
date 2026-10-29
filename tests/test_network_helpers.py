@@ -79,6 +79,18 @@ def test_channel_recommendation_avoids_the_strongest_overlap():
     assert recommend_channels([], "6 GHz")
 
 
+def test_channel_recommendations_respect_detected_regulatory_ranges():
+    ranges = [
+        (2437, 2437, ""),  # 2.4 GHz channel 6
+        (5180, 5200, ""),  # 5 GHz channels 36 and 40
+        (5955, 5975, ""),  # 6 GHz channels 1 and 5
+    ]
+
+    assert [channel for channel, _score in recommend_channels([], "2.4 GHz", ranges)] == [6]
+    assert [channel for channel, _score in recommend_channels([], "5 GHz", ranges)] == [36, 40]
+    assert [channel for channel, _score in recommend_channels([], "6 GHz", ranges)] == [1, 5]
+
+
 def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     save_history_snapshot([{"ssid": "Office", "bssid": "aa:bb", "band": "5 GHz", "channel": 36,
