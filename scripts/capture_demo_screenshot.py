@@ -40,6 +40,16 @@ def capture_and_quit(_app):
     if not window or len(window.visible_networks) != len(DEMO_NETWORKS):
         count = len(window.visible_networks) if window else 0
         raise RuntimeError(f"Expected 3 visible demo networks, found {count}")
+    window_ids = subprocess.check_output(
+        ["xdotool", "search", "--onlyvisible", "--name", "WiFi Analyzer"],
+        text=True,
+    ).splitlines()
+    if not window_ids:
+        raise RuntimeError("Could not find the visible WiFi Analyzer X11 window")
+    subprocess.run(["xdotool", "windowfocus", "--sync", window_ids[0]], check=True)
+    focused_window = subprocess.check_output(["xdotool", "getwindowfocus"], text=True).strip()
+    if focused_window != window_ids[0]:
+        raise RuntimeError("Could not focus the WiFi Analyzer X11 window")
     target = Path(sys.argv[1])
     target.parent.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(["scrot", "-u", str(target)], check=False)
