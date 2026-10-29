@@ -8,6 +8,10 @@ Wi-Fi signal analyzer, channel planner and local connection diagnostics tool.
 
 Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeager/debian-repo).
 
+![WiFi Analyzer displaying fictional example networks and channel overlap](screenshots/main.png)
+
+*Example networks shown; the app displays scan results from the local device.*
+
 ## Features
 
 - Scan access points through NetworkManager D-Bus; no privileged shell command is required.

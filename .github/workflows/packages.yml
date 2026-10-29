@@ -11,6 +11,34 @@ permissions:
   contents: read
 
 jobs:
+  screenshot:
+    name: Capture the demo screenshot
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GTK screenshot tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
+            gir1.2-adw-1 xvfb dbus-x11 scrot
+      - name: Capture the app with fictional access points
+        env:
+          GSK_RENDERER: cairo
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
+          PYTHONPATH: src
+          XDG_CONFIG_HOME: ${{ runner.temp }}/wifi-analyzer-demo/config
+          XDG_DATA_HOME: ${{ runner.temp }}/wifi-analyzer-demo/data
+        run: |
+          mkdir -p "$XDG_CONFIG_HOME/wifi-analyzer" "$XDG_DATA_HOME" screenshots
+          printf '{"welcome_shown": true}\n' > "$XDG_CONFIG_HOME/wifi-analyzer/welcome.json"
+          xvfb-run -a -s '-screen 0 1000x800x24' dbus-run-session -- \
+            python3 scripts/capture_demo_screenshot.py screenshots/main.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wifi-analyzer-demo-screenshot
+          path: screenshots/main.png
+
   flatpak:
     name: Flatpak build
     runs-on: ubuntu-24.04
@@ -31,6 +59,8 @@ jobs:
         run: >-
           flatpak-builder --user --install-deps-from=flathub
           --disable-rofiles-fuse --force-clean --repo=repo
+          --compose-url-policy=full
+          --mirror-screenshots-url=https://dl.flathub.org/media
           build-dir flatpak/io.github.yeager.WifiAnalyzer.json
       - name: Check built Flatpak repository lint (advisory)
         continue-on-error: true
