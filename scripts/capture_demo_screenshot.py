@@ -36,6 +36,10 @@ DEMO_NETWORKS = [
 
 
 def capture_and_quit(_app):
+    window = _app.get_active_window()
+    if not window or len(window.visible_networks) != len(DEMO_NETWORKS):
+        count = len(window.visible_networks) if window else 0
+        raise RuntimeError(f"Expected 3 visible demo networks, found {count}")
     target = Path(sys.argv[1])
     target.parent.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(["scrot", "-u", str(target)], check=False)
@@ -53,6 +57,7 @@ def main():
         json.dumps({"welcome_shown": True}), encoding="utf-8"
     )
     app.scan_networks_dbus = lambda: DEMO_NETWORKS
+    app.WifiAnalyzerWindow._scan = lambda window: window._on_scan_done(DEMO_NETWORKS)
     original_activate = app.WifiAnalyzerApp.do_activate
 
     def activate_fullscreen(application):
