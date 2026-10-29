@@ -13,14 +13,16 @@ permissions:
 jobs:
   screenshot:
     name: Capture the demo screenshot
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    container: debian:stable
     steps:
-      - uses: actions/checkout@v4
       - name: Install GTK screenshot tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
-            gir1.2-adw-1 xvfb dbus-x11 scrot
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y git ca-certificates \
+            python3-gi python3-gi-cairo python3-cairo \
+            gir1.2-gtk-4.0 gir1.2-adw-1 xvfb dbus-x11 scrot
+      - uses: actions/checkout@v4
       - name: Capture the app with fictional access points
         env:
           GSK_RENDERER: cairo
@@ -59,8 +61,6 @@ jobs:
         run: >-
           flatpak-builder --user --install-deps-from=flathub
           --disable-rofiles-fuse --force-clean --repo=repo
-          --compose-url-policy=full
-          --mirror-screenshots-url=https://dl.flathub.org/media
           build-dir flatpak/io.github.yeager.WifiAnalyzer.json
       - name: Check built Flatpak repository lint (advisory)
         continue-on-error: true
