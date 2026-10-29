@@ -34,7 +34,11 @@ def test_flatpak_manifest_rejects_a_source_tag_newer_than_the_project(tmp_path):
 
     manifest_path = tmp_path / "flatpak/io.github.yeager.wifi-analyzer.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest["modules"][0]["sources"][0]["tag"] = "v0.1.25"
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    major, minor, patch = map(int, project["project"]["version"].split("."))
+    manifest["modules"][0]["sources"][0]["tag"] = (
+        f"v{major}.{minor}.{patch + 1}"
+    )
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     _app_id, _version, errors = validate(tmp_path)
@@ -54,8 +58,10 @@ def test_flatpak_manifest_rejects_a_non_semantic_project_version(tmp_path):
         shutil.copy2(ROOT / relative_path, destination)
 
     project_path = tmp_path / "pyproject.toml"
-    project = project_path.read_text(encoding="utf-8").replace(
-        'version = "0.1.24"', 'version = "0.1.24+local"'
+    project_text = project_path.read_text(encoding="utf-8")
+    version = tomllib.loads(project_text)["project"]["version"]
+    project = project_text.replace(
+        f'version = "{version}"', f'version = "{version}+local"'
     )
     project_path.write_text(project, encoding="utf-8")
 

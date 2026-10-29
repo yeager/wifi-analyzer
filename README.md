@@ -21,7 +21,7 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 - Show NetworkManager's announced AP bandwidth when available, with a clearly
   marked estimate as a fallback.
 - Mark 5 GHz DFS channels. Their availability depends on the local regulatory domain.
-- Recommend less congested channels from observed signal overlap.
+- Estimate channel overlap from access points visible in a scan. The score does not measure client traffic or hidden networks.
 - Sort results by signal, channel, or security and group repeated SSIDs by access-point count.
 - Export visible, filtered results as CSV, JSON, anonymized JSON or an HTML
   diagnostic report, with a user-selected file name and destination.

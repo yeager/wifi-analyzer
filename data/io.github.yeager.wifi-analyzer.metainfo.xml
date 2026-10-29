@@ -25,6 +25,9 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.25" date="2026-10-29">
+      <description><p>Clarify that channel overlap scores are scan-based estimates and do not measure client traffic or hidden networks.</p></description>
+    </release>
     <release version="0.1.24" date="2026-10-29">
       <description><p>Prevent formula injection from untrusted network names in CSV exports.</p></description>
     </release>

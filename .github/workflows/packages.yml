@@ -177,3 +177,29 @@ jobs:
         with:
           name: wifi-analyzer-rpm
           path: ~/rpmbuild/RPMS/**/*.rpm
+
+  release:
+    if: github.ref_type == 'tag'
+    name: Publish GitHub release
+    runs-on: ubuntu-24.04
+    needs: [screenshot, debian, rpm]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: wifi-analyzer-deb
+          path: artifacts/deb
+      - uses: actions/download-artifact@v7
+        with:
+          name: wifi-analyzer-rpm
+          path: artifacts/rpm
+      - name: Create release with Debian and RPM packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME"
+          --verify-tag
+          --generate-notes
+          --title "WiFi Analyzer $GITHUB_REF_NAME"
+          artifacts/deb/*.deb artifacts/rpm/*.rpm

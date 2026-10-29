@@ -235,6 +235,22 @@ def recommend_channels(networks, band, regulatory_ranges=()):
     return sorted(scored, key=lambda item: (item[1], item[0]))
 
 
+def channel_recommendation_text(recommendations):
+    """Explain the scan-based estimate without implying measured airtime."""
+    if not recommendations:
+        return (
+            _("No channel recommendation available"),
+            _("Scan this band to compare nearby access points."),
+        )
+    channel, score = recommendations[0]
+    return (
+        _("Lowest estimated overlap in this scan: channel {channel} (score {score})").format(
+            channel=channel, score=score,
+        ),
+        _("Lower scores mean less estimated overlap. Only access points found in this scan count; client traffic and hidden networks are not measured."),
+    )
+
+
 def interference_contributors(network, networks):
     """Explain which observed APs overlap the selected AP most."""
     contributors = []
@@ -993,11 +1009,16 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         filter_box.append(self.profile_entry)
         main_box.append(filter_box)
 
+        recommendation_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        recommendation_box.set_margin_start(12); recommendation_box.set_margin_end(12)
+        recommendation_box.set_margin_top(6)
         self.recommendation = Gtk.Label(xalign=0)
-        self.recommendation.set_margin_start(12); self.recommendation.set_margin_end(12)
-        self.recommendation.set_margin_top(6)
         self.recommendation.add_css_class("dim-label")
-        main_box.append(self.recommendation)
+        self.recommendation_detail = Gtk.Label(xalign=0, wrap=True)
+        self.recommendation_detail.add_css_class("dim-label")
+        recommendation_box.append(self.recommendation)
+        recommendation_box.append(self.recommendation_detail)
+        main_box.append(recommendation_box)
 
         # Channel overlap visualization
         frame = Gtk.Frame()
@@ -1182,12 +1203,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         ]
         self.channel_chart.set_networks(filtered, band, selectable_channels)
         recommendations = recommend_channels(self.networks, band)
-        if recommendations:
-            channel, score = recommendations[0]
-            self.recommendation.set_label(_("Least congested channel: {channel} (overlap score {score})").format(
-                channel=channel, score=score))
-        else:
-            self.recommendation.set_label(_("No channel recommendation available"))
+        recommendation, explanation = channel_recommendation_text(recommendations)
+        self.recommendation.set_label(recommendation)
+        self.recommendation_detail.set_label(explanation)
 
     def _export_rows(self):
         fields = ("ssid", "bssid", "band", "freq", "channel", "width_mhz", "signal_pct", "dbm", "security", "channel_status", "last_seen")

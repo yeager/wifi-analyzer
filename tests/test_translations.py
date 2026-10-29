@@ -1,4 +1,6 @@
+import gettext
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -20,6 +22,36 @@ msgstr ""
 
 def test_current_swedish_catalogue_is_complete():
     validate_swedish_catalogue(ROOT / "po" / "sv.po")
+
+
+def test_swedish_channel_recommendation_explains_score_limits(tmp_path):
+    compiled = tmp_path / "wifi-analyzer.mo"
+    subprocess.run(
+        [
+            "msgfmt", "--check", "--check-format", "-o", str(compiled),
+            str(ROOT / "po" / "sv.po"),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    with compiled.open("rb") as catalogue_file:
+        translated = gettext.GNUTranslations(catalogue_file)
+
+    assert translated.gettext("Scan this band to compare nearby access points.") == (
+        "Sök efter nätverk på det här bandet för att jämföra dem."
+    )
+    assert translated.gettext(
+        "Lowest estimated overlap in this scan: channel {channel} (score {score})"
+    ).format(channel=11, score=43.0) == (
+        "Lägst beräknad överlappning i den här skanningen: kanal 11 (poäng 43.0)"
+    )
+    assert translated.gettext(
+        "Lower scores mean less estimated overlap. Only access points found in this scan count; client traffic and hidden networks are not measured."
+    ) == (
+        "Lägre poäng betyder mindre beräknad överlappning. Bedömningen räknar bara "
+        "nätverk som hittas vid skanningen och tar inte med trafik eller dolda nätverk."
+    )
 
 
 @pytest.mark.parametrize("project_id", ["", "PACKAGE VERSION"])

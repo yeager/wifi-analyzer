@@ -1,3 +1,10 @@
+wifi-analyzer (0.1.25) unstable; urgency=medium
+
+  * Clarify the limits of scan-based channel overlap recommendations.
+  * Add Swedish guidance and verify the recommendation in the demo screenshot.
+
+ -- Daniel Nylander <po@danielnylander.se>  Thu, 29 Oct 2026 20:08:05 +0100
+
 wifi-analyzer (0.1.24) unstable; urgency=medium
 
   * Escape formula-like untrusted text in CSV exports.

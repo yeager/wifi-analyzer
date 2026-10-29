@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wifi-analyzer\n"
 "Report-Msgid-Bugs-To: https://github.com/yeager/wifi-analyzer/issues\n"
-"POT-Creation-Date: 2026-10-29 01:27+0100\n"
+"POT-Creation-Date: 2026-10-29 19:58+0100\n"
 "PO-Revision-Date: 2026-10-29 01:27+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>, 2026\n"
 "Language-Team: Swedish\n"
@@ -292,8 +292,12 @@ msgid "Wi-Fi scan failed"
 msgstr "Det gick inte att söka efter Wi-Fi-nätverk"
 
 #: src/wifi_analyzer/app.py:284
-msgid "Check that NetworkManager is running and your Wi-Fi adapter is enabled. For Flatpak, make sure the app can access NetworkManager."
-msgstr "Kontrollera att NetworkManager är igång och att wifi-adaptern är på. I Flatpak måste appen få ansluta till NetworkManager."
+msgid ""
+"Check that NetworkManager is running and your Wi-Fi adapter is enabled. For "
+"Flatpak, make sure the app can access NetworkManager."
+msgstr ""
+"Kontrollera att NetworkManager är igång och att wifi-adaptern är på. I "
+"Flatpak måste appen få ansluta till NetworkManager."
 
 #: src/wifi_analyzer/app.py:1070
 #, python-brace-format
@@ -309,15 +313,28 @@ msgstr "Wi-Fi-nätverken har ändrats"
 msgid "{new} new, {gone} gone, {changed} changed access points"
 msgstr "{new} nya, {gone} försvunna, {changed} ändrade åtkomstpunkter"
 
-#: src/wifi_analyzer/app.py:1125
+#: src/wifi_analyzer/app.py:247
 #, python-brace-format
-msgid "Least congested channel: {channel} (overlap score {score})"
+msgid ""
+"Lowest estimated overlap in this scan: channel {channel} (score {score})"
 msgstr ""
-"Kanal med minst beräknad överlappning: {channel} (överlappningspoäng {score})"
+"Lägst beräknad överlappning i den här skanningen: kanal {channel} (poäng {score})"
 
-#: src/wifi_analyzer/app.py:1128
+#: src/wifi_analyzer/app.py:242
 msgid "No channel recommendation available"
 msgstr "Ingen kanal kunde rekommenderas"
+
+#: src/wifi_analyzer/app.py:243
+msgid "Scan this band to compare nearby access points."
+msgstr "Sök efter nätverk på det här bandet för att jämföra dem."
+
+#: src/wifi_analyzer/app.py:250
+msgid ""
+"Lower scores mean less estimated overlap. Only access points found in this "
+"scan count; client traffic and hidden networks are not measured."
+msgstr ""
+"Lägre poäng betyder mindre beräknad överlappning. Bedömningen räknar bara "
+"nätverk som hittas vid skanningen och tar inte med trafik eller dolda nätverk."
 
 #: src/wifi_analyzer/app.py:1137
 msgid "Export"

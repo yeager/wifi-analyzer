@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wifi-analyzer 0.1.22\n"
 "Report-Msgid-Bugs-To: https://github.com/yeager/wifi-analyzer/issues\n"
-"POT-Creation-Date: 2026-10-29 01:27+0100\n"
+"POT-Creation-Date: 2026-10-29 19:58+0100\n"
 "PO-Revision-Date: 2026-10-26 20:42+0100\n"
 "Last-Translator: Benjamin Weis <benjamin.weis@gmx.com>\n"
 "Language-Team: none\n"
@@ -34,32 +34,48 @@ msgid "No Wi-Fi device found"
 msgstr "Kein WLAN-Gerät gefunden"
 
 #: src/wifi_analyzer/app.py:259
-msgid "Enable Wi-Fi in system settings, disable airplane mode, and check the adapter driver."
-msgstr "Aktiviere WLAN in den Systemeinstellungen, deaktiviere den Flugmodus und überprüfe den Adaptertreiber."
+msgid ""
+"Enable Wi-Fi in system settings, disable airplane mode, and check the "
+"adapter driver."
+msgstr ""
+"Aktiviere WLAN in den Systemeinstellungen, deaktiviere den Flugmodus und "
+"überprüfe den Adaptertreiber."
 
 #: src/wifi_analyzer/app.py:262
 msgid "Wi-Fi signal is weak"
 msgstr "WLAN-Signal ist schwach"
 
 #: src/wifi_analyzer/app.py:263
-msgid "Move closer to the access point, reduce obstructions, or select a less congested channel."
-msgstr "Gehe näher an den Zugangspunkt heran, beseitige Hindernisse oder wähle einen weniger ausgelasteten Kanal aus."
+msgid ""
+"Move closer to the access point, reduce obstructions, or select a less "
+"congested channel."
+msgstr ""
+"Gehe näher an den Zugangspunkt heran, beseitige Hindernisse oder wähle einen "
+"weniger ausgelasteten Kanal aus."
 
 #: src/wifi_analyzer/app.py:266
 msgid "Wi-Fi connection was lost"
 msgstr "WLAN-Verbindung wurde unterbrochen"
 
 #: src/wifi_analyzer/app.py:267
-msgid "Check the access point, reconnect from system settings, and inspect the gateway and DNS diagnostics."
-msgstr "Überprüfe den Zugangspunkt, stelle die Verbindung über die Systemeinstellungen erneut her und untersuche die Gateway- und DNS-Diagnosen."
+msgid ""
+"Check the access point, reconnect from system settings, and inspect the "
+"gateway and DNS diagnostics."
+msgstr ""
+"Überprüfe den Zugangspunkt, stelle die Verbindung über die "
+"Systemeinstellungen erneut her und untersuche die Gateway- und DNS-Diagnosen."
 
 #: src/wifi_analyzer/app.py:269
 msgid "Wi-Fi access point changed"
 msgstr "WLAN-Zugangspunkt geändert"
 
 #: src/wifi_analyzer/app.py:270
-msgid "Roaming can be normal. If it causes interruptions, compare signal history and access-point overlap."
-msgstr "Roaming kann ganz normal sein. Sollte es zu Unterbrechungen kommen, vergleiche den Signalverlauf und die Überlappung der Zugangspunkte."
+msgid ""
+"Roaming can be normal. If it causes interruptions, compare signal history "
+"and access-point overlap."
+msgstr ""
+"Roaming kann ganz normal sein. Sollte es zu Unterbrechungen kommen, "
+"vergleiche den Signalverlauf und die Überlappung der Zugangspunkte."
 
 #: src/wifi_analyzer/app.py:398
 msgid "Error: no WiFi device found"
@@ -71,7 +87,10 @@ msgid "<Hidden>"
 msgstr "<Versteckt>"
 
 #: src/wifi_analyzer/app.py:508
-msgid "Focus the chart and use the Left and Right Arrow keys to choose a channel. Press Home or End to jump to the first or last channel. Press Enter or Space to filter the network list. Scroll to zoom."
+msgid ""
+"Focus the chart and use the Left and Right Arrow keys to choose a channel. "
+"Press Home or End to jump to the first or last channel. Press Enter or Space "
+"to filter the network list. Scroll to zoom."
 msgstr ""
 
 #: src/wifi_analyzer/app.py:511
@@ -110,7 +129,9 @@ msgstr " · Verbunden"
 
 #: src/wifi_analyzer/app.py:772
 #, python-brace-format
-msgid "Ch {channel} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · {bssid}"
+msgid ""
+"Ch {channel} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · "
+"{bssid}"
 msgstr ""
 
 #: src/wifi_analyzer/app.py:774 src/wifi_analyzer/app.py:915
@@ -180,7 +201,9 @@ msgstr "Mindestsignal"
 
 #: src/wifi_analyzer/app.py:908
 msgid "Only show access points at or above this estimated dBm value"
-msgstr "Nur Zugangspunkte anzeigen, die diesen geschätzten dBm-Wert erreichen oder überschreiten"
+msgstr ""
+"Nur Zugangspunkte anzeigen, die diesen geschätzten dBm-Wert erreichen oder "
+"überschreiten"
 
 #: src/wifi_analyzer/app.py:912 src/wifi_analyzer/app.py:925
 #: src/wifi_analyzer/app.py:1109
@@ -264,7 +287,9 @@ msgid "Wi-Fi scan failed"
 msgstr ""
 
 #: src/wifi_analyzer/app.py:284
-msgid "Check that NetworkManager is running and your Wi-Fi adapter is enabled. For Flatpak, make sure the app can access NetworkManager."
+msgid ""
+"Check that NetworkManager is running and your Wi-Fi adapter is enabled. For "
+"Flatpak, make sure the app can access NetworkManager."
 msgstr ""
 
 #: src/wifi_analyzer/app.py:1070
@@ -281,14 +306,26 @@ msgstr "WLAN-Scan geändert"
 msgid "{new} new, {gone} gone, {changed} changed access points"
 msgstr "{new} neue, {gone} weggefallene, {changed} geänderte Zugangspunkte"
 
-#: src/wifi_analyzer/app.py:1125
-#, python-brace-format
-msgid "Least congested channel: {channel} (overlap score {score})"
-msgstr "Kanal mit der geringsten Überlastung: {channel} (Überlappungswert {score})"
+#: src/wifi_analyzer/app.py:247
+#, fuzzy, python-brace-format
+msgid ""
+"Lowest estimated overlap in this scan: channel {channel} (score {score})"
+msgstr ""
+"Kanal mit der geringsten Überlastung: {channel} (Überlappungswert {score})"
 
-#: src/wifi_analyzer/app.py:1128
+#: src/wifi_analyzer/app.py:242
 msgid "No channel recommendation available"
 msgstr "Keine Kanalempfehlung verfügbar"
+
+#: src/wifi_analyzer/app.py:243
+msgid "Scan this band to compare nearby access points."
+msgstr ""
+
+#: src/wifi_analyzer/app.py:250
+msgid ""
+"Lower scores mean less estimated overlap. Only access points found in this "
+"scan count; client traffic and hidden networks are not measured."
+msgstr ""
 
 #: src/wifi_analyzer/app.py:1137
 msgid "Export"
@@ -392,8 +429,12 @@ msgstr "Erste Schritte"
 #~ msgstr " · vor {seconds}s gesehen"
 
 #, python-brace-format
-#~ msgid "Ch {channel} · {band} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · {bssid}{seen}{dfs}"
-#~ msgstr "Kan. {channel} · {band} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · {bssid}{seen}{dfs}"
+#~ msgid ""
+#~ "Ch {channel} · {band} · {frequency} MHz{width}{active} · {dbm} dBm · "
+#~ "{security} · {bssid}{seen}{dfs}"
+#~ msgstr ""
+#~ "Kan. {channel} · {band} · {frequency} MHz{width}{active} · {dbm} dBm · "
+#~ "{security} · {bssid}{seen}{dfs}"
 
 #, python-brace-format
 #~ msgid "Gateway: {gateway} · DNS: {dns}"

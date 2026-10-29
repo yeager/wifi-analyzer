@@ -7,6 +7,7 @@ from wifi_analyzer.app import (
     band_for_frequency,
     channel_status,
     channel_width_mhz,
+    channel_recommendation_text,
     freq_to_channel,
     network_matches_query,
     parse_regulatory_ranges,
@@ -79,6 +80,22 @@ def test_channel_recommendation_avoids_the_strongest_overlap():
     assert recommend_channels([], "2.4 GHz") == []
     assert recommend_channels([], "5 GHz") == []
     assert recommend_channels([], "6 GHz") == []
+
+
+def test_channel_recommendation_explains_the_limits_of_the_scan_score():
+    summary, explanation = channel_recommendation_text([(6, 0.0)])
+
+    assert summary == "Lowest estimated overlap in this scan: channel 6 (score 0.0)"
+    assert "Lower scores mean less estimated overlap" in explanation
+    assert "Only access points found in this scan count" in explanation
+    assert "client traffic and hidden networks are not measured" in explanation
+
+
+def test_missing_channel_recommendation_suggests_a_scan():
+    summary, explanation = channel_recommendation_text([])
+
+    assert summary == "No channel recommendation available"
+    assert explanation == "Scan this band to compare nearby access points."
 
 
 def test_channel_recommendations_require_a_complete_scan_with_band_observations():

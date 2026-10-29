@@ -74,6 +74,8 @@ def run_demo_app():
             ready.write_text(json.dumps({
                 "visible_networks": len(window.visible_networks),
                 "status": window.statusbar.get_label(),
+                "recommendation": window.recommendation.get_label(),
+                "recommendation_detail": window.recommendation_detail.get_label(),
             }), encoding="utf-8")
             return GLib.SOURCE_REMOVE
 
@@ -105,6 +107,13 @@ def main():
         if (
             state.get("visible_networks") != len(DEMO_NETWORKS)
             or "Found 3 networks" not in state.get("status", "")
+            or not state.get("recommendation", "").startswith(
+                "Lowest estimated overlap in this scan: channel "
+            )
+            or state.get("recommendation_detail") != (
+                "Lower scores mean less estimated overlap. Only access points found "
+                "in this scan count; client traffic and hidden networks are not measured."
+            )
         ):
             raise RuntimeError(f"Demo app reported unexpected UI state: {state}")
         time.sleep(1)
