@@ -69,7 +69,11 @@ def run_demo_app():
                 window.get_application().quit()
                 return GLib.SOURCE_REMOVE
             window._set_status("Found 3 networks")
-            Path(os.environ["WIFI_ANALYZER_DEMO_READY"]).write_text("ready", encoding="utf-8")
+            ready = Path(os.environ["WIFI_ANALYZER_DEMO_READY"])
+            ready.write_text(json.dumps({
+                "visible_networks": len(window.visible_networks),
+                "status": window.statusbar.get_label(),
+            }), encoding="utf-8")
             return GLib.SOURCE_REMOVE
 
     application = DemoApp()
@@ -83,9 +87,10 @@ def main():
 
     target = Path(sys.argv[1])
     target.parent.mkdir(parents=True, exist_ok=True)
+    ready = Path(os.environ["WIFI_ANALYZER_DEMO_READY"])
+    ready.unlink(missing_ok=True)
     server = subprocess.Popen([sys.executable, __file__, "--serve"])
     try:
-        ready = Path(os.environ["WIFI_ANALYZER_DEMO_READY"])
         for _ in range(120):
             if server.poll() is not None:
                 raise RuntimeError("Demo app exited before its screenshot was captured")
@@ -94,6 +99,12 @@ def main():
             time.sleep(0.25)
         else:
             raise RuntimeError("Demo app did not display the fictional networks in time")
+        state = json.loads(ready.read_text(encoding="utf-8"))
+        if (
+            state.get("visible_networks") != len(DEMO_NETWORKS)
+            or "Found 3 networks" not in state.get("status", "")
+        ):
+            raise RuntimeError(f"Demo app reported unexpected UI state: {state}")
         time.sleep(1)
         result = subprocess.run(["scrot", "-u", str(target)], check=False, timeout=5)
         if result.returncode or not target.is_file() or target.stat().st_size < 10_000:
