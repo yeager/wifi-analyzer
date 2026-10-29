@@ -76,8 +76,17 @@ def test_network_search_matches_displayed_fields_case_insensitively():
 def test_channel_recommendation_avoids_the_strongest_overlap():
     networks = [{"band": "2.4 GHz", "channel": 1, "signal_pct": 90, "width_mhz": 20}]
     assert recommend_channels(networks, "2.4 GHz")[0][0] in (6, 11)
-    assert recommend_channels([], "5 GHz")
-    assert recommend_channels([], "6 GHz")
+    assert recommend_channels([], "2.4 GHz") == []
+    assert recommend_channels([], "5 GHz") == []
+    assert recommend_channels([], "6 GHz") == []
+
+
+def test_channel_recommendations_require_a_complete_scan_with_band_observations():
+    network = {"band": "5 GHz", "channel": 36, "signal_pct": 75, "width_mhz": 20}
+    assert recommend_channels([network], "2.4 GHz") == []
+    assert recommend_channels([network, {"error_code": "scan-failed"}], "5 GHz") == []
+    assert recommend_channels([network, {"error_code": "no-device"}], "5 GHz") == []
+    assert recommend_channels([network], "5 GHz")
 
 
 def test_channel_recommendations_respect_detected_regulatory_ranges():
@@ -87,9 +96,14 @@ def test_channel_recommendations_respect_detected_regulatory_ranges():
         (5955, 5975, ""),  # 6 GHz channels 1 and 5
     ]
 
-    assert [channel for channel, _score in recommend_channels([], "2.4 GHz", ranges)] == [6]
-    assert [channel for channel, _score in recommend_channels([], "5 GHz", ranges)] == [36, 40]
-    assert [channel for channel, _score in recommend_channels([], "6 GHz", ranges)] == [1, 5]
+    networks = [
+        {"band": "2.4 GHz", "channel": 6, "signal_pct": 30, "width_mhz": 20},
+        {"band": "5 GHz", "channel": 36, "signal_pct": 30, "width_mhz": 20},
+        {"band": "6 GHz", "channel": 1, "signal_pct": 30, "width_mhz": 20},
+    ]
+    assert {channel for channel, _score in recommend_channels(networks, "2.4 GHz", ranges)} == {6}
+    assert {channel for channel, _score in recommend_channels(networks, "5 GHz", ranges)} == {36, 40}
+    assert {channel for channel, _score in recommend_channels(networks, "6 GHz", ranges)} == {1, 5}
 
 
 def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):

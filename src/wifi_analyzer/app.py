@@ -190,7 +190,20 @@ def network_matches_query(network, query):
 
 
 def recommend_channels(networks, band, regulatory_ranges=()):
-    """Rank channels by observed overlap, excluding out-of-range channels."""
+    """Rank channels by observed overlap, excluding out-of-range channels.
+
+    Do not manufacture a recommendation when this scan failed or contains no
+    access points in the selected band: there is no evidence to rank against.
+    """
+    if not networks or any(net.get("error_code") for net in networks):
+        return []
+    observed = [
+        net for net in networks
+        if net.get("band") == band and net.get("channel", 0) > 0
+    ]
+    if not observed:
+        return []
+
     candidates_by_band = {
         "2.4 GHz": [1, 6, 11],
         "5 GHz": sorted(CHANNEL_FREQ_5),
@@ -213,9 +226,7 @@ def recommend_channels(networks, band, regulatory_ranges=()):
             ):
                 continue
         score = 0.0
-        for net in networks:
-            if net.get("band") != band or not net.get("channel"):
-                continue
+        for net in observed:
             distance = abs(candidate - net["channel"])
             span = max(net.get("width_mhz", 20) / 5, 1)
             if distance < span:
