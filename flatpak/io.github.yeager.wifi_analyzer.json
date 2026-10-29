@@ -20,24 +20,16 @@
         "pip3 install --no-index --no-build-isolation --prefix=/app .",
         "for mo in locale/*/LC_MESSAGES/wifi-analyzer.mo; do lang=$(basename $(dirname $(dirname $mo))); install -Dm644 $mo /app/share/locale/$lang/LC_MESSAGES/wifi-analyzer.mo; done",
         "install -Dm644 data/io.github.yeager.wifi_analyzer.desktop /app/share/applications/io.github.yeager.wifi_analyzer.desktop",
-        "install -Dm644 data/icons/hicolor/512x512/apps/io.github.yeager.WifiAnalyzer.png /app/share/icons/hicolor/512x512/apps/io.github.yeager.wifi_analyzer.png",
-        "install -Dm644 data/icons/hicolor/256x256/apps/io.github.yeager.WifiAnalyzer.png /app/share/icons/hicolor/256x256/apps/io.github.yeager.wifi_analyzer.png",
+        "install -Dm644 data/icons/hicolor/512x512/apps/io.github.yeager.wifi_analyzer.png /app/share/icons/hicolor/512x512/apps/io.github.yeager.wifi_analyzer.png",
+        "install -Dm644 data/icons/hicolor/256x256/apps/io.github.yeager.wifi_analyzer.png /app/share/icons/hicolor/256x256/apps/io.github.yeager.wifi_analyzer.png",
         "install -Dm644 data/io.github.yeager.wifi_analyzer.metainfo.xml /app/share/metainfo/io.github.yeager.wifi_analyzer.metainfo.xml"
       ],
       "sources": [
         {
           "type": "git",
           "url": "https://github.com/yeager/wifi-analyzer.git",
-          "tag": "v0.1.20",
-          "commit": "98e4c9d75cadbc4cc3158f16c9040281bfd90acd"
-        },
-        {
-          "type": "patch",
-          "path": "rename-app-id.patch"
-        },
-        {
-          "type": "patch",
-          "path": "add-appstream-screenshot.patch"
+          "tag": "v0.1.21",
+          "commit": "6f701ee08b5a0a18ac7d3cf340b9fcdb12e42853"
         }
       ]
     }

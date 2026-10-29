@@ -219,15 +219,14 @@ def test_flathub_manifest_has_a_valid_pinned_source():
     project_version = re.search(r'(?m)^version = "([^\"]+)"', project).group(1)
     manifest = json.loads((root / "flatpak" / "io.github.yeager.wifi_analyzer.json").read_text(encoding="utf-8"))
     sources = manifest["modules"][0]["sources"]
+    assert len(sources) == 1
     source = sources[0]
 
     assert source["tag"].startswith("v")
     assert tuple(map(int, source["tag"][1:].split("."))) <= tuple(map(int, project_version.split(".")))
     assert re.fullmatch(r"[0-9a-f]{40}", source["commit"])
     assert source["url"] == "https://github.com/yeager/wifi-analyzer.git"
-    assert manifest["app-id"] == "io.github.yeager.wifi_analyzer"
-    assert sources[1:] == [
-        {"type": "patch", "path": "rename-app-id.patch"},
-        {"type": "patch", "path": "add-appstream-screenshot.patch"},
-    ]
-    assert all((root / "flatpak" / patch["path"]).is_file() for patch in sources[1:])
+    app_id = manifest["app-id"]
+    assert app_id == "io.github.yeager.wifi_analyzer"
+    assert f'APP_ID = "{app_id}"' in (root / "src" / "wifi_analyzer" / "app.py").read_text(encoding="utf-8")
+    assert f"<id>{app_id}</id>" in (root / "data" / f"{app_id}.metainfo.xml").read_text(encoding="utf-8")
