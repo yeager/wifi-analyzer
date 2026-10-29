@@ -88,8 +88,9 @@ requests.
 
 ## Translations
 
-The user interface uses gettext catalogues for 20 languages. Swedish is
-translated and reviewed; the remaining catalogues are ready for translation.
+The user interface ships gettext catalogues for 21 locales. Swedish is
+complete and reviewed; other catalogues may be partial, and untranslated
+strings fall back to English.
 See [`po/README.md`](po/README.md) to contribute or validate a translation.
 The Swedish manual page is installed as `wifi-analyzer(1)` and is maintained in
 [`docs/man/sv`](docs/man/sv).

@@ -3,7 +3,7 @@
 WiFi Analyzer ships gettext catalogues for Arabic, German, Greek, British
 English, Spanish, Finnish, French, Hindi, Italian, Japanese, Korean, Dutch,
 Norwegian, Polish, Brazilian Portuguese, Russian, Swedish, Turkish, Ukrainian,
-and Simplified Chinese.
+Occitan, and Simplified Chinese.
 
 Only completed and reviewed catalogues should be described as translations in
 release notes. An empty catalogue deliberately falls back to the source text.
