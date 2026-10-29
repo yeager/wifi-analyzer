@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Flatpak build tools
-        run: sudo apt-get update && sudo apt-get install -y flatpak flatpak-builder
+        run: sudo apt-get update && sudo apt-get install -y flatpak flatpak-builder xvfb dbus-x11
       - name: Add Flathub runtime source
         run: flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
       - name: Build GNOME 51 Flatpak
@@ -32,6 +32,25 @@ jobs:
             artifacts/flatpak/io.github.yeager.WifiAnalyzer.flatpak \
             io.github.yeager.WifiAnalyzer \
             --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+      - name: Install and smoke-test the Flatpak bundle
+        run: |
+          flatpak install --user --noninteractive \
+            artifacts/flatpak/io.github.yeager.WifiAnalyzer.flatpak
+          set +e
+          GSK_RENDERER=cairo timeout 8s dbus-run-session -- xvfb-run -a \
+            flatpak run --user io.github.yeager.WifiAnalyzer \
+            >"$RUNNER_TEMP/wifi-analyzer-flatpak-smoke.log" 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 124 ]; then
+            cat "$RUNNER_TEMP/wifi-analyzer-flatpak-smoke.log"
+            exit "$status"
+          fi
+          if grep -E 'Traceback|TypeError|ModuleNotFoundError|cairo.Context' \
+            "$RUNNER_TEMP/wifi-analyzer-flatpak-smoke.log"; then
+            cat "$RUNNER_TEMP/wifi-analyzer-flatpak-smoke.log"
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: wifi-analyzer-flatpak
