@@ -608,6 +608,9 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         }
         if self.on_channel_selected and visible_channels and channel > 0:
             channel = min(visible_channels, key=lambda candidate: abs(candidate - channel))
+            self.focused_channel = channel
+            self.grab_focus()
+            self.queue_draw()
             self.on_channel_selected(channel)
 
     def _font_scale(self):

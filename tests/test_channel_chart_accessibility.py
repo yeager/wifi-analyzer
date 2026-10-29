@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import gi
 
@@ -49,6 +49,31 @@ class TestChannelChartAccessibility:
 
         assert chart._on_key_pressed(None, Gdk.KEY_space, 0, 0)
         chart._announce.assert_called_once_with("Channel filter cleared.")
+
+    def test_mouse_selection_becomes_the_keyboard_navigation_origin(self):
+        chart = ChannelDrawingArea()
+        chart.on_channel_selected = Mock()
+        chart.set_networks(
+            [
+                {"band": "2.4 GHz", "channel": 1},
+                {"band": "2.4 GHz", "channel": 6},
+                {"band": "2.4 GHz", "channel": 11},
+            ],
+            "2.4 GHz",
+        )
+
+        with (
+            patch.object(ChannelDrawingArea, "get_allocated_width", return_value=500),
+            patch.object(ChannelDrawingArea, "get_allocated_height", return_value=220),
+            patch.object(ChannelDrawingArea, "grab_focus", return_value=True) as grab_focus,
+        ):
+            chart._on_click(None, 1, 265, 100)
+
+        assert chart.focused_channel == 6
+        chart.on_channel_selected.assert_called_once_with(6)
+        grab_focus.assert_called_once_with(chart)
+        assert chart._on_key_pressed(None, Gdk.KEY_Right, 0, 0)
+        assert chart.focused_channel == 11
 
     def test_home_and_end_jump_to_the_first_and_last_available_channels(self):
         chart = ChannelDrawingArea()
