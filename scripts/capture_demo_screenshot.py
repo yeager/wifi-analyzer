@@ -60,7 +60,16 @@ def run_demo_app():
         def _populate_demo_networks(window):
             window.networks = [dict(network) for network in DEMO_NETWORKS]
             window._update_ui()
+            if len(window.visible_networks) != len(DEMO_NETWORKS):
+                print(
+                    f"Expected 3 visible demo networks, found {len(window.visible_networks)}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                window.get_application().quit()
+                return GLib.SOURCE_REMOVE
             window._set_status("Found 3 networks")
+            Path(os.environ["WIFI_ANALYZER_DEMO_READY"]).write_text("ready", encoding="utf-8")
             return GLib.SOURCE_REMOVE
 
     application = DemoApp()
@@ -76,10 +85,16 @@ def main():
     target.parent.mkdir(parents=True, exist_ok=True)
     server = subprocess.Popen([sys.executable, __file__, "--serve"])
     try:
-        for _ in range(20):
+        ready = Path(os.environ["WIFI_ANALYZER_DEMO_READY"])
+        for _ in range(120):
             if server.poll() is not None:
                 raise RuntimeError("Demo app exited before its screenshot was captured")
+            if ready.is_file():
+                break
             time.sleep(0.25)
+        else:
+            raise RuntimeError("Demo app did not display the fictional networks in time")
+        time.sleep(1)
         result = subprocess.run(["scrot", "-u", str(target)], check=False, timeout=5)
         if result.returncode or not target.is_file() or target.stat().st_size < 10_000:
             raise RuntimeError("Screenshot did not contain the rendered Wi-Fi Analyzer window")

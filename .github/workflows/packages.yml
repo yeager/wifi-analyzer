@@ -32,6 +32,7 @@ jobs:
           PYTHONPATH: src
           XDG_CONFIG_HOME: ${{ runner.temp }}/wifi-analyzer-demo/config
           XDG_DATA_HOME: ${{ runner.temp }}/wifi-analyzer-demo/data
+          WIFI_ANALYZER_DEMO_READY: ${{ runner.temp }}/wifi-analyzer-demo/ready
         run: |
           mkdir -p "$XDG_CONFIG_HOME/wifi-analyzer" "$XDG_DATA_HOME" screenshots
           printf '{"welcome_shown": true}\n' > "$XDG_CONFIG_HOME/wifi-analyzer/welcome.json"
