@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that the Flatpak manifest describes this project's current release."""
+"""Check that the Flatpak manifest pins a valid released source version."""
 
 from __future__ import annotations
 
@@ -37,10 +37,18 @@ def validate(root: Path) -> tuple[str, str, list[str]]:
         manifest_repository = source.get("url", "").removesuffix(".git")
         if not repository or manifest_repository != repository:
             errors.append(f"manifest source URL {source.get('url')!r} does not match {repository!r}")
-        expected_tag = f"v{version}"
-        if source.get("tag") != expected_tag:
+        source_tag = source.get("tag", "")
+        tag_match = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", source_tag)
+        version_match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", version)
+        if not version_match:
+            errors.append(f"project version {version!r} is not a semantic version")
+        elif not tag_match:
             errors.append(
-                f"manifest source tag {source.get('tag')!r} does not match project version {expected_tag!r}"
+                f"manifest source tag {source_tag!r} is not a semantic version tag"
+            )
+        elif tuple(map(int, tag_match.groups())) > tuple(map(int, version_match.groups())):
+            errors.append(
+                f"manifest source version {source_tag!r} is newer than project version {version!r}"
             )
         if not re.fullmatch(r"[0-9a-f]{40}", source.get("commit", "")):
             errors.append("manifest Git source must pin a full 40-character lowercase commit hash")
@@ -72,7 +80,12 @@ def main() -> int:
             print(f"Flatpak manifest: {error}")
         return 1
 
-    print(f"Flatpak manifest matches {app_id} {version} (v{version})")
+    manifest = json.loads((ROOT / "flatpak/io.github.yeager.wifi-analyzer.json").read_text(encoding="utf-8"))
+    source = next(
+        source for module in manifest["modules"] for source in module["sources"]
+        if source.get("type") == "git"
+    )
+    print(f"Flatpak manifest pins {app_id} to {source['tag']} (project version {version})")
     return 0
 
 

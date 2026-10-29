@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.23
+Version:        0.1.24
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -69,6 +69,10 @@ GSK_RENDERER=cairo xvfb-run -a env PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Thu Oct 29 2026 Daniel Nylander <po@danielnylander.se> - 0.1.24-1
+- Escape formula-like untrusted text in CSV exports.
+- Allow the Flatpak manifest to track the latest published release during development.
+
 * Thu Oct 29 2026 Daniel Nylander <po@danielnylander.se> - 0.1.23-1
 - Add Occitan and German translations and clarify partial catalogue behavior.
 

@@ -2,16 +2,32 @@
 import csv
 import json
 import time
+import unicodedata
 from html import escape
 
 
+def _safe_csv_cell(value):
+    """Keep untrusted text from becoming a spreadsheet formula."""
+    if not isinstance(value, str):
+        return value
+    trimmed = value.lstrip()
+    while trimmed.startswith("\ufeff"):
+        trimmed = trimmed[1:].lstrip()
+    if value and (
+        unicodedata.category(value[0]) == "Cc"
+        or (trimmed and trimmed[0] in "=+-@")
+    ):
+        return "'" + value
+    return value
+
+
 def export_csv(data, headers, filepath):
-    """Export data as CSV."""
+    """Export data as CSV, escaping formula-like untrusted text cells."""
     with open(filepath, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         if headers:
-            writer.writerow(headers)
-        writer.writerows(data)
+            writer.writerow(_safe_csv_cell(value) for value in headers)
+        writer.writerows((_safe_csv_cell(value) for value in row) for row in data)
     return filepath
 
 

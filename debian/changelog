@@ -1,3 +1,10 @@
+wifi-analyzer (0.1.24) unstable; urgency=medium
+
+  * Escape formula-like untrusted text in CSV exports.
+  * Allow the Flatpak manifest to track the latest published source release.
+
+ -- Daniel Nylander <po@danielnylander.se>  Thu, 29 Oct 2026 18:15:00 +0100
+
 wifi-analyzer (0.1.23) unstable; urgency=medium
 
   * Add Occitan and German translations and clarify partial catalogue behavior.
