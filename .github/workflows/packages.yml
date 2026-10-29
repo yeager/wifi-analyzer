@@ -61,7 +61,7 @@ jobs:
           --gha-format manifest flatpak/io.github.yeager.WifiAnalyzer.json
       - name: Build GNOME 51 Flatpak
         run: >-
-          flatpak run --user --command=flathub-build org.flatpak.Builder
+          dbus-run-session -- flatpak run --user --command=flathub-build org.flatpak.Builder
           flatpak/io.github.yeager.WifiAnalyzer.json
       - name: Check built Flatpak repository lint (advisory)
         continue-on-error: true

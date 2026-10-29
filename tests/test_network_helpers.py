@@ -218,8 +218,11 @@ def test_flathub_manifest_tracks_the_current_release():
     project = (root / "pyproject.toml").read_text(encoding="utf-8")
     project_version = re.search(r'(?m)^version = "([^\"]+)"', project).group(1)
     manifest = json.loads((root / "flatpak" / "io.github.yeager.WifiAnalyzer.json").read_text(encoding="utf-8"))
-    source = manifest["modules"][0]["sources"][0]
+    sources = manifest["modules"][0]["sources"]
+    source = sources[0]
 
     assert source["tag"] == f"v{project_version}"
     assert re.fullmatch(r"[0-9a-f]{40}", source["commit"])
     assert source["url"] == "https://github.com/yeager/wifi-analyzer.git"
+    assert sources[1] == {"type": "patch", "path": "add-appstream-screenshot.patch"}
+    assert (root / "flatpak" / sources[1]["path"]).is_file()
