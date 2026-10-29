@@ -181,6 +181,12 @@ def test_wifi_problem_includes_a_remedy():
     assert wifi_problem([{"ssid": "Office", "connected": True, "signal_pct": 70}]) is None
 
 
+def test_empty_scan_does_not_claim_wifi_device_is_missing():
+    assert wifi_problem([]) is None
+    no_device = wifi_problem([{"error_code": "no-device"}])
+    assert no_device and no_device[0] == "no-device"
+
+
 def test_failed_scan_does_not_report_connection_lost():
     previous = [{"ssid": "Office", "connected": True, "bssid": "aa:bb"}]
     failed_scan = [{"error_code": "scan-failed", "error_message": "D-Bus unavailable"}]
