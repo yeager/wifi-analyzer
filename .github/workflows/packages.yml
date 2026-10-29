@@ -46,6 +46,30 @@ jobs:
           dpkg-buildpackage -us -uc -b
           mkdir -p artifacts/deb
           cp ../*.deb ../*.buildinfo ../*.changes artifacts/deb/
+      - name: Smoke-test the built Debian package
+        run: |
+          set -eu
+          package=$(find .. -maxdepth 1 -type f -name 'wifi-analyzer_*_all.deb' -print -quit)
+          test -n "$package"
+          dpkg-deb --field "$package" Depends | grep -Fq 'python3-gi-cairo'
+          staging="$RUNNER_TEMP/wifi-analyzer-deb"
+          log="$RUNNER_TEMP/wifi-analyzer-deb-smoke.log"
+          dpkg-deb --extract "$package" "$staging"
+          set +e
+          GSK_RENDERER=cairo \
+            PYTHONPATH="$staging/usr/lib/python3/dist-packages" \
+            timeout 8s xvfb-run -a dbus-run-session -- \
+            "$staging/usr/bin/wifi-analyzer" >"$log" 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 124 ]; then
+            cat "$log"
+            exit "$status"
+          fi
+          if grep -E 'Traceback|TypeError|ModuleNotFoundError|cairo.Context' "$log"; then
+            cat "$log"
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: wifi-analyzer-deb
