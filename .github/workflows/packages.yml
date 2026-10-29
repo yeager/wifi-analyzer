@@ -20,11 +20,21 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y flatpak flatpak-builder xvfb dbus-x11
       - name: Add Flathub runtime source
         run: flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      - name: Install Flathub's manifest linter
+        run: flatpak install --user --noninteractive flathub org.flatpak.Builder
+      - name: Lint Flathub manifest
+        run: >-
+          flatpak run --user --command=flatpak-builder-lint org.flatpak.Builder
+          manifest flatpak/io.github.yeager.WifiAnalyzer.json
       - name: Build GNOME 51 Flatpak
         run: >-
           flatpak-builder --user --install-deps-from=flathub
           --disable-rofiles-fuse --force-clean --repo=repo
           build-dir flatpak/io.github.yeager.WifiAnalyzer.json
+      - name: Lint built Flatpak repository
+        run: >-
+          flatpak run --user --command=flatpak-builder-lint org.flatpak.Builder
+          repo repo
       - name: Create installable Flatpak bundle
         run: |
           mkdir -p artifacts/flatpak
