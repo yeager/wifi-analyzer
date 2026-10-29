@@ -36,7 +36,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y git ca-certificates \
             devscripts dpkg-dev debhelper dh-python gettext \
             pybuild-plugin-pyproject python3-all python3-setuptools \
-            python3-gi python3-cairo python3-pytest \
+            python3-gi python3-gi-cairo python3-cairo python3-pytest \
             gir1.2-gtk-4.0 gir1.2-adw-1 xvfb
       - uses: actions/checkout@v4
       - name: Test GTK behavior and accessibility

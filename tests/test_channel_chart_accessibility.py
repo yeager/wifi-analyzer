@@ -14,6 +14,11 @@ class TestChannelChartAccessibility:
     def setup_class(cls):
         Gtk.init()
 
+    def test_gobject_cairo_foreign_binding_is_available(self):
+        # Gtk.DrawingArea.set_draw_func passes cairo.Context through PyGObject.
+        # python3-cairo alone does not install this GObject converter on Debian.
+        gi.require_foreign("cairo")
+
     def test_chart_is_focusable_and_has_an_accessible_role(self):
         chart = ChannelDrawingArea()
 

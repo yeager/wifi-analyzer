@@ -39,7 +39,7 @@ GTK, libadwaita, PyGObject and Pycairo use native system libraries, so install
 them from your distribution before installing the Python package:
 
 ```bash
-sudo apt install python3-gi python3-cairo gir1.2-gtk-4.0 gir1.2-adw-1 network-manager iw pipx
+sudo apt install python3-gi python3-gi-cairo python3-cairo gir1.2-gtk-4.0 gir1.2-adw-1 network-manager iw pipx
 pipx install --system-site-packages wifi-analyzer
 ```
 

@@ -16,7 +16,7 @@ jobs:
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            ca-certificates git gettext python3-gi python3-cairo \
+            ca-certificates git gettext python3-gi python3-gi-cairo python3-cairo \
             gir1.2-gtk-4.0 gir1.2-adw-1 python3-pytest xvfb
       - uses: actions/checkout@v4
       - name: Compile translations

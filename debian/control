@@ -20,6 +20,7 @@ Depends: ${misc:Depends},
          gir1.2-gtk-4.0,
          network-manager,
          python3-cairo,
+         python3-gi-cairo,
          python3-gi
 Recommends: iw
 Description: GTK application for inspecting nearby Wi-Fi networks
