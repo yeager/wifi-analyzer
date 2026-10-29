@@ -16,5 +16,10 @@ runtime files with:
 python3 scripts/compile_translations.py
 ```
 
+The build checks placeholders and format strings in every catalogue. It also
+requires the Swedish catalogue to have no fuzzy or untranslated messages.
+Other catalogues may be incomplete while they are being translated and will
+fall back to the English source text.
+
 Submit translation updates through GitHub pull requests. Generated `.mo` files
 belong in build output and are not committed.
