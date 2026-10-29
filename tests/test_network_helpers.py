@@ -226,5 +226,8 @@ def test_flathub_manifest_has_a_valid_pinned_source():
     assert re.fullmatch(r"[0-9a-f]{40}", source["commit"])
     assert source["url"] == "https://github.com/yeager/wifi-analyzer.git"
     assert manifest["app-id"] == "io.github.yeager.wifi_analyzer"
-    assert sources[1] == {"type": "patch", "path": "add-appstream-screenshot.patch"}
-    assert (root / "flatpak" / sources[1]["path"]).is_file()
+    assert sources[1:] == [
+        {"type": "patch", "path": "rename-app-id.patch"},
+        {"type": "patch", "path": "add-appstream-screenshot.patch"},
+    ]
+    assert all((root / "flatpak" / patch["path"]).is_file() for patch in sources[1:])
