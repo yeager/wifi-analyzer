@@ -58,15 +58,6 @@ def main():
     )
     app.scan_networks_dbus = lambda: DEMO_NETWORKS
     app.WifiAnalyzerWindow._scan = lambda window: window._on_scan_done(DEMO_NETWORKS)
-    original_activate = app.WifiAnalyzerApp.do_activate
-
-    def activate_fullscreen(application):
-        original_activate(application)
-        window = application.get_active_window()
-        if window:
-            window.fullscreen()
-
-    app.WifiAnalyzerApp.do_activate = activate_fullscreen
     application = app.WifiAnalyzerApp()
     result = {"status": 0}
 
