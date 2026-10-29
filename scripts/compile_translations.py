@@ -7,6 +7,15 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def validate_project_id(catalogue: Path) -> None:
+    text = catalogue.read_text(encoding="utf-8")
+    match = re.search(r'^"Project-Id-Version: ([^"]*)\\n"$', text, re.MULTILINE)
+    if not match or match.group(1).strip().casefold() in {"", "package version"}:
+        raise ValueError(
+            f"{catalogue.name} has an empty or default Project-Id-Version header"
+        )
+
+
 def validate_swedish_catalogue(catalogue: Path) -> None:
     statistics = subprocess.run(
         ["msgfmt", "--check", "--check-format", "--statistics", "-o", "/dev/null", str(catalogue)],
@@ -39,6 +48,7 @@ def validate_swedish_catalogue(catalogue: Path) -> None:
 def compile_catalogues() -> None:
     for catalogue in sorted((ROOT / "po").glob("*.po")):
         language = catalogue.stem
+        validate_project_id(catalogue)
         if language == "sv":
             validate_swedish_catalogue(catalogue)
         targets = (
