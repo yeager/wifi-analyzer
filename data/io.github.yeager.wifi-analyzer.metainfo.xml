@@ -25,6 +25,9 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.23" date="2026-10-29">
+      <description><p>Add Occitan and German translations and clarify partial catalogue behavior.</p></description>
+    </release>
     <release version="0.1.22" date="2026-10-29">
       <description><p>Use the exact GitHub repository slug in the application ID.</p></description>
     </release>
