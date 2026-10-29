@@ -23,7 +23,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y git ca-certificates \
             python3-gi python3-gi-cairo python3-cairo \
             gir1.2-gtk-4.0 gir1.2-adw-1 xvfb dbus-x11 scrot
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Capture the app with fictional access points
         env:
           GSK_RENDERER: cairo
@@ -38,7 +38,7 @@ jobs:
           printf '{"welcome_shown": true}\n' > "$XDG_CONFIG_HOME/wifi-analyzer/welcome.json"
           timeout 30s xvfb-run -a -s '-screen 0 1000x800x24' dbus-run-session -- \
             python3 scripts/capture_demo_screenshot.py screenshots/main.png
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wifi-analyzer-demo-screenshot
           path: screenshots/main.png
@@ -47,7 +47,7 @@ jobs:
     name: Flatpak build
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Flatpak build tools
         run: sudo apt-get update && sudo apt-get install -y flatpak xvfb dbus-x11
       - name: Add Flathub runtime source
@@ -94,7 +94,7 @@ jobs:
             cat "$RUNNER_TEMP/wifi-analyzer-flatpak-smoke.log"
             exit 1
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wifi-analyzer-flatpak
           path: artifacts/flatpak/*.flatpak
@@ -112,7 +112,7 @@ jobs:
             pybuild-plugin-pyproject python3-all python3-setuptools \
             python3-gi python3-gi-cairo python3-cairo python3-pytest \
             gir1.2-gtk-4.0 gir1.2-adw-1 xvfb
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Test GTK behavior and accessibility
         run: GSK_RENDERER=cairo xvfb-run -a pytest -q
       - name: Build Debian package
@@ -144,7 +144,7 @@ jobs:
             cat "$log"
             exit 1
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wifi-analyzer-deb
           path: artifacts/deb/
@@ -160,7 +160,7 @@ jobs:
             python3-devel python3-setuptools python3-pytest \
             python3-gobject python3-cairo gettext desktop-file-utils appstream \
             gtk4 libadwaita xorg-x11-server-Xvfb
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Prepare RPM source archive
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -170,7 +170,7 @@ jobs:
             > "$HOME/rpmbuild/SOURCES/wifi-analyzer-$version.tar.gz"
       - name: Build RPM package
         run: rpmbuild -ba packaging/rpm/wifi-analyzer.spec
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wifi-analyzer-rpm
           path: ~/rpmbuild/RPMS/**/*.rpm

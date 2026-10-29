@@ -10,15 +10,15 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Extract and upload .pot
         env:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
         run: |
           sudo apt-get install -y gettext
           MODULE=$(find src -mindepth 1 -maxdepth 1 -type d ! -name "*.egg-info" | head -1 | xargs basename)
-          REPO=$(basename $GITHUB_REPOSITORY)
-          xgettext --language=Python --keyword=_ --from-code=UTF-8 -o po/${REPO}.pot src/${MODULE}/*.py
+          REPO=$(basename "$GITHUB_REPOSITORY")
+          xgettext --language=Python --keyword=_ --from-code=UTF-8 -o "po/${REPO}.pot" "src/${MODULE}"/*.py
           pip install transifex-python
           pip install transifex-cli || true
           curl -s -X POST "https://rest.api.transifex.com/resource_strings_async_uploads" \
@@ -29,7 +29,7 @@ jobs:
         env:
           TX_TOKEN: ${{ secrets.TX_TOKEN }}
         run: |
-          REPO=$(basename $GITHUB_REPOSITORY)
+          REPO=$(basename "$GITHUB_REPOSITORY")
           for lang in sv; do
             RESP=$(curl -s -X POST "https://rest.api.transifex.com/resource_translations_async_downloads" \
               -H "Authorization: Bearer $TX_TOKEN" \
