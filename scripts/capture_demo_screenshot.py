@@ -87,6 +87,7 @@ def main():
 
     target = Path(sys.argv[1])
     target.parent.mkdir(parents=True, exist_ok=True)
+    target.unlink(missing_ok=True)
     ready = Path(os.environ["WIFI_ANALYZER_DEMO_READY"])
     ready.unlink(missing_ok=True)
     server = subprocess.Popen([sys.executable, __file__, "--serve"])
