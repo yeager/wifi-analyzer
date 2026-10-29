@@ -415,8 +415,12 @@ def compare_scans(previous, current):
 
 
 def anonymize_network(network):
-    """Return an export-safe record without SSID/BSSID identifiers."""
-    record = dict(network)
+    """Return only allowlisted radio measurements without connection identifiers."""
+    allowed_fields = (
+        "band", "freq", "channel", "width_mhz", "signal_pct", "dbm",
+        "security", "channel_status",
+    )
+    record = {field: network[field] for field in allowed_fields if field in network}
     record["ssid"] = "hidden"
     record["bssid"] = "hidden"
     return record
@@ -1248,7 +1252,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
 
     def _export_anonymous_json(self, *_args):
         dialog = Adw.AlertDialog.new(_("Export anonymized JSON"), None)
-        dialog.set_body(_("This export replaces network names (SSIDs) and access point MAC addresses (BSSIDs) with “hidden”. Channel, signal and security details remain. Review the file before sharing it."))
+        dialog.set_body(_("This export hides network names (SSIDs), access point MAC addresses (BSSIDs) and connection-specific details. It keeps band, frequency, channel, signal, width and security or regulatory details. Those details may still identify a location, so review the file before sharing it."))
         dialog.add_response("cancel", _("Cancel"))
         dialog.add_response("export", _("Continue to export"))
         dialog.set_response_appearance("export", Adw.ResponseAppearance.SUGGESTED)

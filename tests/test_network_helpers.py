@@ -176,6 +176,37 @@ def test_scan_comparison_width_parsing_and_anonymization():
     assert parse_iw_wifi_standard("tx bitrate: 866.7 MBit/s VHT-MCS 9") == "Wi-Fi 5 (802.11ac)"
 
 
+def test_anonymized_network_keeps_radio_measurements_only():
+    assert anonymize_network({
+        "ssid": "Office WiFi",
+        "bssid": "00:11:22:33:44:55",
+        "band": "5 GHz",
+        "freq": 5180,
+        "channel": 36,
+        "width_mhz": 80,
+        "signal_pct": 75,
+        "dbm": -62,
+        "security": "WPA2",
+        "channel_status": "",
+        "connected": True,
+        "wifi_standard": "Wi-Fi 6 (802.11ax)",
+        "width_source": "measured",
+        "last_seen": 42,
+        "future_identifier": "should-not-leak",
+    }) == {
+        "ssid": "hidden",
+        "bssid": "hidden",
+        "band": "5 GHz",
+        "freq": 5180,
+        "channel": 36,
+        "width_mhz": 80,
+        "signal_pct": 75,
+        "dbm": -62,
+        "security": "WPA2",
+        "channel_status": "",
+    }
+
+
 def test_anonymized_export_requires_confirmation_before_file_chooser(monkeypatch):
     from wifi_analyzer import app as app_module
 
@@ -208,7 +239,8 @@ def test_anonymized_export_requires_confirmation_before_file_chooser(monkeypatch
 
     assert "SSIDs" in captured["body"]
     assert "BSSIDs" in captured["body"]
-    assert "channel" in captured["body"].casefold()
+    assert "connection-specific details" in captured["body"]
+    assert "identify a location" in captured["body"]
     assert captured["responses"]["cancel"] == "Cancel"
     assert captured["responses"]["export"] == "Continue to export"
     assert "chooser" not in captured

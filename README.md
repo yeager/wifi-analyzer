@@ -32,7 +32,9 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 - Identify Wi-Fi 4, 5, 6/6E and 7 for the active link from `iw` PHY markers.
   A generation is never guessed for an unconnected AP.
 - Compare consecutive scans to identify new, missing, or materially changed access points.
-- Create a self-contained HTML diagnostic report or an anonymized JSON export for safe sharing.
+- Create a self-contained HTML diagnostic report or an anonymized JSON export
+  that omits SSIDs, BSSIDs and connection-specific fields. Radio measurements
+  remain and can still reveal a location; review the file before sharing it.
 - Select an access point to identify the strongest overlapping neighbours.
 - Show the active connection's gateway and DNS servers from local system diagnostics.
 - Use optional 60-second monitoring and location profiles for private local scan history.
