@@ -13,7 +13,7 @@ permissions:
 jobs:
   screenshot:
     name: Capture the demo screenshot
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container: debian:stable
     timeout-minutes: 5
     steps:
@@ -104,7 +104,7 @@ jobs:
 
   debian:
     name: Debian package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container: debian:stable
     steps:
       - name: Install build tools
@@ -154,7 +154,7 @@ jobs:
 
   rpm:
     name: RPM package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container: fedora:latest
     steps:
       - name: Install build tools
