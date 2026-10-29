@@ -2,9 +2,9 @@
 Name=WiFi Analyzer
 Comment=WiFi Network Analysis Tool
 Exec=wifi-analyzer
-Icon=io.github.yeager.wifi_analyzer
+Icon=io.github.yeager.wifi-analyzer
 Terminal=false
 Type=Application
-StartupWMClass=io.github.yeager.wifi_analyzer
+StartupWMClass=io.github.yeager.wifi-analyzer
 Categories=Network;GTK;
 Keywords=wifi;wireless;network;analyzer;channel;

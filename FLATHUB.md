@@ -1,7 +1,7 @@
 # Flathub submission
 
 The manifest intended for Flathub is
-[`flatpak/io.github.yeager.wifi_analyzer.json`](flatpak/io.github.yeager.wifi_analyzer.json).
+[`flatpak/io.github.yeager.wifi-analyzer.json`](flatpak/io.github.yeager.wifi-analyzer.json).
 It pins the public upstream release tag and commit so reviewers can reproduce
 the build without trusting a moving branch.
 
@@ -11,7 +11,7 @@ Before opening a Flathub pull request:
 2. Build it with Flatpak Builder using the current GNOME SDK.
 3. Open a submission pull request to
    <https://github.com/flathub/flathub> with this manifest named
-   `io.github.yeager.wifi_analyzer.json`.
+   `io.github.yeager.wifi-analyzer.json`.
 4. Respond to the automated build and AppStream review comments there.
 
 The sandbox only asks for display access, GPU rendering, and the NetworkManager

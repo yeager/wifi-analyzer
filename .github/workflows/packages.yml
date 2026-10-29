@@ -59,11 +59,11 @@ jobs:
         continue-on-error: true
         run: >-
           flatpak run --user --command=flatpak-builder-lint org.flatpak.Builder
-          --gha-format manifest flatpak/io.github.yeager.wifi_analyzer.json
+          --gha-format manifest flatpak/io.github.yeager.wifi-analyzer.json
       - name: Build GNOME 51 Flatpak
         run: >-
           dbus-run-session -- flatpak run --user --command=flathub-build org.flatpak.Builder
-          flatpak/io.github.yeager.wifi_analyzer.json
+          flatpak/io.github.yeager.wifi-analyzer.json
       - name: Check built Flatpak repository lint (advisory)
         continue-on-error: true
         run: >-
@@ -73,16 +73,16 @@ jobs:
         run: |
           mkdir -p artifacts/flatpak
           flatpak build-bundle repo \
-            artifacts/flatpak/io.github.yeager.wifi_analyzer.flatpak \
-            io.github.yeager.wifi_analyzer \
+            artifacts/flatpak/io.github.yeager.wifi-analyzer.flatpak \
+            io.github.yeager.wifi-analyzer \
             --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
       - name: Install and smoke-test the Flatpak bundle
         run: |
           flatpak install --user --noninteractive \
-            artifacts/flatpak/io.github.yeager.wifi_analyzer.flatpak
+            artifacts/flatpak/io.github.yeager.wifi-analyzer.flatpak
           set +e
           GSK_RENDERER=cairo timeout 8s dbus-run-session -- xvfb-run -a \
-            flatpak run --user io.github.yeager.wifi_analyzer \
+            flatpak run --user io.github.yeager.wifi-analyzer \
             >"$RUNNER_TEMP/wifi-analyzer-flatpak-smoke.log" 2>&1
           status=$?
           set -e

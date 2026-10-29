@@ -29,7 +29,7 @@ else:
     from .accessibility import AccessibilityManager
     from .export_helper import export_csv, export_html_report, export_json
 
-APP_ID = "io.github.yeager.wifi_analyzer"
+APP_ID = "io.github.yeager.wifi-analyzer"
 GETTEXT_DOMAIN = "wifi-analyzer"
 _locale_dir = os.environ.get("WIFI_ANALYZER_LOCALE_DIR")
 if not _locale_dir or not os.path.isdir(_locale_dir):

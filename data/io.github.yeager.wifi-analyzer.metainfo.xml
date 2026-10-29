@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.yeager.wifi_analyzer</id>
+  <id>io.github.yeager.wifi-analyzer</id>
   <name>WiFi Analyzer</name>
   <summary>Inspect nearby Wi-Fi networks and channels</summary>
   <metadata_license>CC0-1.0</metadata_license>
@@ -8,7 +8,7 @@
   <developer id="io.github.yeager">
     <name>Daniel Nylander</name>
   </developer>
-  <launchable type="desktop-id">io.github.yeager.wifi_analyzer.desktop</launchable>
+  <launchable type="desktop-id">io.github.yeager.wifi-analyzer.desktop</launchable>
   <provides>
     <binary>wifi-analyzer</binary>
   </provides>
@@ -25,6 +25,9 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.22" date="2026-10-29">
+      <description><p>Use the exact GitHub repository slug in the application ID.</p></description>
+    </release>
     <release version="0.1.21" date="2026-10-29">
       <description><p>Match the desktop application ID to the GitHub repository slug.</p></description>
     </release>

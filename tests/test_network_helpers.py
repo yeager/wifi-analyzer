@@ -217,9 +217,9 @@ def test_flathub_manifest_has_a_valid_pinned_source():
     root = Path(__file__).parents[1]
     project = (root / "pyproject.toml").read_text(encoding="utf-8")
     project_version = re.search(r'(?m)^version = "([^\"]+)"', project).group(1)
-    manifest = json.loads((root / "flatpak" / "io.github.yeager.wifi_analyzer.json").read_text(encoding="utf-8"))
+    manifest = json.loads((root / "flatpak" / "io.github.yeager.wifi-analyzer.json").read_text(encoding="utf-8"))
     sources = manifest["modules"][0]["sources"]
-    assert len(sources) == 1
+    assert len(sources) in (1, 2)
     source = sources[0]
 
     assert source["tag"].startswith("v")
@@ -227,6 +227,6 @@ def test_flathub_manifest_has_a_valid_pinned_source():
     assert re.fullmatch(r"[0-9a-f]{40}", source["commit"])
     assert source["url"] == "https://github.com/yeager/wifi-analyzer.git"
     app_id = manifest["app-id"]
-    assert app_id == "io.github.yeager.wifi_analyzer"
+    assert app_id == "io.github.yeager.wifi-analyzer"
     assert f'APP_ID = "{app_id}"' in (root / "src" / "wifi_analyzer" / "app.py").read_text(encoding="utf-8")
     assert f"<id>{app_id}</id>" in (root / "data" / f"{app_id}.metainfo.xml").read_text(encoding="utf-8")

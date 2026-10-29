@@ -1,5 +1,5 @@
 {
-  "app-id": "io.github.yeager.wifi_analyzer",
+  "app-id": "io.github.yeager.wifi-analyzer",
   "runtime": "org.gnome.Platform",
   "runtime-version": "51",
   "sdk": "org.gnome.Sdk",
@@ -19,10 +19,10 @@
         "python3 scripts/compile_translations.py",
         "pip3 install --no-index --no-build-isolation --prefix=/app .",
         "for mo in locale/*/LC_MESSAGES/wifi-analyzer.mo; do lang=$(basename $(dirname $(dirname $mo))); install -Dm644 $mo /app/share/locale/$lang/LC_MESSAGES/wifi-analyzer.mo; done",
-        "install -Dm644 data/io.github.yeager.wifi_analyzer.desktop /app/share/applications/io.github.yeager.wifi_analyzer.desktop",
-        "install -Dm644 data/icons/hicolor/512x512/apps/io.github.yeager.wifi_analyzer.png /app/share/icons/hicolor/512x512/apps/io.github.yeager.wifi_analyzer.png",
-        "install -Dm644 data/icons/hicolor/256x256/apps/io.github.yeager.wifi_analyzer.png /app/share/icons/hicolor/256x256/apps/io.github.yeager.wifi_analyzer.png",
-        "install -Dm644 data/io.github.yeager.wifi_analyzer.metainfo.xml /app/share/metainfo/io.github.yeager.wifi_analyzer.metainfo.xml"
+        "install -Dm644 data/io.github.yeager.wifi-analyzer.desktop /app/share/applications/io.github.yeager.wifi-analyzer.desktop",
+        "install -Dm644 data/icons/hicolor/512x512/apps/io.github.yeager.wifi_analyzer.png /app/share/icons/hicolor/512x512/apps/io.github.yeager.wifi-analyzer.png",
+        "install -Dm644 data/icons/hicolor/256x256/apps/io.github.yeager.wifi_analyzer.png /app/share/icons/hicolor/256x256/apps/io.github.yeager.wifi-analyzer.png",
+        "install -Dm644 data/io.github.yeager.wifi-analyzer.metainfo.xml /app/share/metainfo/io.github.yeager.wifi-analyzer.metainfo.xml"
       ],
       "sources": [
         {
@@ -30,6 +30,10 @@
           "url": "https://github.com/yeager/wifi-analyzer.git",
           "tag": "v0.1.21",
           "commit": "6f701ee08b5a0a18ac7d3cf340b9fcdb12e42853"
+        },
+        {
+          "type": "patch",
+          "path": "rename-app-id.patch"
         }
       ]
     }

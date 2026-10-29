@@ -1,3 +1,9 @@
+wifi-analyzer (0.1.22) unstable; urgency=medium
+
+  * Use the exact GitHub repository slug in the application ID.
+
+ -- Daniel Nylander <po@danielnylander.se>  Thu, 29 Oct 2026 16:30:00 +0100
+
 wifi-analyzer (0.1.21) unstable; urgency=medium
 
   * Match the desktop application ID to the GitHub repository slug.
