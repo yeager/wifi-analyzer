@@ -59,6 +59,7 @@ def run_demo_app():
         @staticmethod
         def _populate_demo_networks(window):
             window.networks = [dict(network) for network in DEMO_NETWORKS]
+            window.channel_chart.set_has_tooltip(False)
             window._update_ui()
             if len(window.visible_networks) != len(DEMO_NETWORKS):
                 print(
