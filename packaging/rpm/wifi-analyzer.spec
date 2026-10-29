@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.20
+Version:        0.1.21
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -35,18 +35,18 @@ python3 scripts/compile_translations.py
 
 %install
 %pyproject_install
-install -Dpm0644 data/io.github.yeager.WifiAnalyzer.desktop \
-  %{buildroot}%{_datadir}/applications/io.github.yeager.WifiAnalyzer.desktop
-install -Dpm0644 data/io.github.yeager.WifiAnalyzer.metainfo.xml \
-  %{buildroot}%{_metainfodir}/io.github.yeager.WifiAnalyzer.metainfo.xml
+install -Dpm0644 data/io.github.yeager.wifi_analyzer.desktop \
+  %{buildroot}%{_datadir}/applications/io.github.yeager.wifi_analyzer.desktop
+install -Dpm0644 data/io.github.yeager.wifi_analyzer.metainfo.xml \
+  %{buildroot}%{_metainfodir}/io.github.yeager.wifi_analyzer.metainfo.xml
 install -Dpm0644 docs/man/wifi-analyzer.1 \
   %{buildroot}%{_mandir}/man1/wifi-analyzer.1
 install -Dpm0644 docs/man/sv/wifi-analyzer.1 \
   %{buildroot}%{_mandir}/sv/man1/wifi-analyzer.1
-install -Dpm0644 data/icons/hicolor/256x256/apps/io.github.yeager.WifiAnalyzer.png \
-  %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/io.github.yeager.WifiAnalyzer.png
-install -Dpm0644 data/icons/hicolor/512x512/apps/io.github.yeager.WifiAnalyzer.png \
-  %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/io.github.yeager.WifiAnalyzer.png
+install -Dpm0644 data/icons/hicolor/256x256/apps/io.github.yeager.wifi_analyzer.png \
+  %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/io.github.yeager.wifi_analyzer.png
+install -Dpm0644 data/icons/hicolor/512x512/apps/io.github.yeager.wifi_analyzer.png \
+  %{buildroot}%{_datadir}/icons/hicolor/512x512/apps/io.github.yeager.wifi_analyzer.png
 for mo in locale/*/LC_MESSAGES/wifi-analyzer.mo; do
   lang=$(basename $(dirname $(dirname "$mo")))
   install -Dpm0644 "$mo" %{buildroot}%{_datadir}/locale/$lang/LC_MESSAGES/wifi-analyzer.mo
@@ -61,14 +61,17 @@ GSK_RENDERER=cairo xvfb-run -a env PYTHONPATH=src pytest -q
 %{_bindir}/wifi-analyzer
 %{python3_sitelib}/wifi_analyzer/
 %{python3_sitelib}/wifi_analyzer-*.dist-info/
-%{_datadir}/applications/io.github.yeager.WifiAnalyzer.desktop
-%{_metainfodir}/io.github.yeager.WifiAnalyzer.metainfo.xml
+%{_datadir}/applications/io.github.yeager.wifi_analyzer.desktop
+%{_metainfodir}/io.github.yeager.wifi_analyzer.metainfo.xml
 %{_mandir}/man1/wifi-analyzer.1*
 %{_mandir}/sv/man1/wifi-analyzer.1*
-%{_datadir}/icons/hicolor/*/apps/io.github.yeager.WifiAnalyzer.png
+%{_datadir}/icons/hicolor/*/apps/io.github.yeager.wifi_analyzer.png
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Thu Oct 29 2026 Daniel Nylander <po@danielnylander.se> - 0.1.21-1
+- Match the desktop application ID to the GitHub repository slug.
+
 * Thu Oct 29 2026 Daniel Nylander <po@danielnylander.se> - 0.1.20-1
 - Add keyboard navigation and screen-reader support to the channel graph.
 - Require a complete, validated Swedish translation catalogue.

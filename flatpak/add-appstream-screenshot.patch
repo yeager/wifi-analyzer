@@ -1,5 +1,5 @@
---- a/data/io.github.yeager.WifiAnalyzer.metainfo.xml
-+++ b/data/io.github.yeager.WifiAnalyzer.metainfo.xml
+--- a/data/io.github.yeager.wifi_analyzer.metainfo.xml
++++ b/data/io.github.yeager.wifi_analyzer.metainfo.xml
 @@ -15,6 +15,12 @@
    <description>
      <p>WiFi Analyzer shows nearby wireless networks, their signal strength, channel and security mode.</p>

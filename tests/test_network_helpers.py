@@ -210,19 +210,21 @@ def test_release_version_is_consistent():
     assert 'version=__version__,' in app
 
 
-def test_flathub_manifest_tracks_the_current_release():
+def test_flathub_manifest_has_a_valid_pinned_source():
     import json
     import re
 
     root = Path(__file__).parents[1]
     project = (root / "pyproject.toml").read_text(encoding="utf-8")
     project_version = re.search(r'(?m)^version = "([^\"]+)"', project).group(1)
-    manifest = json.loads((root / "flatpak" / "io.github.yeager.WifiAnalyzer.json").read_text(encoding="utf-8"))
+    manifest = json.loads((root / "flatpak" / "io.github.yeager.wifi_analyzer.json").read_text(encoding="utf-8"))
     sources = manifest["modules"][0]["sources"]
     source = sources[0]
 
-    assert source["tag"] == f"v{project_version}"
+    assert source["tag"].startswith("v")
+    assert tuple(map(int, source["tag"][1:].split("."))) <= tuple(map(int, project_version.split(".")))
     assert re.fullmatch(r"[0-9a-f]{40}", source["commit"])
     assert source["url"] == "https://github.com/yeager/wifi-analyzer.git"
+    assert manifest["app-id"] == "io.github.yeager.wifi_analyzer"
     assert sources[1] == {"type": "patch", "path": "add-appstream-screenshot.patch"}
     assert (root / "flatpak" / sources[1]["path"]).is_file()

@@ -1,3 +1,9 @@
+wifi-analyzer (0.1.21) unstable; urgency=medium
+
+  * Match the desktop application ID to the GitHub repository slug.
+
+ -- Daniel Nylander <po@danielnylander.se>  Thu, 29 Oct 2026 16:00:00 +0100
+
 wifi-analyzer (0.1.20) unstable; urgency=medium
 
   * Add keyboard navigation and screen-reader support to the channel graph.
