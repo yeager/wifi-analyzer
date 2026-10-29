@@ -273,6 +273,16 @@ msgstr ""
 msgid "Scan failed: {error}"
 msgstr ""
 
+#: src/wifi_analyzer/app.py:282
+msgid "Wi-Fi scan failed"
+msgstr ""
+
+#: src/wifi_analyzer/app.py:284
+msgid ""
+"Check that NetworkManager is running and your Wi-Fi adapter is enabled. For "
+"Flatpak, make sure the app can access NetworkManager."
+msgstr ""
+
 #: src/wifi_analyzer/app.py:1070
 #, python-brace-format
 msgid "Found {count} networks{suffix}"

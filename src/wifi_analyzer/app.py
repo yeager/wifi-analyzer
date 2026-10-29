@@ -276,9 +276,15 @@ def connection_diagnostics():
 
 def wifi_problem(networks, previous=()):
     """Return one actionable problem code and remedy, or ``None``."""
-    # A failed scan provides no evidence that the previous connection was lost.
     if any(net.get("error_code") == "scan-failed" for net in networks):
-        return None
+        return (
+            "scan-failed",
+            _("Wi-Fi scan failed"),
+            _(
+                "Check that NetworkManager is running and your Wi-Fi adapter is enabled. "
+                "For Flatpak, make sure the app can access NetworkManager."
+            ),
+        )
     if any(net.get("error_code") == "no-device" for net in networks):
         return ("no-device", _("No Wi-Fi device found"),
                 _("Enable Wi-Fi in system settings, disable airplane mode, and check the adapter driver."))

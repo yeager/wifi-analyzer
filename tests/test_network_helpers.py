@@ -187,11 +187,14 @@ def test_empty_scan_does_not_claim_wifi_device_is_missing():
     assert no_device and no_device[0] == "no-device"
 
 
-def test_failed_scan_does_not_report_connection_lost():
+def test_failed_scan_has_a_remedy_without_reporting_connection_lost():
     previous = [{"ssid": "Office", "connected": True, "bssid": "aa:bb"}]
     failed_scan = [{"error_code": "scan-failed", "error_message": "D-Bus unavailable"}]
 
-    assert wifi_problem(failed_scan, previous) is None
+    problem = wifi_problem(failed_scan, previous)
+    assert problem and problem[0] == "scan-failed"
+    assert "NetworkManager" in problem[2]
+    assert problem[0] != "connection-lost"
 
 
 def test_release_version_is_consistent():
