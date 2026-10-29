@@ -43,16 +43,19 @@ def capture_and_quit(_app):
     window_ids = subprocess.check_output(
         ["xdotool", "search", "--onlyvisible", "--name", "WiFi Analyzer"],
         text=True,
+        timeout=5,
     ).splitlines()
     if not window_ids:
         raise RuntimeError("Could not find the visible WiFi Analyzer X11 window")
-    subprocess.run(["xdotool", "windowfocus", "--sync", window_ids[0]], check=True)
-    focused_window = subprocess.check_output(["xdotool", "getwindowfocus"], text=True).strip()
+    subprocess.run(["xdotool", "windowfocus", window_ids[0]], check=True, timeout=5)
+    focused_window = subprocess.check_output(
+        ["xdotool", "getwindowfocus"], text=True, timeout=5
+    ).strip()
     if focused_window != window_ids[0]:
         raise RuntimeError("Could not focus the WiFi Analyzer X11 window")
     target = Path(sys.argv[1])
     target.parent.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(["scrot", "-u", str(target)], check=False)
+    result = subprocess.run(["scrot", "-u", str(target)], check=False, timeout=5)
     if result.returncode or not target.is_file() or target.stat().st_size == 0:
         raise RuntimeError("Could not capture the Wi-Fi Analyzer window")
     _app.quit()
