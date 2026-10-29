@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: wifi-analyzer\n"
 "Report-Msgid-Bugs-To: https://github.com/yeager/wifi-analyzer/issues\n"
 "POT-Creation-Date: 2026-10-29 01:02+0100\n"
-"PO-Revision-Date: 2026-02-18 09:21+0000\n"
+"PO-Revision-Date: 2026-10-29 01:21+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>, 2026\n"
 "Language-Team: Swedish\n"
 "Language: sv\n"
@@ -136,6 +136,8 @@ msgid ""
 "Ch {channel} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · "
 "{bssid}"
 msgstr ""
+"Kanal {channel} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · "
+"{bssid}"
 
 #: src/wifi_analyzer/app.py:771 src/wifi_analyzer/app.py:912
 #: src/wifi_analyzer/app.py:1097
@@ -302,18 +304,17 @@ msgid "No channel recommendation available"
 msgstr "Ingen kanalrekommendation är tillgänglig"
 
 #: src/wifi_analyzer/app.py:1132
-#, fuzzy
 msgid "Export"
-msgstr "Exportera CSV"
+msgstr "Exportera"
 
 #: src/wifi_analyzer/app.py:1132
 msgid "Cancel"
-msgstr ""
+msgstr "Avbryt"
 
 #: src/wifi_analyzer/app.py:1144
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Export failed: {error}"
-msgstr "Sökningen misslyckades: {error}"
+msgstr "Exporten misslyckades: {error}"
 
 #: src/wifi_analyzer/app.py:1154
 #, python-brace-format
@@ -348,10 +349,14 @@ msgid ""
 "IP addresses: {addresses}\n"
 "Link rate: {rates}"
 msgstr ""
+"Gateway: {gateway}\n"
+"DNS: {dns}\n"
+"IP-adresser: {addresses}\n"
+"Länkhastighet: {rates}"
 
 #: src/wifi_analyzer/app.py:1190
 msgid "Close"
-msgstr ""
+msgstr "Stäng"
 
 #: src/wifi_analyzer/app.py:1195
 msgid "Cleared local scan history"
