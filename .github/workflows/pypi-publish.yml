@@ -24,7 +24,7 @@ jobs:
       - name: Run tests
         env:
           PYTHONPATH: src
-        run: xvfb-run -a pytest -q
+        run: GSK_RENDERER=cairo xvfb-run -a pytest -q
 
   publish:
     needs: test

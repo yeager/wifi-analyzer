@@ -53,7 +53,7 @@ for mo in locale/*/LC_MESSAGES/wifi-analyzer.mo; do
 done
 
 %check
-xvfb-run -a env PYTHONPATH=src pytest -q
+GSK_RENDERER=cairo xvfb-run -a env PYTHONPATH=src pytest -q
 
 %files
 %license LICENSE
