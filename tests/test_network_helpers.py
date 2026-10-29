@@ -123,6 +123,13 @@ def test_wifi_problem_includes_a_remedy():
     assert wifi_problem([{"ssid": "Office", "connected": True, "signal_pct": 70}]) is None
 
 
+def test_failed_scan_does_not_report_connection_lost():
+    previous = [{"ssid": "Office", "connected": True, "bssid": "aa:bb"}]
+    failed_scan = [{"error_code": "scan-failed", "error_message": "D-Bus unavailable"}]
+
+    assert wifi_problem(failed_scan, previous) is None
+
+
 def test_release_version_is_consistent():
     import re
 
