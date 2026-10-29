@@ -71,7 +71,7 @@ class TestChannelChartAccessibility:
 
         assert chart.focused_channel == 6
         chart.on_channel_selected.assert_called_once_with(6)
-        grab_focus.assert_called_once_with(chart)
+        grab_focus.assert_called_once_with()
         assert chart._on_key_pressed(None, Gdk.KEY_Right, 0, 0)
         assert chart.focused_channel == 11
 
