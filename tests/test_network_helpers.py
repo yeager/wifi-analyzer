@@ -176,6 +176,27 @@ def test_scan_comparison_width_parsing_and_anonymization():
     assert parse_iw_wifi_standard("tx bitrate: 866.7 MBit/s VHT-MCS 9") == "Wi-Fi 5 (802.11ac)"
 
 
+def test_wifi_standard_ignores_network_name_and_non_bitrate_text():
+    output = """Connected to 00:11:22:33:44:55 (on wlan0)
+SSID: EHT-MCS HE VHT HT Guest
+freq: 5180
+signal: -45 dBm
+rx bitrate: 866.7 MBit/s VHT-MCS 9 80MHz
+tx bitrate: 780.0 MBit/s VHT-MCS 8 80MHz
+"""
+
+    assert parse_iw_wifi_standard(output) == "Wi-Fi 5 (802.11ac)"
+
+
+def test_wifi_standard_requires_a_phy_marker_on_a_bitrate_line():
+    output = """SSID: EHT-MCS Guest
+freq: 5180
+rx bitrate: 866.7 MBit/s
+"""
+
+    assert parse_iw_wifi_standard(output, 5180) == "802.11a/g/b (legacy)"
+
+
 def test_anonymized_network_keeps_radio_measurements_only():
     assert anonymize_network({
         "ssid": "Office WiFi",

@@ -112,14 +112,18 @@ def parse_iw_wifi_standard(output, frequency=0):
     This is intentionally limited to an active link. Beacon data supplied by
     NetworkManager does not uniquely identify a remote AP's PHY generation.
     """
-    upper = output.upper()
+    bitrate_lines = "\n".join(
+        line for line in output.splitlines()
+        if re.match(r"^\s*(?:RX|TX)\s+BITRATE\s*:", line, re.IGNORECASE)
+    )
+    upper = bitrate_lines.upper()
     for marker, standard in (("EHT", "Wi-Fi 7 (802.11be)"),
                              ("HE", "Wi-Fi 6/6E (802.11ax)"),
                              ("VHT", "Wi-Fi 5 (802.11ac)"),
                              ("HT", "Wi-Fi 4 (802.11n)")):
-        if marker in upper:
+        if re.search(rf"\b{marker}-MCS\b", upper):
             return standard
-    if "BITRATE" in upper:
+    if bitrate_lines:
         return "802.11a/g/b (legacy)" if frequency else "Legacy Wi-Fi"
     return ""
 
