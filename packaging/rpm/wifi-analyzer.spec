@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.19
+Version:        0.1.20
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -69,6 +69,10 @@ xvfb-run -a env PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Thu Oct 29 2026 Daniel Nylander <po@danielnylander.se> - 0.1.20-1
+- Add keyboard navigation and screen-reader support to the channel graph.
+- Require a complete, validated Swedish translation catalogue.
+
 * Sun Oct 25 2026 Daniel Nylander <po@danielnylander.se> - 0.1.19-1
 - Prepare PyPI release, bundle translations, and synchronize version metadata.
 
