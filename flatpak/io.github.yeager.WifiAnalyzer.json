@@ -1,7 +1,7 @@
 {
   "app-id": "io.github.yeager.WifiAnalyzer",
   "runtime": "org.gnome.Platform",
-  "runtime-version": "50",
+  "runtime-version": "51",
   "sdk": "org.gnome.Sdk",
   "command": "wifi-analyzer",
   "finish-args": [
@@ -28,8 +28,8 @@
         {
           "type": "git",
           "url": "https://github.com/yeager/wifi-analyzer.git",
-          "tag": "v0.1.18",
-          "commit": "09b38e595eacff486ea8c664a894529b5bf367d2"
+          "tag": "v0.1.20",
+          "commit": "98e4c9d75cadbc4cc3158f16c9040281bfd90acd"
         }
       ]
     }
