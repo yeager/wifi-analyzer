@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -100,6 +101,37 @@ def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):
     assert history.stat().st_mode & 0o777 == 0o600
     clear_history()
     assert not history.exists()
+
+
+def test_history_recovers_from_wrong_json_shape_and_ignores_bad_records(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    history = tmp_path / "wifi-analyzer" / "history.json"
+    history.parent.mkdir(parents=True)
+    history.write_text('{"not": "a list"}', encoding="utf-8")
+
+    save_history_snapshot(
+        [{"ssid": "Office", "bssid": "aa:bb", "signal_pct": 75, "channel": 36}],
+        now="2026-10-29T12:00:00",
+        profile="Office",
+    )
+    assert load_signal_history("aa:bb", "Office") == [
+        {"scanned_at": "2026-10-29T12:00:00", "signal_pct": 75, "channel": 36},
+    ]
+
+    history.write_text(json.dumps([
+        {"scanned_at": [], "profile": "Office", "networks": []},
+        {"scanned_at": "broken", "profile": "Office", "networks": [
+            None,
+            {"bssid": "aa:bb", "signal_pct": "bad", "channel": 36},
+        ]},
+        {"scanned_at": "valid", "profile": "Office", "networks": [
+            {"bssid": "aa:bb", "signal_pct": 60, "channel": 40},
+        ]},
+    ]), encoding="utf-8")
+
+    assert load_signal_history("aa:bb", "Office") == [
+        {"scanned_at": "valid", "signal_pct": 60, "channel": 40},
+    ]
 
 
 def test_scan_comparison_width_parsing_and_anonymization():

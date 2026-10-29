@@ -292,15 +292,29 @@ def _history_path():
     return os.path.join(directory, "history.json")
 
 
-def save_history_snapshot(networks, now=None, profile="Default"):
-    """Keep local, bounded scan summaries. No scan data leaves the device."""
-    now = now or datetime.now().astimezone().isoformat(timespec="seconds")
-    path = _history_path()
+def _load_history_records(path):
+    """Load structurally valid local history records, ignoring malformed data."""
     try:
         with open(path, encoding="utf-8") as handle:
             history = json.load(handle)
     except (OSError, ValueError):
-        history = []
+        return []
+    if not isinstance(history, list):
+        return []
+    return [
+        scan for scan in history
+        if isinstance(scan, dict)
+        and isinstance(scan.get("scanned_at"), str)
+        and isinstance(scan.get("profile", "Default"), str)
+        and isinstance(scan.get("networks"), list)
+    ]
+
+
+def save_history_snapshot(networks, now=None, profile="Default"):
+    """Keep local, bounded scan summaries. No scan data leaves the device."""
+    now = now or datetime.now().astimezone().isoformat(timespec="seconds")
+    path = _history_path()
+    history = _load_history_records(path)
     history.append({"scanned_at": now, "profile": profile, "networks": [
         {key: net.get(key) for key in ("ssid", "bssid", "band", "channel", "signal_pct", "dbm", "security")}
         for net in networks if net.get("bssid")
@@ -327,14 +341,31 @@ def clear_history():
 
 def load_signal_history(bssid, profile=None):
     """Return local time-series points for one AP, optionally per location profile."""
-    try:
-        with open(_history_path(), encoding="utf-8") as handle:
-            history = json.load(handle)
-    except (OSError, ValueError):
-        return []
-    return [{"scanned_at": scan["scanned_at"], "signal_pct": net.get("signal_pct"), "channel": net.get("channel")}
-            for scan in history if profile in (None, scan.get("profile", "Default"))
-            for net in scan.get("networks", []) if net.get("bssid") == bssid]
+    points = []
+    for scan in _load_history_records(_history_path()):
+        if profile is not None and profile != scan.get("profile", "Default"):
+            continue
+        for net in scan["networks"]:
+            if not isinstance(net, dict) or net.get("bssid") != bssid:
+                continue
+            signal = net.get("signal_pct")
+            channel = net.get("channel")
+            if (
+                isinstance(signal, bool)
+                or not isinstance(signal, (int, float))
+                or not math.isfinite(signal)
+                or not 0 <= signal <= 100
+                or isinstance(channel, bool)
+                or not isinstance(channel, int)
+                or channel < 0
+            ):
+                continue
+            points.append({
+                "scanned_at": scan["scanned_at"],
+                "signal_pct": signal,
+                "channel": channel,
+            })
+    return points
 
 
 def compare_scans(previous, current):
