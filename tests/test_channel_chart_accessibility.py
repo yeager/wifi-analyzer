@@ -1,10 +1,12 @@
+import time
 from unittest.mock import Mock, patch
 
+import cairo
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
-from gi.repository import Gdk, Gtk
+from gi.repository import Gdk, GLib, Gtk
 
 from wifi_analyzer.app import ChannelDrawingArea
 
@@ -18,6 +20,26 @@ class TestChannelChartAccessibility:
         # Gtk.DrawingArea.set_draw_func passes cairo.Context through PyGObject.
         # python3-cairo alone does not install this GObject converter on Debian.
         gi.require_foreign("cairo")
+
+    def test_drawing_area_callback_receives_cairo_context(self):
+        chart = ChannelDrawingArea()
+        draw_contexts = []
+        chart.set_draw_func(lambda _area, context, _width, _height: draw_contexts.append(context))
+        window = Gtk.Window()
+        window.set_child(chart)
+        window.present()
+
+        main_context = GLib.MainContext.default()
+        deadline = time.monotonic() + 2
+        while not draw_contexts and time.monotonic() < deadline:
+            if main_context.pending():
+                main_context.iteration(False)
+            else:
+                time.sleep(0.01)
+        window.destroy()
+
+        assert draw_contexts
+        assert isinstance(draw_contexts[0], cairo.Context)
 
     def test_chart_is_focusable_and_has_an_accessible_role(self):
         chart = ChannelDrawingArea()
