@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/yeager/wifi-analyzer/issues\n"
-"POT-Creation-Date: 2026-10-29 01:02+0100\n"
+"POT-Creation-Date: 2026-10-29 01:27+0100\n"
 "PO-Revision-Date: 2026-09-21 18:35+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -72,8 +72,8 @@ msgstr ""
 msgid "Error: no WiFi device found"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:439 src/wifi_analyzer/app.py:1012
-#: src/wifi_analyzer/app.py:1099
+#: src/wifi_analyzer/app.py:439 src/wifi_analyzer/app.py:1015
+#: src/wifi_analyzer/app.py:1104
 msgid "<Hidden>"
 msgstr ""
 
@@ -102,232 +102,237 @@ msgstr ""
 msgid "Filtering access points by channel {channel}."
 msgstr ""
 
-#: src/wifi_analyzer/app.py:632
+#: src/wifi_analyzer/app.py:635
 msgid "No networks found"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:765
+#: src/wifi_analyzer/app.py:768
 msgid "measured"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:765
+#: src/wifi_analyzer/app.py:768
 msgid "estimated"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:768
+#: src/wifi_analyzer/app.py:771
 msgid " · Connected"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:769
+#: src/wifi_analyzer/app.py:772
 #, python-brace-format
 msgid ""
 "Ch {channel} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · "
 "{bssid}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:771 src/wifi_analyzer/app.py:912
-#: src/wifi_analyzer/app.py:1097
+#: src/wifi_analyzer/app.py:774 src/wifi_analyzer/app.py:915
+#: src/wifi_analyzer/app.py:1102
 msgid "Open"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:806
+#: src/wifi_analyzer/app.py:809
 msgid "No local signal history yet"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:830 src/wifi_analyzer/app.py:1222
+#: src/wifi_analyzer/app.py:833 src/wifi_analyzer/app.py:1227
 msgid "WiFi Analyzer"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:839
+#: src/wifi_analyzer/app.py:842
 msgid "Toggle theme"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:844 src/wifi_analyzer/app.py:1155
+#: src/wifi_analyzer/app.py:847 src/wifi_analyzer/app.py:1160
 msgid "Export CSV"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:845 src/wifi_analyzer/app.py:1162
+#: src/wifi_analyzer/app.py:848 src/wifi_analyzer/app.py:1167
 msgid "Export JSON"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:846 src/wifi_analyzer/app.py:1170
+#: src/wifi_analyzer/app.py:849 src/wifi_analyzer/app.py:1175
 msgid "Export anonymized JSON"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:847 src/wifi_analyzer/app.py:1180
+#: src/wifi_analyzer/app.py:850 src/wifi_analyzer/app.py:1185
 msgid "Export diagnostic report"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:848 src/wifi_analyzer/app.py:1187
+#: src/wifi_analyzer/app.py:851 src/wifi_analyzer/app.py:1192
 msgid "Connection diagnostics"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:849
+#: src/wifi_analyzer/app.py:852
 msgid "Clear local history"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:850
+#: src/wifi_analyzer/app.py:853
 msgid "About"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:854
+#: src/wifi_analyzer/app.py:857
 msgid "Scan"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:857
+#: src/wifi_analyzer/app.py:860
 msgid "Monitor"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:857
+#: src/wifi_analyzer/app.py:860
 msgid "Scan every 60 seconds and notify about changes"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:892
+#: src/wifi_analyzer/app.py:895
 msgid "Filter by name, BSSID, channel or security"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:901
+#: src/wifi_analyzer/app.py:904
 msgid "Minimum signal"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:905
+#: src/wifi_analyzer/app.py:908
 msgid "Only show access points at or above this estimated dBm value"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:909 src/wifi_analyzer/app.py:922
-#: src/wifi_analyzer/app.py:1104
+#: src/wifi_analyzer/app.py:912 src/wifi_analyzer/app.py:925
+#: src/wifi_analyzer/app.py:1109
 msgid "Security"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:912 src/wifi_analyzer/app.py:1096
+#: src/wifi_analyzer/app.py:915 src/wifi_analyzer/app.py:1101
 msgid "All security"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:917
+#: src/wifi_analyzer/app.py:920
 msgid "Hidden SSIDs only"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:921
+#: src/wifi_analyzer/app.py:924
 msgid "Sort"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:922
+#: src/wifi_analyzer/app.py:925
 msgid "Signal"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:922 src/wifi_analyzer/app.py:1102
+#: src/wifi_analyzer/app.py:925 src/wifi_analyzer/app.py:1107
 msgid "Channel"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:925
+#: src/wifi_analyzer/app.py:928
 msgid "Profile"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:927
+#: src/wifi_analyzer/app.py:930
 msgid "Keep local scan history separate for this location"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:956
+#: src/wifi_analyzer/app.py:959
 msgid "Ready — click Scan"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1000
+#: src/wifi_analyzer/app.py:1003
 #, python-brace-format
 msgid "Main overlapping access points: {names}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1002
+#: src/wifi_analyzer/app.py:1005
 msgid "No overlapping access points detected"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1009
+#: src/wifi_analyzer/app.py:1012
 msgid "Signal history"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1013
+#: src/wifi_analyzer/app.py:1016
 #, python-brace-format
 msgid "Local history for profile: {profile}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1022
+#: src/wifi_analyzer/app.py:1025
 msgid "Scanning..."
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1036
+#: src/wifi_analyzer/app.py:1039
 msgid "Monitoring enabled; scanning every 60 seconds"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1040
+#: src/wifi_analyzer/app.py:1043
 msgid "Monitoring disabled"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1063
+#: src/wifi_analyzer/app.py:1064
 #, python-brace-format
-msgid "Scan failed: {error}"
-msgstr ""
-
-#: src/wifi_analyzer/app.py:1065
-#, python-brace-format
-msgid "Found {count} networks{suffix}"
-msgstr ""
-
-#: src/wifi_analyzer/app.py:1067
-msgid "WiFi scan changed"
+msgid " · {new} new, {gone} gone"
 msgstr ""
 
 #: src/wifi_analyzer/app.py:1068
 #, python-brace-format
+msgid "Scan failed: {error}"
+msgstr ""
+
+#: src/wifi_analyzer/app.py:1070
+#, python-brace-format
+msgid "Found {count} networks{suffix}"
+msgstr ""
+
+#: src/wifi_analyzer/app.py:1072
+msgid "WiFi scan changed"
+msgstr ""
+
+#: src/wifi_analyzer/app.py:1073
+#, python-brace-format
 msgid "{new} new, {gone} gone, {changed} changed access points"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1120
+#: src/wifi_analyzer/app.py:1125
 #, python-brace-format
 msgid "Least congested channel: {channel} (overlap score {score})"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1123
+#: src/wifi_analyzer/app.py:1128
 msgid "No channel recommendation available"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1132
+#: src/wifi_analyzer/app.py:1137
 msgid "Export"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1132
+#: src/wifi_analyzer/app.py:1137
 msgid "Cancel"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1144
+#: src/wifi_analyzer/app.py:1149
 #, python-brace-format
 msgid "Export failed: {error}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1154
+#: src/wifi_analyzer/app.py:1159
 #, python-brace-format
 msgid "Exported CSV to {path}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1161
+#: src/wifi_analyzer/app.py:1166
 #, python-brace-format
 msgid "Exported JSON to {path}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1169
+#: src/wifi_analyzer/app.py:1174
 #, python-brace-format
 msgid "Exported anonymized JSON to {path}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1179
+#: src/wifi_analyzer/app.py:1184
 #, python-brace-format
 msgid "Exported diagnostic report to {path}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1184 src/wifi_analyzer/app.py:1185
-#: src/wifi_analyzer/app.py:1186 src/wifi_analyzer/app.py:1189
+#: src/wifi_analyzer/app.py:1189 src/wifi_analyzer/app.py:1190
+#: src/wifi_analyzer/app.py:1191 src/wifi_analyzer/app.py:1194
 msgid "unavailable"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1188
+#: src/wifi_analyzer/app.py:1193
 #, python-brace-format
 msgid ""
 "Gateway: {gateway}\n"
@@ -336,39 +341,39 @@ msgid ""
 "Link rate: {rates}"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1190
+#: src/wifi_analyzer/app.py:1195
 msgid "Close"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1195
+#: src/wifi_analyzer/app.py:1200
 msgid "Cleared local scan history"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1209
+#: src/wifi_analyzer/app.py:1214
 msgid "WiFi Network Analysis Tool"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1211
+#: src/wifi_analyzer/app.py:1216
 msgid "Created by"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1212
+#: src/wifi_analyzer/app.py:1217
 msgid "With thanks to"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1215
+#: src/wifi_analyzer/app.py:1220
 msgid "Project on GitHub"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1247
+#: src/wifi_analyzer/app.py:1252
 msgid "Welcome"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1252
+#: src/wifi_analyzer/app.py:1257
 msgid "Welcome to WiFi Analyzer"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1253
+#: src/wifi_analyzer/app.py:1258
 msgid ""
 "Analyze WiFi networks.\n"
 "\n"
@@ -377,6 +382,6 @@ msgid ""
 "✓ Channel overlap detection"
 msgstr ""
 
-#: src/wifi_analyzer/app.py:1254
+#: src/wifi_analyzer/app.py:1259
 msgid "Get Started"
 msgstr ""

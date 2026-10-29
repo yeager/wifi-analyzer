@@ -22,6 +22,18 @@ def validate_swedish_catalogue(catalogue: Path) -> None:
             "Swedish catalogue contains fuzzy or untranslated messages: "
             + statistics.strip()
         )
+    try:
+        subprocess.run(
+            ["msgcmp", str(catalogue), str(ROOT / "po" / "wifi-analyzer.pot")],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as error:
+        raise ValueError(
+            "Swedish catalogue does not match po/wifi-analyzer.pot: "
+            + error.stderr.strip()
+        ) from error
 
 
 def compile_catalogues() -> None:

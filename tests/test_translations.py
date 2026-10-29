@@ -27,12 +27,13 @@ def test_current_swedish_catalogue_is_complete():
     [
         'msgid "Hello"\nmsgstr ""\n',
         '#, fuzzy\nmsgid "Hello"\nmsgstr "Hej"\n',
+        'msgid "Hello"\nmsgstr "Hej"\n',
     ],
-    ids=["untranslated", "fuzzy"],
+    ids=["untranslated", "fuzzy", "missing-template-entries"],
 )
 def test_incomplete_swedish_catalogue_is_rejected(tmp_path, entry):
     catalogue = tmp_path / "sv.po"
     catalogue.write_text(HEADER + "\n" + entry, encoding="utf-8")
 
-    with pytest.raises(ValueError, match="Swedish catalogue contains"):
+    with pytest.raises(ValueError, match="Swedish catalogue"):
         validate_swedish_catalogue(catalogue)

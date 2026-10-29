@@ -1061,7 +1061,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             save_history_snapshot(self.networks, profile=self.profile_entry.get_text().strip() or "Default")
         self._update_ui()
         changes = compare_scans(previous, self.networks) if previous else None
-        suffix = f" · {len(changes['new'])} new, {len(changes['gone'])} gone" if changes else ""
+        suffix = _(" · {new} new, {gone} gone").format(
+            new=len(changes["new"]), gone=len(changes["gone"]),
+        ) if changes else ""
         if scan_error:
             self._set_status(_("Scan failed: {error}").format(error=scan_error["error_message"]))
         else:
