@@ -505,7 +505,7 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         self.set_content_height(220)
         self.set_focusable(True)
         self.set_accessible_role(Gtk.AccessibleRole.IMG)
-        instructions = _("Focus the chart and use the Left and Right Arrow keys to choose a channel. Press Enter or Space to filter the network list. Scroll to zoom.")
+        instructions = _("Focus the chart and use the Left and Right Arrow keys to choose a channel. Press Home or End to jump to the first or last channel. Press Enter or Space to filter the network list. Scroll to zoom.")
         self.update_property(
             [Gtk.AccessibleProperty.LABEL, Gtk.AccessibleProperty.DESCRIPTION],
             [_("Channel overlap chart"), instructions],
@@ -540,15 +540,20 @@ class ChannelDrawingArea(Gtk.DrawingArea):
         )
 
     def _on_key_pressed(self, _controller, keyval, _keycode, _state):
-        if keyval in (Gdk.KEY_Left, Gdk.KEY_Right):
+        if keyval in (Gdk.KEY_Left, Gdk.KEY_Right, Gdk.KEY_Home, Gdk.KEY_End):
             if not self.selectable_channels:
                 return False
-            direction = 1 if keyval == Gdk.KEY_Right else -1
-            if self.focused_channel in self.selectable_channels:
-                index = self.selectable_channels.index(self.focused_channel)
+            if keyval == Gdk.KEY_Home:
+                index = 0
+            elif keyval == Gdk.KEY_End:
+                index = len(self.selectable_channels) - 1
             else:
-                index = -1 if direction > 0 else 0
-            index = (index + direction) % len(self.selectable_channels)
+                direction = 1 if keyval == Gdk.KEY_Right else -1
+                if self.focused_channel in self.selectable_channels:
+                    index = self.selectable_channels.index(self.focused_channel)
+                else:
+                    index = -1 if direction > 0 else 0
+                index = (index + direction) % len(self.selectable_channels)
             self.focused_channel = self.selectable_channels[index]
             self.queue_draw()
             self._announce(_("Channel {channel}. Press Enter to filter the network list.").format(

@@ -50,3 +50,16 @@ class TestChannelChartAccessibility:
         assert chart._on_key_pressed(None, Gdk.KEY_space, 0, 0)
         chart._announce.assert_called_once_with("Channel filter cleared.")
 
+    def test_home_and_end_jump_to_the_first_and_last_available_channels(self):
+        chart = ChannelDrawingArea()
+        chart.set_networks([], "5 GHz", selectable_channels=[36, 40, 44, 149])
+        chart._announce = Mock()
+
+        assert chart._on_key_pressed(None, Gdk.KEY_Home, 0, 0)
+        assert chart.focused_channel == 36
+        assert chart._announce.call_args.args[0].startswith("Channel 36.")
+
+        assert chart._on_key_pressed(None, Gdk.KEY_End, 0, 0)
+        assert chart.focused_channel == 149
+        assert chart._announce.call_args.args[0].startswith("Channel 149.")
+
