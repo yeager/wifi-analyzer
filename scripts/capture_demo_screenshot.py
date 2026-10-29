@@ -66,8 +66,19 @@ def main():
     (config_dir / "welcome.json").write_text(
         json.dumps({"welcome_shown": True}), encoding="utf-8"
     )
-    app.scan_networks_dbus = lambda: DEMO_NETWORKS
-    app.WifiAnalyzerWindow._scan = lambda window: window._on_scan_done(DEMO_NETWORKS)
+    # The demo must never issue a real scan; populate its UI after the window
+    # has been presented so GTK has a mapped surface before the screenshot.
+    app.WifiAnalyzerWindow._scan = lambda _window: None
+
+    def activate_demo(application):
+        window = application.get_active_window()
+        if not window:
+            window = app.WifiAnalyzerWindow(application)
+        application._wlc_settings = {"welcome_shown": True}
+        window.present()
+        window._on_scan_done(DEMO_NETWORKS)
+
+    app.WifiAnalyzerApp.do_activate = activate_demo
     application = app.WifiAnalyzerApp()
     result = {"status": 0}
 
@@ -81,7 +92,6 @@ def main():
         return GLib.SOURCE_REMOVE
 
     GLib.timeout_add_seconds(4, capture, application)
-    application.connect("activate", lambda *_args: None)
     application.run()
     return result["status"]
 
