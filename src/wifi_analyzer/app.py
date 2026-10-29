@@ -1247,12 +1247,24 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self._choose_export_path(_("Export JSON"), "wifi-analyzer.json", write)
 
     def _export_anonymous_json(self, *_args):
+        dialog = Adw.AlertDialog.new(_("Export anonymized JSON"), None)
+        dialog.set_body(_("This export replaces network names (SSIDs) and access point MAC addresses (BSSIDs) with “hidden”. Channel, signal and security details remain. Review the file before sharing it."))
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("export", _("Continue to export"))
+        dialog.set_response_appearance("export", Adw.ResponseAppearance.SUGGESTED)
+
         def write(path):
             records = [anonymize_network(net) for net in getattr(self, "visible_networks", self.networks)
                        if net.get("bssid")]
             export_json(records, None, path)
             self._set_status(_("Exported anonymized JSON to {path}").format(path=path))
-        self._choose_export_path(_("Export anonymized JSON"), "wifi-analyzer-anonymous.json", write)
+
+        def on_response(_dialog, response):
+            if response == "export":
+                self._choose_export_path(_("Export anonymized JSON"), "wifi-analyzer-anonymous.json", write)
+
+        dialog.connect("response", on_response)
+        dialog.present(self)
 
     def _export_report(self, *_args):
         def write(path):

@@ -159,6 +159,12 @@ msgstr ""
 msgid "Export diagnostic report"
 msgstr ""
 
+msgid "This export replaces network names (SSIDs) and access point MAC addresses (BSSIDs) with “hidden”. Channel, signal and security details remain. Review the file before sharing it."
+msgstr ""
+
+msgid "Continue to export"
+msgstr ""
+
 #: src/wifi_analyzer/app.py:851 src/wifi_analyzer/app.py:1192
 msgid "Connection diagnostics"
 msgstr ""

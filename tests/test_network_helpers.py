@@ -176,6 +176,50 @@ def test_scan_comparison_width_parsing_and_anonymization():
     assert parse_iw_wifi_standard("tx bitrate: 866.7 MBit/s VHT-MCS 9") == "Wi-Fi 5 (802.11ac)"
 
 
+def test_anonymized_export_requires_confirmation_before_file_chooser(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    captured = {}
+
+    class FakeDialog:
+        def __init__(self, title, _subtitle):
+            captured["title"] = title
+
+        def set_body(self, body):
+            captured["body"] = body
+
+        def add_response(self, response, label):
+            captured.setdefault("responses", {})[response] = label
+
+        def set_response_appearance(self, response, appearance):
+            captured["appearance"] = (response, appearance)
+
+        def connect(self, signal, callback):
+            captured["callback"] = callback
+
+        def present(self, parent):
+            captured["parent"] = parent
+
+    monkeypatch.setattr(app_module.Adw.AlertDialog, "new", FakeDialog)
+    window = app_module.WifiAnalyzerWindow.__new__(app_module.WifiAnalyzerWindow)
+    window._choose_export_path = lambda *args: captured.setdefault("chooser", args)
+
+    window._export_anonymous_json()
+
+    assert "SSIDs" in captured["body"]
+    assert "BSSIDs" in captured["body"]
+    assert "channel" in captured["body"].casefold()
+    assert captured["responses"]["cancel"] == "Cancel"
+    assert captured["responses"]["export"] == "Continue to export"
+    assert "chooser" not in captured
+
+    captured["callback"](None, "cancel")
+    assert "chooser" not in captured
+
+    captured["callback"](None, "export")
+    assert captured["chooser"][0] == "Export anonymized JSON"
+
+
 def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
     target = {"ssid": "Target", "bssid": "a", "band": "5 GHz", "channel": 36, "width_mhz": 20}
     other = {"ssid": "Neighbour", "bssid": "b", "band": "5 GHz", "channel": 36, "width_mhz": 20, "signal_pct": 70}

@@ -173,6 +173,12 @@ msgstr "Exportera anonymiserad JSON"
 msgid "Export diagnostic report"
 msgstr "Exportera diagnostikrapport"
 
+msgid "This export replaces network names (SSIDs) and access point MAC addresses (BSSIDs) with “hidden”. Channel, signal and security details remain. Review the file before sharing it."
+msgstr "Den här exporten ersätter nätverksnamn (SSID) och åtkomstpunkternas MAC-adresser (BSSID) med ”dolt”. Information om kanal, signalstyrka och säkerhet finns kvar. Granska filen innan du delar den."
+
+msgid "Continue to export"
+msgstr "Fortsätt exportera"
+
 #: src/wifi_analyzer/app.py:851 src/wifi_analyzer/app.py:1192
 msgid "Connection diagnostics"
 msgstr "Anslutningsdiagnostik"
