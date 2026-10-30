@@ -595,6 +595,38 @@ def test_all_identifiable_exports_require_confirmation(monkeypatch):
     ]
 
 
+def test_diagnostic_export_reuses_regulatory_ranges_from_the_latest_scan(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    captured = {}
+    network = {
+        "ssid": "Example", "bssid": "00:11:22:33:44:55", "band": "5 GHz",
+        "channel": 36, "signal_pct": 70, "width_mhz": 20,
+    }
+    window = WifiAnalyzerWindow.__new__(WifiAnalyzerWindow)
+    window.networks = [network]
+    window.visible_networks = [network]
+    window.regulatory_ranges = [(5180, 5180, "")]
+    window._confirm_identifiable_export = (
+        lambda _title, _filename, write: write("report.html")
+    )
+    window._set_status = Mock()
+
+    def export_report(networks, recommendations, path):
+        captured.update(networks=networks, recommendations=recommendations, path=path)
+
+    monkeypatch.setattr(
+        app_module, "local_regulatory_ranges",
+        Mock(side_effect=AssertionError("must use scan cache")),
+    )
+    monkeypatch.setattr(app_module, "export_html_report", export_report)
+
+    window._export_report()
+
+    assert captured["path"] == "report.html"
+    assert captured["recommendations"]["5 GHz"][0] == 36
+
+
 def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
     target = {"ssid": "Target", "bssid": "a", "band": "5 GHz", "channel": 36, "width_mhz": 20}
     other = {"ssid": "Neighbour", "bssid": "b", "band": "5 GHz", "channel": 36, "width_mhz": 20, "signal_pct": 70}

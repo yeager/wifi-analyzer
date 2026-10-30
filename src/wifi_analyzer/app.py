@@ -1488,7 +1488,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
 
     def _export_report(self, *_args):
         def write(path):
-            regulatory_ranges = local_regulatory_ranges()
+            regulatory_ranges = getattr(self, "regulatory_ranges", ())
             recommendations = {}
             for band in ("2.4 GHz", "5 GHz", "6 GHz"):
                 ranked = recommend_channels(self.networks, band, regulatory_ranges)
