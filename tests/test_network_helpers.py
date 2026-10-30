@@ -271,6 +271,7 @@ def test_main_view_channel_recommendations_use_latest_scan_regulatory_ranges(mon
     window.channel_chart = Mock()
     window.recommendation = Mock()
     window.recommendation_detail = Mock()
+    window.security_advice = Mock()
 
     window._update_ui()
 
@@ -311,12 +312,14 @@ def test_main_view_adds_connected_network_security_advice(monkeypatch):
     window.channel_chart = Mock()
     window.recommendation = Mock()
     window.recommendation_detail = Mock()
+    window.security_advice = Mock()
 
     window._update_ui()
 
-    detail = window.recommendation_detail.set_label.call_args.args[0]
-    assert "Security advice:" in detail
-    assert "disable WEP/WPA1" in detail
+    advice = window.security_advice.set_label.call_args.args[0]
+    assert "Security advice:" in advice
+    assert "disable WEP/WPA1" in advice
+    window.security_advice.set_visible.assert_called_once_with(True)
 
 
 def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):

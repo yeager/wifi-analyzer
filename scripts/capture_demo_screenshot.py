@@ -16,7 +16,7 @@ DEMO_NETWORKS = [
     {
         "ssid": "Example Home", "bssid": "02:00:00:00:00:01",
         "freq": 2412, "channel": 1, "signal_pct": 86, "dbm": -57,
-        "security": "WPA3", "band": "2.4 GHz", "width_mhz": 20,
+        "security": "", "band": "2.4 GHz", "width_mhz": 20,
         "channel_status": "", "last_seen": 0, "connected": True,
         "width_source": "measured", "wifi_standard": "Wi-Fi 6",
     },
@@ -110,6 +110,7 @@ def run_demo_app():
                 "status": window.statusbar.get_label(),
                 "recommendation": window.recommendation.get_label(),
                 "recommendation_detail": window.recommendation_detail.get_label(),
+                "security_advice": window.security_advice.get_label(),
                 "history_measurements": history_measurements,
             }), encoding="utf-8")
             return GLib.SOURCE_REMOVE
@@ -155,6 +156,12 @@ def main():
                 "at 20 MHz; reported access point widths are used when available. Only "
                 "access points found in this scan count; client traffic and hidden "
                 "networks are not measured."
+            )
+            or state.get("security_advice") != (
+                "Security advice: The connected access point reports no Wi-Fi "
+                "security. Avoid sensitive activity on this network until you "
+                "have checked what protection it provides. HTTPS protects only "
+                "connections to sites that use it."
             )
             or state.get("history_measurements") != expected_history_measurements
         ):

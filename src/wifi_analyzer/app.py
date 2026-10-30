@@ -1268,8 +1268,11 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self.recommendation.add_css_class("dim-label")
         self.recommendation_detail = Gtk.Label(xalign=0, wrap=True)
         self.recommendation_detail.add_css_class("dim-label")
+        self.security_advice = Gtk.Label(xalign=0, wrap=True)
+        self.security_advice.set_margin_top(4)
         recommendation_box.append(self.recommendation)
         recommendation_box.append(self.recommendation_detail)
+        recommendation_box.append(self.security_advice)
         main_box.append(recommendation_box)
 
         # Channel overlap visualization
@@ -1508,10 +1511,10 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             recommendations, no_result_reason,
         )
         security_advice = connected_security_advice(self.networks)
-        if security_advice:
-            explanation = f"{explanation}\n\n{security_advice}"
         self.recommendation.set_label(recommendation)
         self.recommendation_detail.set_label(explanation)
+        self.security_advice.set_label(security_advice)
+        self.security_advice.set_visible(bool(security_advice))
 
     def _export_rows(self):
         fields = ("ssid", "bssid", "band", "freq", "channel", "width_mhz", "signal_pct", "dbm", "security", "channel_status", "last_seen")
