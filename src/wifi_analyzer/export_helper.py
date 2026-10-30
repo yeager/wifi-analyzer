@@ -49,8 +49,11 @@ def export_html_report(networks, recommendations, filepath):
                             ("ssid", "bssid", "band", "channel", "signal_pct", "security", "channel_status")) + "</tr>"
         for net in networks
     )
-    advice = "<br>".join(f"{escape(band)}: channel {channel} (score {score})"
-                         for band, (channel, score) in recommendations.items() if channel is not None)
+    advice = "<br>".join(
+        f"{escape(str(band))}: channel {escape(str(channel))} (score {escape(str(score))})"
+        for band, (channel, score) in recommendations.items()
+        if channel is not None
+    )
     document = f"""<!doctype html><html><head><meta charset=\"utf-8\"><title>WiFi Analyzer report</title>
 <style>body{{font-family:sans-serif;margin:2rem}}table{{border-collapse:collapse;width:100%}}td,th{{border:1px solid #ccc;padding:.4rem;text-align:left}}</style>
 </head><body><h1>WiFi Analyzer report</h1><p>Generated {escape(time.strftime('%Y-%m-%d %H:%M:%S'))}</p>
