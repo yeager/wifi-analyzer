@@ -200,7 +200,24 @@ jobs:
           git archive --format=tar.gz --prefix="wifi-analyzer-$version/" HEAD \
             > "$HOME/rpmbuild/SOURCES/wifi-analyzer-$version.tar.gz"
       - name: Build RPM package
-        run: rpmbuild -ba packaging/rpm/wifi-analyzer.spec
+        run: |
+          set -eu
+          rpmbuild -ba packaging/rpm/wifi-analyzer.spec
+          package=$(find "$HOME/rpmbuild/RPMS" -type f -name 'wifi-analyzer-*.noarch.rpm' -print -quit)
+          test -n "$package"
+          for path in \
+            /usr/share/applications/io.github.yeager.wifi-analyzer.desktop \
+            /usr/share/metainfo/io.github.yeager.wifi-analyzer.metainfo.xml \
+            /usr/share/icons/hicolor/256x256/apps/io.github.yeager.wifi-analyzer.png \
+            /usr/share/icons/hicolor/512x512/apps/io.github.yeager.wifi-analyzer.png \
+            /usr/share/locale/sv/LC_MESSAGES/wifi-analyzer.mo \
+            /usr/share/man/man1/wifi-analyzer.1.gz \
+            /usr/share/man/sv/man1/wifi-analyzer.1.gz; do
+            rpm -qpl "$package" | grep -Fxq "$path" || {
+              echo "RPM package is missing $path" >&2
+              exit 1
+            }
+          done
       - uses: actions/upload-artifact@v7
         with:
           name: wifi-analyzer-rpm

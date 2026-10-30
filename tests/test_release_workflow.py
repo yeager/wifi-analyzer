@@ -115,6 +115,22 @@ def test_debian_smoke_test_requires_launcher_metadata_icons_and_translations():
         assert path in workflow
 
 
+def test_rpm_build_checks_launcher_metadata_icons_and_translations():
+    workflow = (ROOT / ".github/workflows/packages.yml").read_text(encoding="utf-8")
+    rpm_job = workflow.split("  rpm:\n", 1)[1].split("  release:\n", 1)[0]
+    assert "rpm -qpl \"$package\"" in rpm_job
+    for path in (
+        "/usr/share/applications/io.github.yeager.wifi-analyzer.desktop",
+        "/usr/share/metainfo/io.github.yeager.wifi-analyzer.metainfo.xml",
+        "/usr/share/icons/hicolor/256x256/apps/io.github.yeager.wifi-analyzer.png",
+        "/usr/share/icons/hicolor/512x512/apps/io.github.yeager.wifi-analyzer.png",
+        "/usr/share/locale/sv/LC_MESSAGES/wifi-analyzer.mo",
+        "/usr/share/man/man1/wifi-analyzer.1.gz",
+        "/usr/share/man/sv/man1/wifi-analyzer.1.gz",
+    ):
+        assert path in rpm_job
+
+
 def run_release_publisher(tmp_path, release_exists):
     bin_directory = tmp_path / "bin"
     bin_directory.mkdir()
