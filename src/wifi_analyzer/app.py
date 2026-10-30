@@ -1408,14 +1408,14 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         def write(path):
             export_csv(self._export_rows(), headers, path)
             self._set_status(_("Exported CSV to {path}").format(path=path))
-        self._choose_export_path(_("Export CSV"), "wifi-analyzer.csv", write)
+        self._confirm_identifiable_export(_("Export CSV"), "wifi-analyzer.csv", write)
 
     def _export_json(self, *_args):
         headers = ["ssid", "bssid", "band", "frequency_mhz", "channel", "width_mhz", "signal_percent", "estimated_dbm", "security", "channel_status", "last_seen_seconds"]
         def write(path):
             export_json(self._export_rows(), headers, path)
             self._set_status(_("Exported JSON to {path}").format(path=path))
-        self._choose_export_path(_("Export JSON"), "wifi-analyzer.json", write)
+        self._confirm_identifiable_export(_("Export JSON"), "wifi-analyzer.json", write)
 
     def _export_anonymous_json(self, *_args):
         dialog = Adw.AlertDialog.new(_("Export anonymized JSON"), None)
@@ -1437,6 +1437,22 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         dialog.connect("response", on_response)
         dialog.present(self)
 
+    def _confirm_identifiable_export(self, title, filename, write):
+        """Warn before exporting scan data that identifies nearby networks."""
+        dialog = Adw.AlertDialog.new(_("Export network details?"), None)
+        dialog.set_body(_("This export includes visible network names (SSIDs) and access point MAC addresses (BSSIDs). Save it locally and review it before sharing; these details can reveal nearby networks and your location."))
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("export", _("Continue to export"))
+        dialog.set_default_response("cancel")
+        dialog.set_response_appearance("export", Adw.ResponseAppearance.SUGGESTED)
+
+        def on_response(_dialog, response):
+            if response == "export":
+                self._choose_export_path(title, filename, write)
+
+        dialog.connect("response", on_response)
+        dialog.present(self)
+
     def _export_report(self, *_args):
         def write(path):
             regulatory_ranges = local_regulatory_ranges()
@@ -1446,20 +1462,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
                 recommendations[band] = ranked[0] if ranked else (None, None)
             export_html_report([net for net in getattr(self, "visible_networks", self.networks) if net.get("bssid")], recommendations, path)
             self._set_status(_("Exported diagnostic report to {path}").format(path=path))
-
-        dialog = Adw.AlertDialog.new(_("Export diagnostic report"), None)
-        dialog.set_body(_("This report includes visible network names (SSIDs) and access point MAC addresses (BSSIDs). Save it locally and review it before sharing; these details can reveal nearby networks and your location."))
-        dialog.add_response("cancel", _("Cancel"))
-        dialog.add_response("export", _("Continue to export"))
-        dialog.set_default_response("cancel")
-        dialog.set_response_appearance("export", Adw.ResponseAppearance.SUGGESTED)
-
-        def on_response(_dialog, response):
-            if response == "export":
-                self._choose_export_path(_("Export diagnostic report"), "wifi-analyzer-report.html", write)
-
-        dialog.connect("response", on_response)
-        dialog.present(self)
+        self._confirm_identifiable_export(_("Export diagnostic report"), "wifi-analyzer-report.html", write)
 
     def _show_connection_diagnostics(self, *_args):
         info = connection_diagnostics()

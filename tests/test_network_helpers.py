@@ -539,6 +539,7 @@ def test_html_diagnostic_export_warns_about_network_names_and_macs(monkeypatch):
 
     window._export_report()
 
+    assert captured["title"] == "Export network details?"
     assert "SSIDs" in captured["body"]
     assert "BSSIDs" in captured["body"]
     assert "location" in captured["body"]
@@ -552,6 +553,24 @@ def test_html_diagnostic_export_warns_about_network_names_and_macs(monkeypatch):
 
     captured["callback"](None, "export")
     assert captured["chooser"][0] == "Export diagnostic report"
+
+
+def test_all_identifiable_exports_require_confirmation(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    captured = []
+    window = app_module.WifiAnalyzerWindow.__new__(app_module.WifiAnalyzerWindow)
+    window._confirm_identifiable_export = lambda *args: captured.append(args)
+
+    window._export_csv()
+    window._export_json()
+    window._export_report()
+
+    assert [(title, filename) for title, filename, _write in captured] == [
+        ("Export CSV", "wifi-analyzer.csv"),
+        ("Export JSON", "wifi-analyzer.json"),
+        ("Export diagnostic report", "wifi-analyzer-report.html"),
+    ]
 
 
 def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):

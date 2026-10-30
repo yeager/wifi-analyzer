@@ -229,9 +229,13 @@ msgstr "Exportera anonymiserad JSON"
 msgid "Export diagnostic report"
 msgstr "Exportera diagnostikrapport"
 
+#: src/wifi_analyzer/app.py:1444
+msgid "Export network details?"
+msgstr "Exportera nätverksuppgifter?"
+
 #: src/wifi_analyzer/app.py:1445
-msgid "This report includes visible network names (SSIDs) and access point MAC addresses (BSSIDs). Save it locally and review it before sharing; these details can reveal nearby networks and your location."
-msgstr "Rapporten innehåller synliga nätverksnamn (SSID) och accesspunkternas MAC-adresser (BSSID). Spara den lokalt och granska den innan du delar den. Uppgifterna kan avslöja nätverk i närheten och din plats."
+msgid "This export includes visible network names (SSIDs) and access point MAC addresses (BSSIDs). Save it locally and review it before sharing; these details can reveal nearby networks and your location."
+msgstr "Exporten innehåller synliga nätverksnamn (SSID) och accesspunkternas MAC-adresser (BSSID). Spara den lokalt och granska den innan du delar den. Uppgifterna kan avslöja nätverk i närheten och din plats."
 
 #: src/wifi_analyzer/app.py:1063 src/wifi_analyzer/app.py:1456
 msgid "Connection diagnostics"
