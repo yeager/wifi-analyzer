@@ -1190,8 +1190,12 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         )
         self.sort_filter.connect("notify::selected", self._on_filter_changed)
         filter_box.append(self.sort_filter)
-        filter_box.append(Gtk.Label(label=_("Profile")))
+        profile_label = Gtk.Label(label=_("Profile"))
+        filter_box.append(profile_label)
         self.profile_entry = Gtk.Entry(text="Default", width_chars=10)
+        self.profile_entry.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Profile")],
+        )
         self.profile_entry.set_tooltip_text(_("Keep local scan history separate for this location"))
         filter_box.append(self.profile_entry)
         main_box.append(filter_box)
