@@ -603,10 +603,14 @@ def test_diagnostic_export_reuses_regulatory_ranges_from_the_latest_scan(monkeyp
         "ssid": "Example", "bssid": "00:11:22:33:44:55", "band": "5 GHz",
         "channel": 36, "signal_pct": 70, "width_mhz": 20,
     }
+    hidden_by_band_filter = {
+        "ssid": "Other band", "bssid": "00:11:22:33:44:66", "band": "2.4 GHz",
+        "channel": 6, "signal_pct": 70, "width_mhz": 20,
+    }
     window = WifiAnalyzerWindow.__new__(WifiAnalyzerWindow)
-    window.networks = [network]
+    window.networks = [network, hidden_by_band_filter]
     window.visible_networks = [network]
-    window.regulatory_ranges = [(5180, 5180, "")]
+    window.regulatory_ranges = [(2412, 2412, ""), (5180, 5180, "")]
     window._confirm_identifiable_export = (
         lambda _title, _filename, write: write("report.html")
     )
@@ -624,7 +628,9 @@ def test_diagnostic_export_reuses_regulatory_ranges_from_the_latest_scan(monkeyp
     window._export_report()
 
     assert captured["path"] == "report.html"
+    assert captured["networks"] == [network]
     assert captured["recommendations"]["5 GHz"][0] == 36
+    assert captured["recommendations"]["2.4 GHz"] == (None, None)
 
 
 def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):

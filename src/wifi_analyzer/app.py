@@ -1489,11 +1489,15 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
     def _export_report(self, *_args):
         def write(path):
             regulatory_ranges = getattr(self, "regulatory_ranges", ())
+            report_networks = [
+                net for net in getattr(self, "visible_networks", self.networks)
+                if net.get("bssid")
+            ]
             recommendations = {}
             for band in ("2.4 GHz", "5 GHz", "6 GHz"):
-                ranked = recommend_channels(self.networks, band, regulatory_ranges)
+                ranked = recommend_channels(report_networks, band, regulatory_ranges)
                 recommendations[band] = ranked[0] if ranked else (None, None)
-            export_html_report([net for net in getattr(self, "visible_networks", self.networks) if net.get("bssid")], recommendations, path)
+            export_html_report(report_networks, recommendations, path)
             self._set_status(_("Exported diagnostic report to {path}").format(path=path))
         self._confirm_identifiable_export(_("Export diagnostic report"), "wifi-analyzer-report.html", write)
 
