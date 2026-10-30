@@ -68,3 +68,24 @@ def test_flatpak_manifest_rejects_a_non_semantic_project_version(tmp_path):
     _app_id, _version, errors = validate(tmp_path)
 
     assert any("project version" in error for error in errors)
+
+
+def test_flatpak_manifest_rejects_unreviewed_host_filesystem_access(tmp_path):
+    for relative_path in (
+        "pyproject.toml",
+        "flatpak/io.github.yeager.wifi-analyzer.json",
+        "data/io.github.yeager.wifi-analyzer.desktop",
+        "data/io.github.yeager.wifi-analyzer.metainfo.xml",
+    ):
+        destination = tmp_path / relative_path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / relative_path, destination)
+
+    manifest_path = tmp_path / "flatpak/io.github.yeager.wifi-analyzer.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["finish-args"].append("--filesystem=host")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    _app_id, _version, errors = validate(tmp_path)
+
+    assert any("unreviewed Flatpak permission: --filesystem=host" in error for error in errors)

@@ -11,6 +11,13 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REQUIRED_FINISH_ARGS = {
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--system-talk-name=org.freedesktop.NetworkManager",
+}
 
 
 def validate(root: Path) -> tuple[str, str, list[str]]:
@@ -69,6 +76,16 @@ def validate(root: Path) -> tuple[str, str, list[str]]:
             metadata_id = ET.parse(metainfo_file).getroot().findtext("id")
             if metadata_id != app_id:
                 errors.append(f"AppStream id {metadata_id!r} does not match manifest app-id {app_id!r}")
+
+    finish_args = manifest.get("finish-args", [])
+    if not isinstance(finish_args, list) or any(not isinstance(arg, str) for arg in finish_args):
+        errors.append("manifest finish-args must be a list of permission strings")
+    else:
+        granted = set(finish_args)
+        for permission in sorted(granted - REQUIRED_FINISH_ARGS):
+            errors.append(f"manifest grants an unreviewed Flatpak permission: {permission}")
+        for permission in sorted(REQUIRED_FINISH_ARGS - granted):
+            errors.append(f"manifest is missing required Flatpak permission: {permission}")
 
     return app_id, version, errors
 
