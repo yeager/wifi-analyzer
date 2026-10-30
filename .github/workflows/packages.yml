@@ -145,6 +145,19 @@ jobs:
           staging="$RUNNER_TEMP/wifi-analyzer-deb"
           log="$RUNNER_TEMP/wifi-analyzer-deb-smoke.log"
           dpkg-deb --extract "$package" "$staging"
+          for path in \
+            usr/share/applications/io.github.yeager.wifi-analyzer.desktop \
+            usr/share/metainfo/io.github.yeager.wifi-analyzer.metainfo.xml \
+            usr/share/icons/hicolor/256x256/apps/io.github.yeager.wifi-analyzer.png \
+            usr/share/icons/hicolor/512x512/apps/io.github.yeager.wifi-analyzer.png \
+            usr/share/locale/sv/LC_MESSAGES/wifi-analyzer.mo \
+            usr/share/man/man1/wifi-analyzer.1.gz \
+            usr/share/man/sv/man1/wifi-analyzer.1.gz; do
+            test -f "$staging/$path" || {
+              echo "Debian package is missing $path" >&2
+              exit 1
+            }
+          done
           set +e
           GSK_RENDERER=cairo \
             PYTHONPATH="$staging/usr/lib/python3/dist-packages" \
