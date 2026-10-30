@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from wifi_analyzer.app import (
+    GLib,
     band_for_frequency,
     channel_status,
     channel_width_mhz,
@@ -34,6 +35,8 @@ from wifi_analyzer.app import (
     wifi_problem,
     WifiAnalyzerWindow,
     _security_string,
+    _read_last_scan,
+    wait_for_scan_completion,
 )
 
 
@@ -72,6 +75,72 @@ def test_frequency_helpers_cover_all_supported_bands():
     assert channel_width_mhz(0) == 0
     assert freq_to_channel(2484) == 14
     assert freq_to_channel(7125) == 0
+
+
+def test_read_last_scan_unwraps_the_dbus_variant():
+    proxy = Mock()
+    proxy.call_sync.return_value.unpack.return_value = (GLib.Variant("x", 1234),)
+
+    assert _read_last_scan(proxy) == 1234
+    proxy.call_sync.assert_called_once()
+
+
+def test_wait_for_scan_completion_waits_until_networkmanager_finishes(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    readings = iter([100, 100, 101])
+    clock = iter([0.0, 0.0, 0.25])
+    monkeypatch.setattr(app_module, "_read_last_scan", lambda _proxy: next(readings))
+    monkeypatch.setattr(app_module.time, "monotonic", lambda: next(clock))
+    sleep = Mock()
+    monkeypatch.setattr(app_module.time, "sleep", sleep)
+
+    assert wait_for_scan_completion(Mock(), 100, timeout=5)
+    assert sleep.call_count == 2
+    assert all(call.args == (0.25,) for call in sleep.call_args_list)
+
+
+def test_wait_for_scan_completion_times_out_when_lastscan_does_not_change(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    clock = iter([0.0, 2.0])
+    monkeypatch.setattr(app_module, "_read_last_scan", lambda _proxy: 100)
+    monkeypatch.setattr(app_module.time, "monotonic", lambda: next(clock))
+    sleep = Mock()
+    monkeypatch.setattr(app_module.time, "sleep", sleep)
+
+    assert not wait_for_scan_completion(Mock(), 100, timeout=2)
+    sleep.assert_not_called()
+
+
+def test_network_scan_waits_for_networkmanager_before_reading_access_points(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    events = []
+    manager_proxy = Mock()
+    wireless_proxy = Mock()
+    wireless_proxy.call_sync.side_effect = [
+        Mock(),
+        Mock(unpack=Mock(side_effect=lambda: (events.append("read-access-points") or [],))),
+    ]
+    proxies = iter([manager_proxy, wireless_proxy])
+    monkeypatch.setattr(app_module.Gio.DBusProxy, "new_for_bus_sync", lambda *_args: next(proxies))
+    monkeypatch.setattr(app_module, "_find_wifi_device", lambda _proxy: ("/wifi/0", "wlan0", "/"))
+    monkeypatch.setattr(app_module, "connected_radio_width", lambda _interface: 0)
+    monkeypatch.setattr(app_module, "connected_radio_standard", lambda _interface: "")
+    monkeypatch.setattr(app_module, "_read_last_scan", lambda _proxy: 10)
+
+    def wait(_proxy, previous_scan):
+        events.append(("wait", previous_scan))
+        return True
+
+    monkeypatch.setattr(app_module, "wait_for_scan_completion", wait)
+
+    assert app_module.scan_networks_dbus(regulatory_ranges=[]) == []
+    assert events == [("wait", 10), "read-access-points"]
+    assert [call.args[0] for call in wireless_proxy.call_sync.call_args_list] == [
+        "RequestScan", "GetAllAccessPoints",
+    ]
 
 
 def test_dfs_channels_are_identified_without_claiming_a_ban():

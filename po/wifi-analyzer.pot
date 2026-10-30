@@ -344,6 +344,10 @@ msgstr ""
 msgid "Scan failed: {error}"
 msgstr ""
 
+#: src/wifi_analyzer/app.py:772
+msgid "The Wi-Fi scan did not finish within 15 seconds."
+msgstr ""
+
 #: src/wifi_analyzer/app.py:1317
 #, python-brace-format
 msgid "Found {count} networks{suffix}"

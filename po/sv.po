@@ -367,6 +367,10 @@ msgstr " · nya: {new}, försvunna: {gone}"
 msgid "Scan failed: {error}"
 msgstr "Skanningen misslyckades: {error}"
 
+#: src/wifi_analyzer/app.py:772
+msgid "The Wi-Fi scan did not finish within 15 seconds."
+msgstr "Wi-Fi-skanningen blev inte klar inom 15 sekunder."
+
 #: src/wifi_analyzer/app.py:1317
 #, python-brace-format
 msgid "Found {count} networks{suffix}"

@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -179,6 +180,27 @@ def local_regulatory_ranges():
     except (FileNotFoundError, subprocess.SubprocessError):
         return []
     return parse_regulatory_ranges(result.stdout) if result.returncode == 0 else []
+
+
+def _read_last_scan(wireless_proxy):
+    reply = wireless_proxy.call_sync(
+        "org.freedesktop.DBus.Properties.Get",
+        GLib.Variant("(ss)", (NM_WIRELESS_IFACE, "LastScan")),
+        Gio.DBusCallFlags.NONE, 2000, None,
+    ).unpack()[0]
+    return int(reply.unpack() if isinstance(reply, GLib.Variant) else reply)
+
+
+def wait_for_scan_completion(wireless_proxy, previous_scan, timeout=15, poll_interval=0.25):
+    """Wait for NetworkManager's LastScan timestamp to advance after RequestScan."""
+    deadline = time.monotonic() + timeout
+    while True:
+        if _read_last_scan(wireless_proxy) > previous_scan:
+            return True
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return False
+        time.sleep(min(poll_interval, remaining))
 
 
 def channel_status(freq, channel, regulatory_ranges=()):
@@ -727,10 +749,13 @@ def scan_networks_dbus(regulatory_ranges=None):
             NM_BUS_NAME, wifi_path, NM_WIRELESS_IFACE, None
         )
 
+        previous_scan = _read_last_scan(wireless_proxy)
         wireless_proxy.call_sync(
             "RequestScan", GLib.Variant("(a{sv})", ({},)),
             Gio.DBusCallFlags.NONE, 5000, None
         )
+        if not wait_for_scan_completion(wireless_proxy, previous_scan):
+            raise TimeoutError(_("The Wi-Fi scan did not finish within 15 seconds."))
 
         ap_paths = wireless_proxy.call_sync(
             "GetAllAccessPoints", None, Gio.DBusCallFlags.NONE, -1, None
@@ -774,7 +799,7 @@ def scan_networks_dbus(regulatory_ranges=None):
                 "width_source": "measured" if connected and actual_width else "estimated",
                 "wifi_standard": active_standard if connected else "",
             })
-    except (GLib.Error, TypeError, ValueError) as error:
+    except (GLib.Error, TypeError, ValueError, TimeoutError) as error:
         networks.append({"ssid": f"Error: {error}", "bssid": "", "freq": 0, "channel": 0,
                          "signal_pct": 0, "dbm": -100, "security": "", "band": "",
                          "error_code": "scan-failed", "error_message": str(error)})
