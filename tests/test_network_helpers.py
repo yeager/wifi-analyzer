@@ -31,6 +31,7 @@ from wifi_analyzer.app import (
     format_signal_history_time,
     format_signal_history_measurements,
     wifi_problem,
+    WifiAnalyzerWindow,
 )
 
 
@@ -171,13 +172,60 @@ def test_main_view_channel_recommendations_use_latest_scan_regulatory_ranges(mon
 
 def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
-    save_history_snapshot([{"ssid": "Office", "bssid": "aa:bb", "band": "5 GHz", "channel": 36,
-                            "signal_pct": 50, "dbm": -75, "security": "WPA3"}], now="2026-09-21T15:00:00")
+    assert save_history_snapshot([{"ssid": "Office", "bssid": "aa:bb", "band": "5 GHz", "channel": 36,
+                                  "signal_pct": 50, "dbm": -75, "security": "WPA3"}], now="2026-09-21T15:00:00")
     history = tmp_path / "wifi-analyzer" / "history.json"
     assert "Office" in history.read_text()
     assert history.stat().st_mode & 0o777 == 0o600
     clear_history()
     assert not history.exists()
+
+
+def test_history_storage_errors_are_reported_without_raising(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    monkeypatch.setattr(
+        "wifi_analyzer.app.tempfile.mkstemp",
+        Mock(side_effect=OSError("read-only filesystem")),
+    )
+
+    assert not save_history_snapshot([
+        {"ssid": "Office", "bssid": "aa:bb", "signal_pct": 50, "channel": 36},
+    ])
+
+
+def test_clearing_history_reports_storage_errors(monkeypatch):
+    monkeypatch.setattr("wifi_analyzer.app._history_path", lambda: "/unused/history.json")
+    monkeypatch.setattr(
+        "wifi_analyzer.app.os.unlink",
+        Mock(side_effect=PermissionError("read-only filesystem")),
+    )
+
+    assert not clear_history()
+
+
+def test_scan_results_remain_visible_when_local_history_cannot_be_saved(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    window = WifiAnalyzerWindow.__new__(WifiAnalyzerWindow)
+    window.networks = []
+    window.regulatory_ranges = []
+    window._last_problem_code = None
+    window.profile_entry = Mock()
+    window.profile_entry.get_text.return_value = "Home"
+    window._update_ui = Mock()
+    window._set_status = Mock()
+    networks = [{
+        "ssid": "Office", "bssid": "aa:bb", "band": "5 GHz", "channel": 36,
+        "signal_pct": 70, "dbm": -60, "security": "WPA2",
+    }]
+    monkeypatch.setattr(app_module, "save_history_snapshot", lambda *_args, **_kwargs: False)
+
+    window._on_scan_done(networks)
+
+    window._update_ui.assert_called_once_with()
+    window._set_status.assert_called_once()
+    assert window.networks[0]["ssid"] == "Office"
+    assert "Local scan history could not be saved" in window._set_status.call_args.args[0]
 
 
 def test_history_recovers_from_wrong_json_shape_and_ignores_bad_records(tmp_path, monkeypatch):

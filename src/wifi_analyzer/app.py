@@ -382,30 +382,51 @@ def _load_history_records(path):
 def save_history_snapshot(networks, now=None, profile="Default"):
     """Keep local, bounded scan summaries. No scan data leaves the device."""
     now = now or datetime.now().astimezone().isoformat(timespec="seconds")
-    path = _history_path()
-    history = _load_history_records(path)
-    history.append({"scanned_at": now, "profile": profile, "networks": [
-        {key: net.get(key) for key in ("ssid", "bssid", "band", "channel", "signal_pct", "dbm", "security")}
-        for net in networks if net.get("bssid")
-    ]})
-    # Network names and BSSIDs are sensitive local data.  A private,
-    # atomic replacement avoids both accidental sharing and torn JSON files.
-    fd, temporary_path = tempfile.mkstemp(prefix="history-", dir=os.path.dirname(path))
+    descriptor = None
+    temporary_path = None
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        path = _history_path()
+        history = _load_history_records(path)
+        history.append({"scanned_at": now, "profile": profile, "networks": [
+            {key: net.get(key) for key in ("ssid", "bssid", "band", "channel", "signal_pct", "dbm", "security")}
+            for net in networks if net.get("bssid")
+        ]})
+        # Network names and BSSIDs are sensitive local data.  A private,
+        # atomic replacement avoids both accidental sharing and torn JSON files.
+        descriptor, temporary_path = tempfile.mkstemp(
+            prefix="history-", dir=os.path.dirname(path),
+        )
+        handle = os.fdopen(descriptor, "w", encoding="utf-8")
+        descriptor = None
+        with handle:
             json.dump(history[-100:], handle, ensure_ascii=False, indent=2)
         os.chmod(temporary_path, 0o600)
         os.replace(temporary_path, path)
+        temporary_path = None
+        return True
+    except OSError:
+        return False
     finally:
-        if os.path.exists(temporary_path):
-            os.unlink(temporary_path)
+        if descriptor is not None:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+        if temporary_path is not None:
+            try:
+                os.unlink(temporary_path)
+            except OSError:
+                pass
 
 
 def clear_history():
     try:
         os.unlink(_history_path())
     except FileNotFoundError:
-        pass
+        return True
+    except OSError:
+        return False
+    return True
 
 
 def load_signal_history(bssid, profile=None):
@@ -1279,8 +1300,12 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             net["access_point_count"] = counts.get(net.get("ssid"), 1)
         self.networks = sorted(nets, key=lambda n: n["signal_pct"], reverse=True)
         scan_error = next((net for net in self.networks if net.get("error_code") == "scan-failed"), None)
+        history_saved = None
         if any(net.get("bssid") for net in self.networks):
-            save_history_snapshot(self.networks, profile=self.profile_entry.get_text().strip() or "Default")
+            history_saved = save_history_snapshot(
+                self.networks,
+                profile=self.profile_entry.get_text().strip() or "Default",
+            )
         self._update_ui()
         changes = compare_scans(previous, self.networks) if previous else None
         suffix = _(" · {new} new, {gone} gone").format(
@@ -1289,7 +1314,12 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         if scan_error:
             self._set_status(_("Scan failed: {error}").format(error=scan_error["error_message"]))
         else:
-            self._set_status(_("Found {count} networks{suffix}").format(count=len(self.networks), suffix=suffix))
+            message = _("Found {count} networks{suffix}").format(
+                count=len(self.networks), suffix=suffix,
+            )
+            if history_saved is False:
+                message += " · " + _("Local scan history could not be saved")
+            self._set_status(message)
         if changes and (changes["new"] or changes["gone"] or changes["changed"]):
             notification = Gio.Notification.new(_("WiFi scan changed"))
             notification.set_body(_("{new} new, {gone} gone, {changed} changed access points").format(
@@ -1430,8 +1460,10 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         dialog.present(self)
 
     def _clear_history(self, *_args):
-        clear_history()
-        self._set_status(_("Cleared local scan history"))
+        if clear_history():
+            self._set_status(_("Cleared local scan history"))
+        else:
+            self._set_status(_("Could not clear local scan history"))
 
     def _show_about(self, *args):
         about = Adw.AboutDialog(
