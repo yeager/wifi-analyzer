@@ -49,7 +49,7 @@ def test_swedish_channel_recommendation_explains_score_limits(tmp_path):
     assert translated.gettext(
         "Lower scores mean less estimated overlap. The candidate is estimated at 20 MHz; reported access point widths are used when available. Only access points found in this scan count; client traffic and hidden networks are not measured."
     ) == (
-        "Lägre poäng betyder mindre beräknad överlappning. Bedömningen räknar bara "
+        "Lägre poäng betyder mindre beräknad överlappning. Bedömningen räknar "
         "med 20 MHz för den föreslagna kanalen och använder rapporterad bredd för "
         "åtkomstpunkter när den finns. Den räknar bara nätverk som hittas vid "
         "skanningen och tar inte med trafik eller dolda nätverk."

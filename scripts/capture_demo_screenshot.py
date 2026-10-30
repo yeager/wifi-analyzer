@@ -151,8 +151,10 @@ def main():
                 "Lowest estimated overlap in this scan: channel "
             )
             or state.get("recommendation_detail") != (
-                "Lower scores mean less estimated overlap. Only access points found "
-                "in this scan count; client traffic and hidden networks are not measured."
+                "Lower scores mean less estimated overlap. The candidate is estimated "
+                "at 20 MHz; reported access point widths are used when available. Only "
+                "access points found in this scan count; client traffic and hidden "
+                "networks are not measured."
             )
             or state.get("history_measurements") != expected_history_measurements
         ):
