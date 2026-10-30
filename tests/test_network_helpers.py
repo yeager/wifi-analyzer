@@ -354,6 +354,23 @@ def test_history_recovers_from_wrong_json_shape_and_ignores_bad_records(tmp_path
     ]
 
 
+def test_history_recovers_from_invalid_utf8(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    history = tmp_path / "wifi-analyzer" / "history.json"
+    history.parent.mkdir(parents=True)
+    history.write_bytes(b"\xff\xfe")
+
+    save_history_snapshot(
+        [{"ssid": "Office", "bssid": "aa:bb", "signal_pct": 75, "channel": 36}],
+        now="2026-10-29T12:00:00",
+        profile="Office",
+    )
+
+    assert load_signal_history("aa:bb", "Office") == [
+        {"scanned_at": "2026-10-29T12:00:00", "signal_pct": 75, "channel": 36},
+    ]
+
+
 def test_history_profile_names_are_trimmed_and_bounded(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     profile = "  " + "Office" * 30 + "  "
