@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from wifi_analyzer import app
@@ -34,6 +35,7 @@ DEMO_NETWORKS = [
         "width_source": "estimated", "wifi_standard": "",
     },
 ]
+DEMO_HISTORY_SIGNALS = [42, 53, 64, 58, 76, 84]
 
 
 def run_demo_app():
@@ -69,6 +71,38 @@ def run_demo_app():
                 )
                 window.get_application().quit()
                 return GLib.SOURCE_REMOVE
+            history_measurements = 0
+            if os.environ.get("WIFI_ANALYZER_DEMO_HISTORY") == "1":
+                network = window.networks[0]
+                now = datetime.now().astimezone()
+                history_points = []
+                for index, signal in enumerate(DEMO_HISTORY_SIGNALS):
+                    scanned_at = now - timedelta(
+                        minutes=(len(DEMO_HISTORY_SIGNALS) - index - 1) * 5
+                    )
+                    history_points.append({
+                        "scanned_at": scanned_at.isoformat(timespec="seconds"),
+                        "signal_pct": signal,
+                        "channel": network["channel"],
+                    })
+                app.load_signal_history = lambda bssid, profile=None: (
+                    list(history_points)
+                    if bssid == network["bssid"] and profile in (None, "Default")
+                    else []
+                )
+                history_measurements = len(
+                    app.load_signal_history(network["bssid"], "Default")
+                )
+                if history_measurements != len(DEMO_HISTORY_SIGNALS):
+                    print(
+                        f"Expected {len(DEMO_HISTORY_SIGNALS)} demo history points, "
+                        f"found {history_measurements}",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    window.get_application().quit()
+                    return GLib.SOURCE_REMOVE
+                window._show_signal_history(network)
             window._set_status("Found 3 networks")
             ready = Path(os.environ["WIFI_ANALYZER_DEMO_READY"])
             ready.write_text(json.dumps({
@@ -76,6 +110,7 @@ def run_demo_app():
                 "status": window.statusbar.get_label(),
                 "recommendation": window.recommendation.get_label(),
                 "recommendation_detail": window.recommendation_detail.get_label(),
+                "history_measurements": history_measurements,
             }), encoding="utf-8")
             return GLib.SOURCE_REMOVE
 
@@ -104,6 +139,11 @@ def main():
         else:
             raise RuntimeError("Demo app did not display the fictional networks in time")
         state = json.loads(ready.read_text(encoding="utf-8"))
+        expected_history_measurements = (
+            len(DEMO_HISTORY_SIGNALS)
+            if os.environ.get("WIFI_ANALYZER_DEMO_HISTORY") == "1"
+            else 0
+        )
         if (
             state.get("visible_networks") != len(DEMO_NETWORKS)
             or "Found 3 networks" not in state.get("status", "")
@@ -114,6 +154,7 @@ def main():
                 "Lower scores mean less estimated overlap. Only access points found "
                 "in this scan count; client traffic and hidden networks are not measured."
             )
+            or state.get("history_measurements") != expected_history_measurements
         ):
             raise RuntimeError(f"Demo app reported unexpected UI state: {state}")
         time.sleep(1)

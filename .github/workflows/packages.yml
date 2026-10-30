@@ -45,10 +45,15 @@ jobs:
           printf '{"welcome_shown": true}\n' > "$XDG_CONFIG_HOME/wifi-analyzer/welcome.json"
           timeout 30s xvfb-run -a -s '-screen 0 1000x800x24' dbus-run-session -- \
             python3 scripts/capture_demo_screenshot.py screenshots/main.png
+          WIFI_ANALYZER_DEMO_HISTORY=1 timeout 30s xvfb-run -a \
+            -s '-screen 0 1000x800x24' dbus-run-session -- \
+            python3 scripts/capture_demo_screenshot.py screenshots/history.png
       - uses: actions/upload-artifact@v7
         with:
           name: wifi-analyzer-demo-screenshot
-          path: screenshots/main.png
+          path: |
+            screenshots/main.png
+            screenshots/history.png
 
   flatpak:
     if: >-

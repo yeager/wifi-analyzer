@@ -12,6 +12,10 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 
 *Example networks shown; the app displays scan results from the local device.*
 
+![Signal history with a chart and a recent measurements list](screenshots/history.png)
+
+*Fictional local measurements shown; the text list complements the chart for screen-reader users.*
+
 ## Features
 
 - Scan access points through NetworkManager D-Bus; no privileged shell command is required.
@@ -30,6 +34,7 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 - Escape formula-like untrusted text in CSV exports so nearby network names
   are not interpreted as spreadsheet formulas.
 - Keep up to 100 local scan summaries for future history views. Scan data never leaves the device and can be cleared from the menu.
+- Review local signal history with an accessible chart summary and a newest-first text list of measurements.
 - Mark the active access point and use the actual channel width reported by `iw` for that radio when available.
 - Identify Wi-Fi 4, 5, 6/6E and 7 for the active link from `iw` PHY markers.
   A generation is never guessed for an unconnected AP.
