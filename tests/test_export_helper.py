@@ -1,6 +1,27 @@
 import csv
+import stat
 
-from wifi_analyzer.export_helper import export_csv, export_html_report
+from wifi_analyzer.export_helper import export_csv, export_html_report, export_json
+
+
+def test_exports_are_owner_only_and_tighten_existing_file_permissions(tmp_path):
+    csv_path = tmp_path / "networks.csv"
+    json_path = tmp_path / "networks.json"
+    html_path = tmp_path / "report.html"
+
+    export_csv([["Home Wi-Fi", "00:11:22:33:44:55"]], ["SSID", "BSSID"], csv_path)
+    export_json([["Home Wi-Fi", "00:11:22:33:44:55"]], ["SSID", "BSSID"], json_path)
+    export_html_report(
+        [{"ssid": "Home Wi-Fi", "bssid": "00:11:22:33:44:55"}], {}, html_path,
+    )
+
+    existing_path = tmp_path / "existing.csv"
+    existing_path.write_text("old contents\n", encoding="utf-8")
+    existing_path.chmod(0o644)
+    export_csv([["Private network"]], ["SSID"], existing_path)
+
+    for path in (csv_path, json_path, html_path, existing_path):
+        assert stat.S_IMODE(path.stat().st_mode) == 0o600
 
 
 def test_csv_export_treats_formula_like_text_as_plain_text(tmp_path):
