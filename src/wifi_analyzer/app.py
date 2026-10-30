@@ -406,6 +406,9 @@ def _history_path():
     return os.path.join(directory, "history.json")
 
 
+MAX_HISTORY_PROFILE_LENGTH = 64
+
+
 def _load_history_records(path):
     """Load structurally valid local history records, ignoring malformed data."""
     try:
@@ -427,6 +430,8 @@ def _load_history_records(path):
 def save_history_snapshot(networks, now=None, profile="Default"):
     """Keep local, bounded scan summaries. No scan data leaves the device."""
     now = now or datetime.now().astimezone().isoformat(timespec="seconds")
+    profile = profile.strip()[:MAX_HISTORY_PROFILE_LENGTH] if isinstance(profile, str) else "Default"
+    profile = profile or "Default"
     descriptor = None
     temporary_path = None
     try:
@@ -1214,6 +1219,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         profile_label = Gtk.Label(label=_("Profile"))
         filter_box.append(profile_label)
         self.profile_entry = Gtk.Entry(text="Default", width_chars=10)
+        self.profile_entry.set_max_length(MAX_HISTORY_PROFILE_LENGTH)
         self.profile_entry.update_property(
             [Gtk.AccessibleProperty.LABEL], [_("Profile")],
         )
