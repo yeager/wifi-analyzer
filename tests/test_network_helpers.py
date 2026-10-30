@@ -255,8 +255,10 @@ def test_network_manager_lookup_returns_the_connected_adapter(monkeypatch):
 
     network_manager = Mock()
     network_manager.call_sync.return_value.unpack.return_value = (
-        "/org/freedesktop/NetworkManager/Devices/1",
-        "/org/freedesktop/NetworkManager/Devices/2",
+        (
+            "/org/freedesktop/NetworkManager/Devices/1",
+            "/org/freedesktop/NetworkManager/Devices/2",
+        ),
     )
     fake_gio = Mock()
     fake_gio.DBusProxy.new_for_bus_sync.side_effect = (
@@ -296,7 +298,7 @@ def test_connected_radio_standard_skips_unconnected_interfaces(monkeypatch):
     from wifi_analyzer import app as app_module
 
     outputs = iter([
-        "phy#0\n\tInterface wlan0\n",
+        "phy#0\n\tInterface wlan0\nphy#1\n\tInterface wlan1\n",
         "Not connected.\n",
         "Connected to 00:11:22:33:44:55 (on wlan1)\ntx bitrate: 1200 MBit/s HE-MCS 11\n",
     ])
