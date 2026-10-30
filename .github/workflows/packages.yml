@@ -73,8 +73,7 @@ jobs:
         run: flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
       - name: Install Flathub's manifest linter
         run: flatpak install --user --noninteractive flathub org.flatpak.Builder
-      - name: Check Flathub manifest lint (advisory)
-        continue-on-error: true
+      - name: Check Flathub manifest lint
         run: >-
           flatpak run --user --command=flatpak-builder-lint org.flatpak.Builder
           --gha-format manifest flatpak/io.github.yeager.wifi-analyzer.json
@@ -82,8 +81,7 @@ jobs:
         run: >-
           dbus-run-session -- flatpak run --user --command=flathub-build org.flatpak.Builder
           flatpak/io.github.yeager.wifi-analyzer.json
-      - name: Check built Flatpak repository lint (advisory)
-        continue-on-error: true
+      - name: Check built Flatpak repository lint
         run: >-
           flatpak run --user --command=flatpak-builder-lint org.flatpak.Builder
           --gha-format repo repo
