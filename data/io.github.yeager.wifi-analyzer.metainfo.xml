@@ -25,6 +25,12 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.31" date="2026-10-30">
+      <description>
+        <p>Make saved signal-history charts accessible with a text summary and recent measurements.</p>
+        <p xml:lang="sv">Gör diagrammet över sparad signalhistorik tillgängligt med en textbeskrivning och en lista över de senaste mätningarna.</p>
+      </description>
+    </release>
     <release version="0.1.30" date="2026-10-30">
       <description>
         <p>Improve release verification when CI checks out a tag without a local tag reference.</p>

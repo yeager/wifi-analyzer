@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.30
+Version:        0.1.31
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -70,6 +70,9 @@ GSK_RENDERER=cairo xvfb-run -a env PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.31-1
+- Expose saved signal-history plots and measurements to screen readers.
+
 * Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.30-1
 - Resolve release commits from the verified GitHub event when a local tag ref is unavailable.
 
