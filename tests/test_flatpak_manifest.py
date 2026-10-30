@@ -24,18 +24,19 @@ def _copy_release_manifest_inputs(destination):
         shutil.copy2(ROOT / relative_path, target)
 
 
-def test_flatpak_manifest_pins_a_released_source_not_newer_than_the_project():
+def test_flatpak_manifest_pins_the_current_project_release():
     app_id, version, errors = validate(ROOT)
 
     assert app_id == "io.github.yeager.wifi-analyzer"
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert tuple(map(int, version.split("."))) <= tuple(
-        map(int, project["project"]["version"].split("."))
-    )
+    assert version == project["project"]["version"]
     assert errors == []
 
 
-def test_flatpak_manifest_rejects_a_source_tag_newer_than_the_project(tmp_path):
+@pytest.mark.parametrize("tag_offset", [-1, 1])
+def test_flatpak_manifest_rejects_a_source_tag_that_does_not_match_the_project(
+    tmp_path, tag_offset
+):
     for relative_path in (
         "pyproject.toml",
         "flatpak/io.github.yeager.wifi-analyzer.json",
@@ -51,7 +52,7 @@ def test_flatpak_manifest_rejects_a_source_tag_newer_than_the_project(tmp_path):
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     major, minor, patch = map(int, project["project"]["version"].split("."))
     manifest["modules"][0]["sources"][0]["tag"] = (
-        f"v{major}.{minor}.{patch + 1}"
+        f"v{major}.{minor}.{patch + tag_offset}"
     )
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 

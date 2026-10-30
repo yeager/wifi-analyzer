@@ -55,9 +55,9 @@ def validate(root: Path, manifest_path: Path | None = None) -> tuple[str, str, l
             errors.append(
                 f"manifest source tag {source_tag!r} is not a semantic version tag"
             )
-        elif tuple(map(int, tag_match.groups())) > tuple(map(int, version_match.groups())):
+        elif tuple(map(int, tag_match.groups())) != tuple(map(int, version_match.groups())):
             errors.append(
-                f"manifest source version {source_tag!r} is newer than project version {version!r}"
+                f"manifest source version {source_tag!r} does not match project version {version!r}"
             )
         if not re.fullmatch(r"[0-9a-f]{40}", source.get("commit", "")):
             errors.append("manifest Git source must pin a full 40-character lowercase commit hash")
