@@ -25,6 +25,12 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.33" date="2026-10-30">
+      <description>
+        <p>Show security advice for the connected Wi-Fi network, including open, Enhanced Open and older security modes.</p>
+        <p xml:lang="sv">Visa säkerhetsråd för det anslutna Wi-Fi-nätverket, bland annat för öppna nät, Enhanced Open och äldre säkerhetslägen.</p>
+      </description>
+    </release>
     <release version="0.1.32" date="2026-10-30">
       <description>
         <p>Improve Wi-Fi security classification, protect identifiable exports, and refine channel recommendations using local regulatory limits and reported channel widths. Add accessible controls and clearer connection diagnostics.</p>

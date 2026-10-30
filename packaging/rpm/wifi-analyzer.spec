@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.32
+Version:        0.1.33
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -70,6 +70,9 @@ GSK_RENDERER=cairo xvfb-run -a env PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.33-1
+- Add guidance for open, Enhanced Open, and older Wi-Fi security modes.
+
 * Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.32-1
 - Improve Wi-Fi security classification, exports, accessible controls and diagnostics.
 - Respect local regulatory channel limits and reported channel widths.

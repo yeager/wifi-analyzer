@@ -1,3 +1,9 @@
+wifi-analyzer (0.1.33) unstable; urgency=medium
+
+  * Add security advice for open, Enhanced Open, and older Wi-Fi security modes.
+
+ -- Daniel Nylander <po@danielnylander.se>  Fri, 30 Oct 2026 16:30:00 +0100
+
 wifi-analyzer (0.1.32) unstable; urgency=medium
 
   * Classify mixed WPA3 and OWE security modes and improve accessible controls.
