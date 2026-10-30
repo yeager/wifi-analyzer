@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.27
+Version:        0.1.28
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -69,6 +69,9 @@ GSK_RENDERER=cairo xvfb-run -a env PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.28-1
+- Read connection link rates from the active NetworkManager Wi-Fi adapter.
+
 * Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.27-1
 - Prefer the connected Wi-Fi adapter when multiple devices are available.
 
