@@ -98,9 +98,12 @@ def parse_iw_channel_width(output):
     return int(match.group(1)) if match else None
 
 
-def connected_radio_width():
+def connected_radio_width(interface=None):
+    command = ["iw", "dev"]
+    if interface:
+        command.extend([interface, "info"])
     try:
-        result = subprocess.run(["iw", "dev"], capture_output=True, text=True, timeout=2, check=False)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=2, check=False)
     except (FileNotFoundError, subprocess.SubprocessError):
         return None
     return parse_iw_channel_width(result.stdout) if result.returncode == 0 else None
@@ -128,18 +131,29 @@ def parse_iw_wifi_standard(output, frequency=0):
     return ""
 
 
-def connected_radio_standard():
+def connected_radio_standard(interface=None):
     """Return a measured PHY label for the connected interface, when known."""
-    try:
-        device = subprocess.run(["iw", "dev"], capture_output=True, text=True, timeout=2, check=False)
-        interface = re.search(r"^\s*Interface\s+(\S+)", device.stdout, re.MULTILINE)
-        if device.returncode or not interface:
+    if interface:
+        interfaces = [interface]
+    else:
+        try:
+            device = subprocess.run(["iw", "dev"], capture_output=True, text=True, timeout=2, check=False)
+        except (FileNotFoundError, subprocess.SubprocessError):
             return ""
-        link = subprocess.run(["iw", "dev", interface.group(1), "link"], capture_output=True,
-                              text=True, timeout=2, check=False)
-    except (FileNotFoundError, subprocess.SubprocessError):
-        return ""
-    return parse_iw_wifi_standard(link.stdout) if link.returncode == 0 else ""
+        if device.returncode:
+            return ""
+        interfaces = re.findall(r"^\s*Interface\s+(\S+)", device.stdout, re.MULTILINE)
+    for name in interfaces:
+        try:
+            link = subprocess.run(["iw", "dev", name, "link"], capture_output=True,
+                                  text=True, timeout=2, check=False)
+        except (FileNotFoundError, subprocess.SubprocessError):
+            continue
+        if link.returncode == 0:
+            standard = parse_iw_wifi_standard(link.stdout)
+            if standard:
+                return standard
+    return ""
 
 
 def parse_regulatory_ranges(output):
@@ -452,10 +466,11 @@ def _security_string(flags, wpa_flags, rsn_flags):
         return "WEP"
     return ""
 
-def _find_wifi_device_path(nm_proxy):
+def _find_wifi_device(nm_proxy):
     devices = nm_proxy.call_sync(
         "GetDevices", None, Gio.DBusCallFlags.NONE, -1, None
     ).unpack()[0]
+    candidates = []
     for path in devices:
         dev_props = Gio.DBusProxy.new_for_bus_sync(
             Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
@@ -466,8 +481,31 @@ def _find_wifi_device_path(nm_proxy):
             Gio.DBusCallFlags.NONE, -1, None
         ).unpack()[0]
         if device_type == NM_DEVICE_TYPE_WIFI:
-            return path
-    return None
+            device_interface = dev_props.call_sync(
+                "Get", GLib.Variant("(ss)", (NM_DEVICE_IFACE, "Interface")),
+                Gio.DBusCallFlags.NONE, -1, None
+            ).unpack()[0]
+            wireless_props = Gio.DBusProxy.new_for_bus_sync(
+                Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
+                NM_BUS_NAME, path, "org.freedesktop.DBus.Properties", None
+            )
+            active_ap = wireless_props.call_sync(
+                "Get", GLib.Variant("(ss)", (NM_WIRELESS_IFACE, "ActiveAccessPoint")),
+                Gio.DBusCallFlags.NONE, -1, None
+            ).unpack()[0]
+            candidates.append((path, device_interface, active_ap))
+    return select_wifi_device(candidates)
+
+
+def select_wifi_device(candidates):
+    """Prefer the NetworkManager Wi-Fi device with an active access point."""
+    candidates = list(candidates)
+    if not candidates:
+        return None
+    return next(
+        (candidate for candidate in candidates if candidate[2] not in (None, "", "/")),
+        candidates[0],
+    )
 
 
 def scan_networks_dbus(regulatory_ranges=None):
@@ -480,23 +518,16 @@ def scan_networks_dbus(regulatory_ranges=None):
             Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
             NM_BUS_NAME, NM_OBJ_PATH, NM_IFACE, None
         )
-        wifi_path = _find_wifi_device_path(nm_proxy)
-        if not wifi_path:
+        wifi_device = _find_wifi_device(nm_proxy)
+        if not wifi_device:
             networks.append({"ssid": _("Error: no WiFi device found"), "bssid": "", "freq": 0,
                              "channel": 0, "signal_pct": 0, "dbm": -100, "security": "", "band": "",
                              "error_code": "no-device", "error_message": _("No Wi-Fi device found")})
             return networks
+        wifi_path, wifi_interface, active_ap = wifi_device
 
-        wifi_props = Gio.DBusProxy.new_for_bus_sync(
-            Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None, NM_BUS_NAME, wifi_path,
-            "org.freedesktop.DBus.Properties", None
-        )
-        active_ap = wifi_props.call_sync(
-            "Get", GLib.Variant("(ss)", (NM_WIRELESS_IFACE, "ActiveAccessPoint")),
-            Gio.DBusCallFlags.NONE, -1, None
-        ).unpack()[0]
-        actual_width = connected_radio_width()
-        active_standard = connected_radio_standard()
+        actual_width = connected_radio_width(wifi_interface)
+        active_standard = connected_radio_standard(wifi_interface)
 
         wireless_proxy = Gio.DBusProxy.new_for_bus_sync(
             Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,

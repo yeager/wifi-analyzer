@@ -15,6 +15,7 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 ## Features
 
 - Scan access points through NetworkManager D-Bus; no privileged shell command is required.
+- Prefer the adapter with an active NetworkManager connection when the computer has multiple Wi-Fi devices. Active-link width and Wi-Fi generation are read from that interface.
 - Filter results by network name, BSSID, channel or security type.
 - Inspect 2.4, 5 and 6 GHz bands with a channel-overlap graph.
 - Navigate the channel graph with Left/Right and Home/End, filter channels with Enter/Space, and hear channel selections read by screen readers.

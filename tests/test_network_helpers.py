@@ -18,6 +18,10 @@ from wifi_analyzer.app import (
     compare_scans,
     parse_iw_channel_width,
     parse_iw_wifi_standard,
+    connected_radio_standard,
+    connected_radio_width,
+    select_wifi_device,
+    _find_wifi_device,
     anonymize_network,
     interference_contributors,
     parse_connection_diagnostics,
@@ -212,6 +216,97 @@ def test_scan_comparison_width_parsing_and_anonymization():
     assert parse_iw_wifi_standard("rx bitrate: 1200 MBit/s HE-MCS 11") == "Wi-Fi 6/6E (802.11ax)"
     assert parse_iw_wifi_standard("tx bitrate: 2882 MBit/s EHT-MCS 13") == "Wi-Fi 7 (802.11be)"
     assert parse_iw_wifi_standard("tx bitrate: 866.7 MBit/s VHT-MCS 9") == "Wi-Fi 5 (802.11ac)"
+
+
+def test_wifi_device_selection_prefers_the_connected_adapter():
+    devices = [
+        ("/org/freedesktop/NetworkManager/Devices/1", "wlan0", "/"),
+        ("/org/freedesktop/NetworkManager/Devices/2", "wlan1", "/org/freedesktop/NetworkManager/AccessPoint/4"),
+    ]
+
+    assert select_wifi_device(devices) == devices[1]
+    assert select_wifi_device(devices[:1]) == devices[0]
+    assert select_wifi_device([]) is None
+
+
+def test_network_manager_lookup_returns_the_connected_adapter(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    class FakeVariant:
+        def __init__(self, value):
+            self.value = value
+
+        def unpack(self):
+            return (self.value,)
+
+    class FakeProperties:
+        def __init__(self, path):
+            self.path = path
+
+        def call_sync(self, _method, parameters, *_args):
+            interface, name = parameters.unpack()
+            if name == "DeviceType":
+                return FakeVariant(app_module.NM_DEVICE_TYPE_WIFI)
+            if name == "Interface":
+                return FakeVariant("wlan0" if self.path.endswith("/1") else "wlan1")
+            if interface == app_module.NM_WIRELESS_IFACE and name == "ActiveAccessPoint":
+                return FakeVariant("/" if self.path.endswith("/1") else "/ap/2")
+            raise AssertionError((interface, name))
+
+    network_manager = Mock()
+    network_manager.call_sync.return_value.unpack.return_value = (
+        "/org/freedesktop/NetworkManager/Devices/1",
+        "/org/freedesktop/NetworkManager/Devices/2",
+    )
+    fake_gio = Mock()
+    fake_gio.DBusProxy.new_for_bus_sync.side_effect = (
+        lambda _bus, _flags, _info, _name, path, _interface, _cancellable: FakeProperties(path)
+    )
+    monkeypatch.setattr(app_module, "Gio", fake_gio)
+
+    assert _find_wifi_device(network_manager) == (
+        "/org/freedesktop/NetworkManager/Devices/2", "wlan1", "/ap/2",
+    )
+
+
+def test_connected_radio_width_and_standard_use_the_selected_interface(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    calls = []
+    outputs = {
+        ("iw", "dev", "wlan1", "info"): "Interface wlan1\n\tchannel 36 (5180 MHz), width: 160 MHz\n",
+        ("iw", "dev", "wlan1", "link"): "Connected to 00:11:22:33:44:55 (on wlan1)\nrx bitrate: 2882 MBit/s EHT-MCS 13\n",
+    }
+
+    def run(command, **_kwargs):
+        calls.append(tuple(command))
+        return subprocess.CompletedProcess(command, 0, outputs[tuple(command)], "")
+
+    monkeypatch.setattr(app_module.subprocess, "run", run)
+
+    assert connected_radio_width("wlan1") == 160
+    assert connected_radio_standard("wlan1") == "Wi-Fi 7 (802.11be)"
+    assert calls == [
+        ("iw", "dev", "wlan1", "info"),
+        ("iw", "dev", "wlan1", "link"),
+    ]
+
+
+def test_connected_radio_standard_skips_unconnected_interfaces(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    outputs = iter([
+        "phy#0\n\tInterface wlan0\n",
+        "Not connected.\n",
+        "Connected to 00:11:22:33:44:55 (on wlan1)\ntx bitrate: 1200 MBit/s HE-MCS 11\n",
+    ])
+    monkeypatch.setattr(
+        app_module.subprocess,
+        "run",
+        lambda command, **_kwargs: subprocess.CompletedProcess(command, 0, next(outputs), ""),
+    )
+
+    assert connected_radio_standard() == "Wi-Fi 6/6E (802.11ax)"
 
 
 def test_wifi_standard_ignores_network_name_and_non_bitrate_text():

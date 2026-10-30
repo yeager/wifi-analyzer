@@ -25,6 +25,9 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.27" date="2026-10-30">
+      <description><p>Prefer the Wi-Fi adapter connected through NetworkManager and read active-link details from the matching interface when multiple adapters are available.</p></description>
+    </release>
     <release version="0.1.26" date="2026-10-30">
       <description><p>Respect locally reported regulatory frequency ranges when recommending channels.</p></description>
     </release>

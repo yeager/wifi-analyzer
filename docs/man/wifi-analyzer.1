@@ -1,4 +1,4 @@
-.TH WIFI-ANALYZER 1 "2026-10-30" "WiFi Analyzer 0.1.26" "User Commands"
+.TH WIFI-ANALYZER 1 "2026-10-30" "WiFi Analyzer 0.1.27" "User Commands"
 .SH NAME
 wifi-analyzer \- inspect nearby Wi-Fi networks and channel use
 .SH SYNOPSIS
@@ -9,6 +9,8 @@ uses NetworkManager to list nearby access points. It shows signal strength,
 frequency, channel, security, channel overlap and local regulatory hints.
 Channel recommendations exclude frequencies outside ranges reported by the local
 regulatory domain when that information is available.
+When multiple Wi-Fi devices are available, it prefers the device with an active
+NetworkManager connection and reads active-link details from that interface.
 .PP
 The application keeps scan history locally. Exporting a scan always requires
 choosing a destination file.

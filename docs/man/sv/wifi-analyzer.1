@@ -1,4 +1,4 @@
-.TH WIFI-ANALYZER 1 "2026-10-30" "WiFi Analyzer 0.1.26" "Användarkommandon"
+.TH WIFI-ANALYZER 1 "2026-10-30" "WiFi Analyzer 0.1.27" "Användarkommandon"
 .SH NAMN
 wifi-analyzer \- granska närliggande Wi-Fi-nätverk och kanalanvändning
 .SH SYNOPSIS
@@ -10,6 +10,9 @@ visar signalstyrka, frekvens, kanal, säkerhet, kanalöverlappning och lokala
 regleringsupplysningar.
 Kanalrekommendationer utesluter frekvenser utanför områden som det lokala
 regleringsområdet rapporterar, när sådan information är tillgänglig.
+Om datorn har flera Wi-Fi-enheter väljer programmet i första hand den som har
+en aktiv anslutning i NetworkManager. Information om kanalbredd och Wi-Fi-
+generation hämtas då från samma gränssnitt.
 .PP
 Programmet sparar sökhistorik lokalt. Vid export måste du alltid välja en
 målfil.
