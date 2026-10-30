@@ -133,6 +133,19 @@ def test_channel_recommendations_respect_detected_regulatory_ranges():
     assert {channel for channel, _score in recommend_channels(networks, "6 GHz", ranges)} == {1, 5}
 
 
+def test_channel_recommendations_skip_channels_that_cannot_initiate_transmission():
+    network = {"band": "5 GHz", "channel": 36, "signal_pct": 70, "width_mhz": 20}
+    ranges = [
+        (5180, 5200, "NO-IR, DFS"),
+        (5220, 5240, ""),
+    ]
+
+    recommendations = recommend_channels([network], "5 GHz", ranges)
+
+    assert recommendations
+    assert all(channel not in {36, 40} for channel, _score in recommendations)
+
+
 def test_main_view_channel_recommendations_use_latest_scan_regulatory_ranges(monkeypatch):
     from wifi_analyzer import app as app_module
 

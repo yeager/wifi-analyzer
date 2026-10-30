@@ -241,7 +241,12 @@ def recommend_channels(networks, band, regulatory_ranges=()):
             else:
                 frequency = 5950 + candidate * 5
             if frequency is None or not any(
-                start <= frequency <= end for start, end, _flags in regulatory_ranges
+                start <= frequency <= end
+                and not any(
+                    restricted in flags.upper()
+                    for restricted in ("NO-IR", "PASSIVE-SCAN", "NO-BEACON")
+                )
+                for start, end, flags in regulatory_ranges
             ):
                 continue
         score = 0.0
