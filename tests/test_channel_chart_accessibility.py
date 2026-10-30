@@ -8,7 +8,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, GLib, Gtk
 
-from wifi_analyzer.app import ChannelDrawingArea, SignalHistoryDrawingArea
+from wifi_analyzer.app import ChannelDrawingArea, NetworkRow, SignalHistoryDrawingArea
 
 
 class TestChannelChartAccessibility:
@@ -121,4 +121,26 @@ class TestChannelChartAccessibility:
         assert chart._on_key_pressed(None, Gdk.KEY_End, 0, 0)
         assert chart.focused_channel == 149
         assert chart._announce.call_args.args[0].startswith("Channel 149.")
+
+    def test_scan_error_row_shows_guidance_without_fake_signal_metrics(self):
+        row = NetworkRow({
+            "ssid": "Error: no WiFi device found",
+            "signal_pct": 0,
+            "error_code": "no-device",
+        })
+        labels = []
+
+        def collect_labels(widget):
+            if isinstance(widget, Gtk.Label):
+                labels.append(widget.get_text())
+            child = widget.get_first_child() if hasattr(widget, "get_first_child") else None
+            while child:
+                collect_labels(child)
+                child = child.get_next_sibling()
+
+        collect_labels(row)
+
+        assert "No Wi-Fi device found" in labels
+        assert any("Enable Wi-Fi" in label and "adapter driver" in label for label in labels)
+        assert not any("0%" in label or "0 dBm" in label or "Open" == label for label in labels)
 

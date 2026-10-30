@@ -1082,6 +1082,26 @@ class NetworkRow(Gtk.ListBoxRow):
         box.set_margin_start(12); box.set_margin_end(12)
         box.set_margin_top(6); box.set_margin_bottom(6)
 
+        if net.get("error_code"):
+            problem = wifi_problem([net])
+            title = problem[1] if problem else _("Wi-Fi scan failed")
+            explanation = problem[2] if problem else _("Check your Wi-Fi settings and try again.")
+            icon = Gtk.Image.new_from_icon_name("dialog-warning-symbolic")
+            icon.set_valign(Gtk.Align.START)
+            box.append(icon)
+
+            message_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            message_box.set_hexpand(True)
+            title_label = Gtk.Label(label=title, xalign=0, wrap=True)
+            title_label.add_css_class("heading")
+            message_box.append(title_label)
+            explanation_label = Gtk.Label(label=explanation, xalign=0, wrap=True)
+            explanation_label.add_css_class("dim-label")
+            message_box.append(explanation_label)
+            box.append(message_box)
+            self.set_child(box)
+            return
+
         # Signal strength icon
         if net["signal_pct"] > 75:
             icon = "network-wireless-signal-excellent-symbolic"
