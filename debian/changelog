@@ -1,3 +1,12 @@
+wifi-analyzer (0.1.32) unstable; urgency=medium
+
+  * Classify mixed WPA3 and OWE security modes and improve accessible controls.
+  * Protect identifiable diagnostic exports and handle local history failures.
+  * Respect local regulatory channel limits and reported channel widths.
+  * Improve gateway diagnostics and match reports to visible networks.
+
+ -- Daniel Nylander <po@danielnylander.se>  Fri, 30 Oct 2026 11:20:00 +0100
+
 wifi-analyzer (0.1.31) unstable; urgency=medium
 
   * Make signal-history charts accessible with a non-visual summary and recent measurements.

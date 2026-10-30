@@ -25,6 +25,12 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.32" date="2026-10-30">
+      <description>
+        <p>Improve Wi-Fi security classification, protect identifiable exports, and refine channel recommendations using local regulatory limits and reported channel widths. Add accessible controls and clearer connection diagnostics.</p>
+        <p xml:lang="sv">Förbättra klassningen av Wi-Fi-säkerhet, skydda exporter med identifierande uppgifter och förfina kanalrekommendationer efter lokala regler och rapporterad kanalbredd. Förbättra tillgängligheten och förtydliga anslutningsdiagnostiken.</p>
+      </description>
+    </release>
     <release version="0.1.31" date="2026-10-30">
       <description>
         <p>Make saved signal-history charts accessible with a text summary and recent measurements.</p>
