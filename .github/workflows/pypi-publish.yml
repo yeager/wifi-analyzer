@@ -3,13 +3,21 @@ name: Publish to PyPI
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to publish
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   test:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
     runs-on: ubuntu-24.04
     container: debian:stable
     steps:
@@ -22,9 +30,12 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ inputs.release_tag || github.ref }}
+      - name: Mark the checkout as safe for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Verify release tag and commit
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
           python3 scripts/check-release-tag.py "$RELEASE_TAG"
           python3 scripts/check-release-commit.py "$RELEASE_TAG"
@@ -37,7 +48,9 @@ jobs:
 
   publish:
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
     runs-on: ubuntu-24.04
     environment: pypi
     permissions:
@@ -46,9 +59,12 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ inputs.release_tag || github.ref }}
+      - name: Mark the checkout as safe for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Verify release tag and commit
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
           python3 scripts/check-release-tag.py "$RELEASE_TAG"
           python3 scripts/check-release-commit.py "$RELEASE_TAG"

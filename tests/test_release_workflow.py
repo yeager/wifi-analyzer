@@ -40,7 +40,9 @@ def test_pypi_release_checks_tag_version_and_main_ancestry_before_publish():
     assert workflow.count("python3 scripts/check-release-tag.py \"$RELEASE_TAG\"") == 2
     assert workflow.count("python3 scripts/check-release-commit.py \"$RELEASE_TAG\"") == 2
     assert workflow.count("fetch-depth: 0") == 2
-    assert workflow.count("if: startsWith(github.ref, 'refs/tags/v')") == 2
+    assert workflow.count("ref: ${{ inputs.release_tag || github.ref }}") == 2
+    assert workflow.count("Mark the checkout as safe for Git") == 2
+    assert workflow.count("inputs.release_tag != ''") == 2
 
 
 def test_release_commit_checker_rejects_a_non_semver_tag_without_git_access():
