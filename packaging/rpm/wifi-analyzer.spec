@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.34
+Version:        0.1.35
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -70,6 +70,9 @@ GSK_RENDERER=cairo xvfb-run -a env PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.35-1
+- Validate IP addresses in connection diagnostics.
+
 * Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.34-1
 - Show actionable guidance when a Wi-Fi scan fails.
 

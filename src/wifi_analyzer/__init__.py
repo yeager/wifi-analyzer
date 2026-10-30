@@ -1,2 +1,2 @@
 """WiFi Analyzer — WiFi Network Analysis Tool."""
-__version__ = "0.1.34"
+__version__ = "0.1.35"
