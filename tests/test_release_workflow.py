@@ -176,7 +176,6 @@ def test_iw_is_optional_for_rpm_and_recommended_for_extra_radio_details():
 
 def test_apt_repository_instructions_include_the_primary_key_fingerprint_check():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "497A39BE28C8389ED4BBAE39CB94F175B0803158" in readme
     assert "C7982569D1DCC5468A072D94D7B45ED27B9EBB63" in readme
     assert "gpg --show-keys --with-fingerprint /tmp/yeager-repo-key.asc" in readme
     assert "https://yeager.github.io/debian-repo stable main" in readme

@@ -25,6 +25,12 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.36" date="2026-10-30">
+      <description>
+        <p>Document the replacement APT signing key and required client update.</p>
+        <p xml:lang="sv">Dokumentera den nya APT-nyckeln och hur klienterna ska uppdateras.</p>
+      </description>
+    </release>
     <release version="0.1.35" date="2026-10-30">
       <description>
         <p>Validate IP addresses in connection diagnostics and reject malformed values.</p>
