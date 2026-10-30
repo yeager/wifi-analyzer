@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
@@ -129,6 +130,19 @@ def test_rpm_build_checks_launcher_metadata_icons_and_translations():
         "/usr/share/man/sv/man1/wifi-analyzer.1.gz",
     ):
         assert path in rpm_job
+
+
+def test_rpm_build_pins_fedora_and_installs_pyproject_build_backend():
+    workflow = (ROOT / ".github/workflows/packages.yml").read_text(encoding="utf-8")
+    rpm_job = workflow.split("  rpm:\n", 1)[1].split("  release:\n", 1)[0]
+    spec = (ROOT / "packaging/rpm/wifi-analyzer.spec").read_text(encoding="utf-8")
+    build_system = tomllib.loads(
+        (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )["build-system"]
+    assert "container: fedora:44" in rpm_job
+    assert "python3-setuptools_scm" in rpm_job
+    assert "python3dist(setuptools-scm)" in spec
+    assert any("setuptools-scm" in requirement for requirement in build_system["requires"])
 
 
 def run_release_publisher(tmp_path, release_exists):

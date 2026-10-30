@@ -15,6 +15,7 @@ BuildRequires:   libadwaita
 BuildRequires:   python3-devel
 BuildRequires:   python3-pytest
 BuildRequires:   python3dist(setuptools)
+BuildRequires:   python3dist(setuptools-scm)
 BuildRequires:   xorg-x11-server-Xvfb
 Requires:        NetworkManager
 Requires:        iw
