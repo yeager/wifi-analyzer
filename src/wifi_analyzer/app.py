@@ -362,6 +362,26 @@ def interference_contributors(network, networks):
 
 def parse_connection_diagnostics(route_output, dns_output, address_output="", link_output=""):
     """Extract gateway and DNS servers without retaining unrelated system data."""
+    def ip_values(output, *, allow_prefix=False):
+        values = []
+        for candidate in re.findall(
+            r"(?<![A-Za-z0-9_])[0-9A-Fa-f:.%]+(?:/\d{1,3})?(?![A-Za-z0-9_])", output,
+        ):
+            if "." not in candidate and ":" not in candidate:
+                continue
+            try:
+                parsed = (
+                    ipaddress.ip_interface(candidate)
+                    if allow_prefix or "/" in candidate
+                    else ipaddress.ip_address(candidate)
+                )
+            except ValueError:
+                continue
+            value = str(parsed)
+            if value not in values:
+                values.append(value)
+        return values
+
     gateway = ""
     for line in route_output.splitlines():
         fields = line.split()
@@ -377,8 +397,8 @@ def parse_connection_diagnostics(route_output, dns_output, address_output="", li
             continue
         gateway = candidate
         break
-    servers = re.findall(r"(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{3,}", dns_output)
-    addresses = re.findall(r"(?:\d{1,3}\.){3}\d{1,3}(?:/\d{1,2})?|[0-9a-fA-F:]{3,}(?:/\d{1,3})?", address_output)
+    servers = ip_values(dns_output)
+    addresses = ip_values(address_output, allow_prefix=True)
     rates = re.findall(r"(?:tx|rx) bitrate:\s*([^\n]+)", link_output, re.IGNORECASE)
     return {"gateway": gateway, "dns_servers": list(dict.fromkeys(servers)),
             "ip_addresses": list(dict.fromkeys(addresses)), "link_rates": rates}

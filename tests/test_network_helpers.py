@@ -889,6 +889,13 @@ def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
         "default dev ppp0\ndefault via fe80::1 dev wlan0 proto ra", "",
     )["gateway"] == "fe80::1"
     assert parse_connection_diagnostics("default via not-an-ip dev wlan0", "")["gateway"] == ""
+    invalid = parse_connection_diagnostics(
+        "default via 192.0.2.1 dev wlan0",
+        "Link 2: 999.999.999.999 1.1.1.1 2001:db8::zz",
+        "wlan0 UP 192.0.2.999/24 2001:db8::2/129 2001:db8::3/64",
+    )
+    assert invalid["dns_servers"] == ["1.1.1.1"]
+    assert invalid["ip_addresses"] == ["2001:db8::3/64"]
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     save_history_snapshot([{"ssid": "AP", "bssid": "a", "signal_pct": 42, "channel": 6}], now="now", profile="Home")
     assert load_signal_history("a", "Home") == [{"scanned_at": "now", "signal_pct": 42, "channel": 6}]
