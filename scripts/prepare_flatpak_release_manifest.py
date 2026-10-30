@@ -40,7 +40,8 @@ def prepare(root: Path, tag: str, commit: str) -> Path:
 
     sources[0]["tag"] = tag
     sources[0]["commit"] = commit
-    output = root / "flatpak/release-manifest.json"
+    output = root / "flatpak/release/io.github.yeager.wifi-analyzer.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return output
 

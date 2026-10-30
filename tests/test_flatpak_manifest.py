@@ -114,6 +114,8 @@ def test_release_manifest_pins_the_exact_version_tag_and_commit(tmp_path):
 
     output = prepare(tmp_path, tag, commit)
 
+    assert output.name == "io.github.yeager.wifi-analyzer.json"
+    assert output.parent.name == "release"
     manifest = json.loads(output.read_text(encoding="utf-8"))
     source = manifest["modules"][0]["sources"][0]
     assert source["tag"] == tag
