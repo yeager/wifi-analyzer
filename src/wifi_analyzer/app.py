@@ -299,12 +299,30 @@ def connection_diagnostics():
         route = subprocess.run(["ip", "route"], capture_output=True, text=True, timeout=2, check=False).stdout
         dns = subprocess.run(["resolvectl", "dns"], capture_output=True, text=True, timeout=2, check=False).stdout
         addresses = subprocess.run(["ip", "-brief", "address"], capture_output=True, text=True, timeout=2, check=False).stdout
-        device = subprocess.run(["iw", "dev"], capture_output=True, text=True, timeout=2, check=False).stdout
-        interface = re.search(r"^\s*Interface\s+(\S+)", device, re.MULTILINE)
-        link = subprocess.run(["iw", "dev", interface.group(1), "link"], capture_output=True,
-                              text=True, timeout=2, check=False).stdout if interface else ""
     except (FileNotFoundError, subprocess.SubprocessError):
         return {"gateway": "", "dns_servers": [], "ip_addresses": [], "link_rates": []}
+
+    # Match link-rate diagnostics to the active NetworkManager radio when
+    # several adapters are present. An inactive first radio may have no link.
+    try:
+        nm_proxy = Gio.DBusProxy.new_for_bus_sync(
+            Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
+            NM_BUS_NAME, NM_OBJ_PATH, NM_IFACE, None,
+        )
+        wifi_device = _find_wifi_device(nm_proxy)
+        interface = wifi_device[1] if wifi_device else None
+    except Exception:  # Keep gateway, DNS and IP details useful without D-Bus.
+        interface = None
+
+    link = ""
+    if interface:
+        try:
+            link = subprocess.run(
+                ["iw", "dev", interface, "link"], capture_output=True,
+                text=True, timeout=2, check=False,
+            ).stdout
+        except (FileNotFoundError, subprocess.SubprocessError):
+            pass
     return parse_connection_diagnostics(route, dns, addresses, link)
 
 

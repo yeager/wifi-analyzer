@@ -422,6 +422,34 @@ def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
     assert load_signal_history("a", "Home") == [{"scanned_at": "now", "signal_pct": 42, "channel": 6}]
 
 
+def test_connection_diagnostics_uses_networkmanager_active_wifi_interface(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    calls = []
+    outputs = {
+        ("ip", "route"): "default via 192.0.2.1 dev wlan1",
+        ("resolvectl", "dns"): "Link 2 (wlan1): 1.1.1.1",
+        ("ip", "-brief", "address"): "wlan1 UP 192.0.2.10/24",
+        ("iw", "dev", "wlan1", "link"): "Connected to aa:bb:cc:dd:ee:ff (on wlan1)\nrx bitrate: 866.7 MBit/s",
+    }
+
+    def run(command, **_kwargs):
+        calls.append(tuple(command))
+        return subprocess.CompletedProcess(command, 0, outputs[tuple(command)], "")
+
+    fake_gio = Mock()
+    monkeypatch.setattr(app_module, "Gio", fake_gio)
+    monkeypatch.setattr(app_module, "_find_wifi_device", Mock(return_value=("/device/2", "wlan1", "/ap/2")))
+    monkeypatch.setattr(app_module.subprocess, "run", run)
+
+    diagnostics = app_module.connection_diagnostics()
+
+    assert diagnostics["link_rates"] == ["866.7 MBit/s"]
+    assert diagnostics["gateway"] == "192.0.2.1"
+    assert ("iw", "dev", "wlan1", "link") in calls
+    assert ("iw", "dev") not in calls
+
+
 def test_wifi_problem_includes_a_remedy():
     code, title, remedy = wifi_problem([{"ssid": "Office", "connected": True, "signal_pct": 20}])
     assert code == "weak-signal"
