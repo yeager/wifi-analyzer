@@ -264,9 +264,19 @@ def recommend_channels(networks, band, regulatory_ranges=()):
     return sorted(scored, key=lambda item: (item[1], item[0]))
 
 
-def channel_recommendation_text(recommendations):
+def channel_recommendation_text(recommendations, no_result_reason="no-observations"):
     """Explain the scan-based estimate without implying measured airtime."""
     if not recommendations:
+        if no_result_reason == "scan-failed":
+            return (
+                _("No channel recommendation available"),
+                _("The scan did not complete, so nearby access points could not be compared."),
+            )
+        if no_result_reason == "no-eligible-channels":
+            return (
+                _("No channel recommendation available"),
+                _("Nearby access points were found, but the detected regulatory information lists no candidate channel that can initiate transmission. Check the router’s country and channel settings."),
+            )
         return (
             _("No channel recommendation available"),
             _("Scan this band to compare nearby access points."),
@@ -1445,7 +1455,18 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         recommendations = recommend_channels(
             self.networks, band, getattr(self, "regulatory_ranges", ()),
         )
-        recommendation, explanation = channel_recommendation_text(recommendations)
+        if any(net.get("error_code") for net in self.networks):
+            no_result_reason = "scan-failed"
+        elif any(
+            net.get("band") == band and net.get("channel", 0) > 0
+            for net in self.networks
+        ) and getattr(self, "regulatory_ranges", ()):
+            no_result_reason = "no-eligible-channels"
+        else:
+            no_result_reason = "no-observations"
+        recommendation, explanation = channel_recommendation_text(
+            recommendations, no_result_reason,
+        )
         self.recommendation.set_label(recommendation)
         self.recommendation_detail.set_label(explanation)
 

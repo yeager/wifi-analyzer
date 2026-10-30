@@ -146,6 +146,25 @@ def test_missing_channel_recommendation_suggests_a_scan():
     assert explanation == "Scan this band to compare nearby access points."
 
 
+def test_channel_recommendation_explains_when_regulations_leave_no_candidate():
+    summary, explanation = channel_recommendation_text(
+        [], "no-eligible-channels",
+    )
+
+    assert summary == "No channel recommendation available"
+    assert "detected regulatory information" in explanation
+    assert "no candidate channel that can initiate transmission" in explanation
+    assert "router’s country and channel settings" in explanation
+
+
+def test_failed_channel_scan_does_not_ask_user_to_scan_again():
+    summary, explanation = channel_recommendation_text([], "scan-failed")
+
+    assert summary == "No channel recommendation available"
+    assert "scan did not complete" in explanation
+    assert "could not be compared" in explanation
+
+
 def test_channel_recommendations_require_a_complete_scan_with_band_observations():
     network = {"band": "5 GHz", "channel": 36, "signal_pct": 75, "width_mhz": 20}
     assert recommend_channels([network], "2.4 GHz") == []
@@ -238,6 +257,12 @@ def test_main_view_channel_recommendations_use_latest_scan_regulatory_ranges(mon
     window._update_ui()
 
     recommend.assert_called_once_with(networks, "5 GHz", ranges)
+
+    recommend.return_value = []
+    window.regulatory_ranges = [(5180, 5200, "NO-IR")]
+    window._update_ui()
+
+    assert "detected regulatory information" in window.recommendation_detail.set_label.call_args.args[0]
 
 
 def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):

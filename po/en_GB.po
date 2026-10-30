@@ -33,6 +33,14 @@ msgstr "DFS — availability depends on local regulations"
 msgid "No channel recommendation available"
 msgstr "No channel recommendation available"
 
+#: src/wifi_analyzer/app.py:273
+msgid "The scan did not complete, so nearby access points could not be compared."
+msgstr "The scan did not complete, so nearby access points could not be compared."
+
+#: src/wifi_analyzer/app.py:278
+msgid "Nearby access points were found, but the detected regulatory information lists no candidate channel that can initiate transmission. Check the router’s country and channel settings."
+msgstr "Nearby access points were found, but the detected regulatory information lists no candidate channel that can initiate transmission. Check the router’s country and channel settings."
+
 #: src/wifi_analyzer/app.py:261
 msgid "Scan this band to compare nearby access points."
 msgstr "Scan this band to compare nearby access points."

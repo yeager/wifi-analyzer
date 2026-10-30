@@ -36,6 +36,12 @@ msgstr "Ingen kanal kunde rekommenderas"
 msgid "Scan this band to compare nearby access points."
 msgstr "Sök efter nätverk på det här bandet för att jämföra dem."
 
+msgid "The scan did not complete, so nearby access points could not be compared."
+msgstr "Skanningen slutfördes inte, så det gick inte att jämföra närliggande åtkomstpunkter."
+
+msgid "Nearby access points were found, but the detected regulatory information lists no candidate channel that can initiate transmission. Check the router’s country and channel settings."
+msgstr "Närliggande åtkomstpunkter hittades, men den upptäckta regleringsinformationen anger ingen kandidatkanal som får inleda sändning. Kontrollera routerns lands- och kanalinställningar."
+
 #: src/wifi_analyzer/app.py:265
 #, python-brace-format
 msgid ""
