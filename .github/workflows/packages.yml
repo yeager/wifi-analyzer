@@ -232,8 +232,12 @@ jobs:
             echo "No Debian or RPM release assets were downloaded." >&2
             exit 1
           fi
-          gh release create "$RELEASE_TAG" \
-            --verify-tag \
-            --generate-notes \
-            --title "WiFi Analyzer $RELEASE_TAG" \
-            "${assets[@]}"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" \
+              --verify-tag \
+              --generate-notes \
+              --title "WiFi Analyzer $RELEASE_TAG" \
+              "${assets[@]}"
+          fi

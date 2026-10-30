@@ -32,6 +32,13 @@ def test_release_workflow_checks_the_selected_version_tag_before_uploading():
     )
 
 
+def test_release_workflow_updates_assets_when_the_release_already_exists():
+    workflow = (ROOT / ".github/workflows/packages.yml").read_text(encoding="utf-8")
+    assert 'gh release view "$RELEASE_TAG"' in workflow
+    assert 'gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber' in workflow
+    assert 'gh release create "$RELEASE_TAG"' in workflow
+
+
 def run_release_tag_check(tag):
     env = dict(os.environ, RELEASE_TAG=tag)
     return subprocess.run(
