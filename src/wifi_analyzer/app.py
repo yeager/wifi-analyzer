@@ -83,12 +83,13 @@ def band_for_frequency(freq):
 
 
 def channel_width_mhz(freq):
-    """Return the width that can safely be inferred from NetworkManager data.
+    """Return a conservative fallback when NetworkManager reports no width.
 
-    NetworkManager's AccessPoint D-Bus interface exposes a centre frequency but
-    no channel-width property.  A 20 MHz primary channel is therefore the only
-    non-speculative value we can display.  Keep the source alongside the value
-    so the UI does not present an estimate as a measurement.
+    The AccessPoint D-Bus interface exposes the bandwidth announced by the AP.
+    This helper is only used when that value is unavailable, so use the
+    20 MHz primary-channel width rather than guessing a wider channel. Keep
+    the source alongside the value so the UI does not present an estimate as
+    a measurement.
     """
     return 20 if band_for_frequency(freq) else 0
 
