@@ -290,6 +290,40 @@ def channel_recommendation_text(recommendations, no_result_reason="no-observatio
     )
 
 
+def connected_security_advice(networks):
+    """Give cautious security guidance for the connected access point only."""
+    connected = next(
+        (network for network in networks if network.get("connected")), None,
+    )
+    if connected is None:
+        return ""
+    security = connected.get("security")
+    if not isinstance(security, str):
+        security = ""
+
+    if security in {"WEP", "WPA1", "WPA1/WPA2", "WPA Enterprise"}:
+        return _(
+            "Security advice: The connected access point advertises an older "
+            "Wi-Fi security mode. If you manage it, use WPA2 with AES or WPA3 "
+            "and disable WEP/WPA1. The scan cannot tell which cipher your "
+            "connection uses."
+        )
+    if security == "Enhanced Open (OWE)":
+        return _(
+            "Security advice: Enhanced Open encrypts Wi-Fi traffic but does "
+            "not authenticate the access point. Check the network name with "
+            "the venue or network owner before using it."
+        )
+    if not security:
+        return _(
+            "Security advice: The connected access point reports no Wi-Fi "
+            "security. Avoid sensitive activity on this network until you "
+            "have checked what protection it provides. HTTPS protects only "
+            "connections to sites that use it."
+        )
+    return ""
+
+
 def interference_contributors(network, networks):
     """Explain which observed APs overlap the selected AP most."""
     contributors = []
@@ -1473,6 +1507,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         recommendation, explanation = channel_recommendation_text(
             recommendations, no_result_reason,
         )
+        security_advice = connected_security_advice(self.networks)
+        if security_advice:
+            explanation = f"{explanation}\n\n{security_advice}"
         self.recommendation.set_label(recommendation)
         self.recommendation_detail.set_label(explanation)
 

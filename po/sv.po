@@ -550,3 +550,15 @@ msgstr "Kom igång"
 #, python-brace-format
 #~ msgid "Gateway: {gateway} · DNS: {dns}"
 #~ msgstr "Gateway: {gateway} · DNS: {dns}"
+
+#: src/wifi_analyzer/app.py:306
+msgid "Security advice: The connected access point advertises an older Wi-Fi security mode. If you manage it, use WPA2 with AES or WPA3 and disable WEP/WPA1. The scan cannot tell which cipher your connection uses."
+msgstr "Säkerhetsråd: Den anslutna åtkomstpunkten använder ett äldre Wi-Fi-säkerhetsläge. Om du ansvarar för routern bör du använda WPA2 med AES eller WPA3 och stänga av WEP och WPA1. Skanningen visar inte vilket krypteringsläge anslutningen använder."
+
+#: src/wifi_analyzer/app.py:313
+msgid "Security advice: Enhanced Open encrypts Wi-Fi traffic but does not authenticate the access point. Check the network name with the venue or network owner before using it."
+msgstr "Säkerhetsråd: Enhanced Open krypterar Wi-Fi-trafiken men verifierar inte åtkomstpunkten. Kontrollera nätverksnamnet med verksamheten eller nätverksansvarig innan du använder nätet."
+
+#: src/wifi_analyzer/app.py:319
+msgid "Security advice: The connected access point reports no Wi-Fi security. Avoid sensitive activity on this network until you have checked what protection it provides. HTTPS protects only connections to sites that use it."
+msgstr "Säkerhetsråd: Den anslutna åtkomstpunkten rapporterar inget Wi-Fi-skydd. Undvik känsliga ärenden på nätverket tills du vet vilket skydd som finns. HTTPS skyddar bara anslutningar till webbplatser som använder det."

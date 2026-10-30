@@ -469,3 +469,15 @@ msgstr ""
 #: src/wifi_analyzer/app.py:1525
 msgid "Get Started"
 msgstr ""
+
+#: src/wifi_analyzer/app.py:306
+msgid "Security advice: The connected access point advertises an older Wi-Fi security mode. If you manage it, use WPA2 with AES or WPA3 and disable WEP/WPA1. The scan cannot tell which cipher your connection uses."
+msgstr ""
+
+#: src/wifi_analyzer/app.py:313
+msgid "Security advice: Enhanced Open encrypts Wi-Fi traffic but does not authenticate the access point. Check the network name with the venue or network owner before using it."
+msgstr ""
+
+#: src/wifi_analyzer/app.py:319
+msgid "Security advice: The connected access point reports no Wi-Fi security. Avoid sensitive activity on this network until you have checked what protection it provides. HTTPS protects only connections to sites that use it."
+msgstr ""

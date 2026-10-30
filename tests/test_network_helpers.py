@@ -13,6 +13,7 @@ from wifi_analyzer.app import (
     network_matches_query,
     parse_regulatory_ranges,
     recommend_channels,
+    connected_security_advice,
     save_history_snapshot,
     clear_history,
     compare_scans,
@@ -139,6 +140,23 @@ def test_channel_recommendation_explains_the_limits_of_the_scan_score():
     assert "client traffic and hidden networks are not measured" in explanation
 
 
+def test_connected_security_advice_covers_open_owe_and_legacy_modes_cautiously():
+    assert "reports no Wi-Fi security" in connected_security_advice([{
+        "connected": True, "security": "",
+    }])
+    assert "does not authenticate the access point" in connected_security_advice([{
+        "connected": True, "security": "Enhanced Open (OWE)",
+    }])
+    legacy = connected_security_advice([{"connected": True, "security": "WPA1/WPA2"}])
+    assert "use WPA2 with AES or WPA3" in legacy
+    assert "cannot tell which cipher" in legacy
+
+
+def test_connected_security_advice_does_not_warn_about_other_or_modern_networks():
+    assert connected_security_advice([{"connected": False, "security": "WEP"}]) == ""
+    assert connected_security_advice([{"connected": True, "security": "WPA3"}]) == ""
+
+
 def test_missing_channel_recommendation_suggests_a_scan():
     summary, explanation = channel_recommendation_text([])
 
@@ -263,6 +281,42 @@ def test_main_view_channel_recommendations_use_latest_scan_regulatory_ranges(mon
     window._update_ui()
 
     assert "detected regulatory information" in window.recommendation_detail.set_label.call_args.args[0]
+
+
+def test_main_view_adds_connected_network_security_advice(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    networks = [{
+        "ssid": "Office", "bssid": "aa:bb", "band": "5 GHz", "channel": 36,
+        "dbm": -50, "signal_pct": 100, "security": "WEP", "connected": True,
+    }]
+    monkeypatch.setattr(app_module, "recommend_channels", lambda *_args: [(36, 0.0)])
+    window = app_module.WifiAnalyzerWindow.__new__(app_module.WifiAnalyzerWindow)
+    window.networks = networks
+    window.regulatory_ranges = []
+    window.selected_channel = None
+    window._get_band = lambda: "5 GHz"
+    window.listbox = Mock()
+    window.listbox.get_first_child.return_value = None
+    window.security_filter = Mock()
+    window.security_filter.get_selected_item.return_value.get_string.return_value = "All security"
+    window.signal_threshold = Mock()
+    window.signal_threshold.get_value_as_int.return_value = -100
+    window.hidden_filter = Mock()
+    window.hidden_filter.get_active.return_value = False
+    window.search_entry = Mock()
+    window.search_entry.get_text.return_value = ""
+    window.sort_filter = Mock()
+    window.sort_filter.get_selected_item.return_value.get_string.return_value = "Signal"
+    window.channel_chart = Mock()
+    window.recommendation = Mock()
+    window.recommendation_detail = Mock()
+
+    window._update_ui()
+
+    detail = window.recommendation_detail.set_label.call_args.args[0]
+    assert "Security advice:" in detail
+    assert "disable WEP/WPA1" in detail
 
 
 def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):
