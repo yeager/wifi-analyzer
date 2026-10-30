@@ -34,9 +34,84 @@ def test_release_workflow_checks_the_selected_version_tag_before_uploading():
 
 def test_release_workflow_updates_assets_when_the_release_already_exists():
     workflow = (ROOT / ".github/workflows/packages.yml").read_text(encoding="utf-8")
-    assert 'gh release view "$RELEASE_TAG"' in workflow
-    assert 'gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber' in workflow
-    assert 'gh release create "$RELEASE_TAG"' in workflow
+    assert 'scripts/publish-release-assets.sh "${assets[@]}"' in workflow
+
+
+def run_release_publisher(tmp_path, release_exists):
+    bin_directory = tmp_path / "bin"
+    bin_directory.mkdir()
+    calls_path = tmp_path / "gh-calls"
+    fake_gh = bin_directory / "gh"
+    fake_gh.write_text(
+        "#!/usr/bin/env bash\n"
+        "printf '%s\\0' \"$@\" >> \"$GH_CALLS\"\n"
+        "printf '\\0' >> \"$GH_CALLS\"\n"
+        "if [[ \"$1 $2\" == 'release view' ]]; then\n"
+        "  [[ \"$FAKE_RELEASE_EXISTS\" == 1 ]]\n"
+        "elif [[ \"$1 $2\" == 'release upload' || \"$1 $2\" == 'release create' ]]; then\n"
+        "  exit 0\n"
+        "else\n"
+        "  exit 90\n"
+        "fi\n",
+        encoding="utf-8",
+    )
+    fake_gh.chmod(0o755)
+    environment = dict(
+        os.environ,
+        PATH=f"{bin_directory}{os.pathsep}{os.environ['PATH']}",
+        RELEASE_TAG="v0.1.28",
+        GH_CALLS=str(calls_path),
+        FAKE_RELEASE_EXISTS="1" if release_exists else "0",
+    )
+    assets = ["wifi-analyzer_0.1.28_all.deb", "wifi-analyzer-0.1.28-1.noarch.rpm"]
+    result = subprocess.run(
+        ["bash", str(ROOT / "scripts/publish-release-assets.sh"), *assets],
+        cwd=ROOT,
+        env=environment,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    calls = []
+    for invocation in calls_path.read_bytes().split(b"\0\0"):
+        if invocation:
+            calls.append([os.fsdecode(argument) for argument in invocation.split(b"\0")])
+    return result, calls, assets
+
+
+def test_release_publisher_uploads_and_replaces_assets_for_existing_release(tmp_path):
+    result, calls, assets = run_release_publisher(tmp_path, release_exists=True)
+    assert result.returncode == 0, result.stderr
+    assert calls == [
+        ["release", "view", "v0.1.28"],
+        ["release", "upload", "v0.1.28", *assets, "--clobber"],
+    ]
+
+
+def test_release_publisher_creates_a_new_release_with_verified_tag(tmp_path):
+    result, calls, assets = run_release_publisher(tmp_path, release_exists=False)
+    assert result.returncode == 0, result.stderr
+    assert calls == [
+        ["release", "view", "v0.1.28"],
+        [
+            "release", "create", "v0.1.28", "--verify-tag", "--generate-notes",
+            "--title", "WiFi Analyzer v0.1.28", *assets,
+        ],
+    ]
+
+
+def test_release_publisher_requires_a_tag_and_assets(tmp_path):
+    script = ROOT / "scripts/publish-release-assets.sh"
+    without_tag = subprocess.run(
+        ["bash", str(script), "asset.deb"], cwd=ROOT,
+        env=dict(os.environ, RELEASE_TAG=""), capture_output=True, text=True,
+    )
+    assert without_tag.returncode == 2
+    without_assets = subprocess.run(
+        ["bash", str(script)], cwd=ROOT,
+        env=dict(os.environ, RELEASE_TAG="v0.1.28"), capture_output=True, text=True,
+    )
+    assert without_assets.returncode == 2
 
 
 def run_release_tag_check(tag):
