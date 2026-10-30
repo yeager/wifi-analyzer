@@ -103,12 +103,12 @@ The Swedish manual page is installed as `wifi-analyzer(1)` and is maintained in
 
 ### Flatpak
 
-Flatpak-paketet byggs från
+The Flatpak package is built from
 [`flatpak/io.github.yeager.wifi-analyzer.json`](flatpak/io.github.yeager.wifi-analyzer.json).
-GitHub Actions bygger en installerbar `.flatpak`-bundle för pull requests och
-pushar till `main`. Release-taggar hoppar över Flatpak-jobbet eftersom manifestet
-pekar på den senast utgivna och versionsstämplade källkoden. Hämta artefakten från
-paketworkflowen och installera den så här:
+GitHub Actions builds an installable `.flatpak` bundle for pull requests and
+pushes to `main`. Release tags skip the Flatpak job because the manifest points
+to the latest released, version-pinned source. Download the artifact from the
+package workflow and install it like this:
 
 ```bash
 flatpak remote-add --user --if-not-exists flathub \
