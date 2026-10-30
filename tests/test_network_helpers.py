@@ -506,6 +506,54 @@ def test_anonymized_export_requires_confirmation_before_file_chooser(monkeypatch
     assert captured["chooser"][0] == "Export anonymized JSON"
 
 
+def test_html_diagnostic_export_warns_about_network_names_and_macs(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    captured = {}
+
+    class FakeDialog:
+        def __init__(self, title, _subtitle):
+            captured["title"] = title
+
+        def set_body(self, body):
+            captured["body"] = body
+
+        def add_response(self, response, label):
+            captured.setdefault("responses", {})[response] = label
+
+        def set_default_response(self, response):
+            captured["default"] = response
+
+        def set_response_appearance(self, response, appearance):
+            captured["appearance"] = (response, appearance)
+
+        def connect(self, signal, callback):
+            captured["callback"] = callback
+
+        def present(self, parent):
+            captured["parent"] = parent
+
+    monkeypatch.setattr(app_module.Adw.AlertDialog, "new", FakeDialog)
+    window = app_module.WifiAnalyzerWindow.__new__(app_module.WifiAnalyzerWindow)
+    window._choose_export_path = lambda *args: captured.setdefault("chooser", args)
+
+    window._export_report()
+
+    assert "SSIDs" in captured["body"]
+    assert "BSSIDs" in captured["body"]
+    assert "location" in captured["body"]
+    assert captured["responses"]["cancel"] == "Cancel"
+    assert captured["responses"]["export"] == "Continue to export"
+    assert captured["default"] == "cancel"
+    assert "chooser" not in captured
+
+    captured["callback"](None, "cancel")
+    assert "chooser" not in captured
+
+    captured["callback"](None, "export")
+    assert captured["chooser"][0] == "Export diagnostic report"
+
+
 def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
     target = {"ssid": "Target", "bssid": "a", "band": "5 GHz", "channel": 36, "width_mhz": 20}
     other = {"ssid": "Neighbour", "bssid": "b", "band": "5 GHz", "channel": 36, "width_mhz": 20, "signal_pct": 70}

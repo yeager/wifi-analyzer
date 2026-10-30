@@ -1446,7 +1446,20 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
                 recommendations[band] = ranked[0] if ranked else (None, None)
             export_html_report([net for net in getattr(self, "visible_networks", self.networks) if net.get("bssid")], recommendations, path)
             self._set_status(_("Exported diagnostic report to {path}").format(path=path))
-        self._choose_export_path(_("Export diagnostic report"), "wifi-analyzer-report.html", write)
+
+        dialog = Adw.AlertDialog.new(_("Export diagnostic report"), None)
+        dialog.set_body(_("This report includes visible network names (SSIDs) and access point MAC addresses (BSSIDs). Save it locally and review it before sharing; these details can reveal nearby networks and your location."))
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("export", _("Continue to export"))
+        dialog.set_default_response("cancel")
+        dialog.set_response_appearance("export", Adw.ResponseAppearance.SUGGESTED)
+
+        def on_response(_dialog, response):
+            if response == "export":
+                self._choose_export_path(_("Export diagnostic report"), "wifi-analyzer-report.html", write)
+
+        dialog.connect("response", on_response)
+        dialog.present(self)
 
     def _show_connection_diagnostics(self, *_args):
         info = connection_diagnostics()
