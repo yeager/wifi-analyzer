@@ -235,12 +235,14 @@ def run_release_tag_check(tag):
 
 
 def test_release_tag_checker_accepts_matching_version():
-    result = run_release_tag_check("v0.1.28")
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    version = project["project"]["version"]
+    result = run_release_tag_check(f"v{version}")
     assert result.returncode == 0, result.stderr
-    assert "matches package version 0.1.28" in result.stdout
+    assert f"matches package version {version}" in result.stdout
 
 
 def test_release_tag_checker_rejects_a_different_or_malformed_version():
-    for tag in ("v0.1.27", "0.1.28", "v0.1.28-rc1"):
+    for tag in ("v0.1.28", "0.1.29", "v0.1.29-rc1"):
         result = run_release_tag_check(tag)
         assert result.returncode != 0, tag

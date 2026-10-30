@@ -25,6 +25,12 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.29" date="2026-10-30">
+      <description>
+        <p>Escape untrusted values in diagnostic reports, restrict Flatpak permissions to the reviewed set, and strengthen release and package verification.</p>
+        <p xml:lang="sv">Escapa osäkra värden i felsökningsrapporter, begränsa Flatpak-behörigheterna till den granskade uppsättningen och förbättra kontrollerna av releaser och paket.</p>
+      </description>
+    </release>
     <release version="0.1.28" date="2026-10-30">
       <description><p>Use the active NetworkManager Wi-Fi adapter for connection link-rate diagnostics when multiple adapters are available.</p></description>
     </release>
