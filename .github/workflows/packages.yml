@@ -57,16 +57,31 @@ jobs:
 
   flatpak:
     if: >-
-      github.ref_type != 'tag' &&
-      (github.event_name != 'workflow_dispatch' || inputs.release_tag == '')
+      github.event_name != 'workflow_dispatch' || inputs.release_tag != ''
     name: Flatpak build
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_tag || github.ref }}
-      - name: Check Flatpak source is not newer than the project
-        run: python3 scripts/check_flatpak_manifest.py
+      - name: Prepare and validate the Flatpak manifest
+        id: manifest
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            release_tag="$GITHUB_REF_NAME"
+          elif [ "$EVENT_NAME" = workflow_dispatch ] && [ -n "$RELEASE_TAG" ]; then
+            release_tag="$RELEASE_TAG"
+          else
+            python3 scripts/check_flatpak_manifest.py
+            echo "path=flatpak/io.github.yeager.wifi-analyzer.json" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 scripts/prepare_flatpak_release_manifest.py "$release_tag"
+          python3 scripts/check_flatpak_manifest.py --manifest flatpak/release-manifest.json
+          echo "path=flatpak/release-manifest.json" >> "$GITHUB_OUTPUT"
       - name: Install Flatpak build tools
         run: sudo apt-get update && sudo apt-get install -y flatpak xvfb dbus-x11
       - name: Add Flathub runtime source
@@ -76,11 +91,15 @@ jobs:
       - name: Check Flathub manifest lint
         run: >-
           flatpak run --user --command=flatpak-builder-lint org.flatpak.Builder
-          --gha-format manifest flatpak/io.github.yeager.wifi-analyzer.json
+          --gha-format manifest "$MANIFEST"
+        env:
+          MANIFEST: ${{ steps.manifest.outputs.path }}
       - name: Build GNOME 51 Flatpak
         run: >-
           dbus-run-session -- flatpak run --user --command=flathub-build org.flatpak.Builder
-          flatpak/io.github.yeager.wifi-analyzer.json
+          "$MANIFEST"
+        env:
+          MANIFEST: ${{ steps.manifest.outputs.path }}
       - name: Check built Flatpak repository lint
         run: >-
           flatpak run --user --command=flatpak-builder-lint org.flatpak.Builder
@@ -233,7 +252,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
     name: Publish GitHub release
     runs-on: ubuntu-24.04
-    needs: [screenshot, debian, rpm]
+    needs: [screenshot, flatpak, debian, rpm]
     permissions:
       contents: write
     steps:
@@ -257,14 +276,18 @@ jobs:
         with:
           name: wifi-analyzer-rpm
           path: artifacts/rpm
-      - name: Create release with Debian and RPM packages
+      - uses: actions/download-artifact@v7
+        with:
+          name: wifi-analyzer-flatpak
+          path: artifacts/flatpak
+      - name: Create release with Debian, RPM and Flatpak packages
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
           mapfile -d '' -t assets < <(
-            find artifacts/deb artifacts/rpm -type f \
-              \( -name '*.deb' -o -name '*.rpm' \) -print0
+            find artifacts/deb artifacts/rpm artifacts/flatpak -type f \
+              \( -name '*.deb' -o -name '*.rpm' -o -name '*.flatpak' \) -print0
           )
           if [ "${#assets[@]}" -eq 0 ]; then
             echo "No Debian or RPM release assets were downloaded." >&2

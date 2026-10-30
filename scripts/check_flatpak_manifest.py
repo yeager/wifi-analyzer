@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import tomllib
@@ -20,11 +21,12 @@ REQUIRED_FINISH_ARGS = {
 }
 
 
-def validate(root: Path) -> tuple[str, str, list[str]]:
+def validate(root: Path, manifest_path: Path | None = None) -> tuple[str, str, list[str]]:
     project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
-    manifest = json.loads(
-        (root / "flatpak/io.github.yeager.wifi-analyzer.json").read_text(encoding="utf-8")
-    )
+    manifest_file = manifest_path or root / "flatpak/io.github.yeager.wifi-analyzer.json"
+    if not manifest_file.is_absolute():
+        manifest_file = root / manifest_file
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     project_data = project["project"]
     app_id = manifest.get("app-id", "")
     version = project_data["version"]
@@ -91,13 +93,19 @@ def validate(root: Path) -> tuple[str, str, list[str]]:
 
 
 def main() -> int:
-    app_id, version, errors = validate(ROOT)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--manifest", type=Path, help="manifest file to validate")
+    args = parser.parse_args()
+    app_id, version, errors = validate(ROOT, args.manifest)
     if errors:
         for error in errors:
             print(f"Flatpak manifest: {error}")
         return 1
 
-    manifest = json.loads((ROOT / "flatpak/io.github.yeager.wifi-analyzer.json").read_text(encoding="utf-8"))
+    manifest_path = args.manifest or ROOT / "flatpak/io.github.yeager.wifi-analyzer.json"
+    if not manifest_path.is_absolute():
+        manifest_path = ROOT / manifest_path
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     source = next(
         source for module in manifest["modules"] for source in module["sources"]
         if source.get("type") == "git"

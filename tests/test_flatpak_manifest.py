@@ -3,11 +3,25 @@ import shutil
 import sys
 import tomllib
 from pathlib import Path
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from check_flatpak_manifest import validate
+from prepare_flatpak_release_manifest import prepare
+
+
+def _copy_release_manifest_inputs(destination):
+    for relative_path in (
+        "pyproject.toml",
+        "flatpak/io.github.yeager.wifi-analyzer.json",
+        "data/io.github.yeager.wifi-analyzer.desktop",
+        "data/io.github.yeager.wifi-analyzer.metainfo.xml",
+    ):
+        target = destination / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / relative_path, target)
 
 
 def test_flatpak_manifest_pins_a_released_source_not_newer_than_the_project():
@@ -89,3 +103,37 @@ def test_flatpak_manifest_rejects_unreviewed_host_filesystem_access(tmp_path):
     _app_id, _version, errors = validate(tmp_path)
 
     assert any("unreviewed Flatpak permission: --filesystem=host" in error for error in errors)
+
+
+def test_release_manifest_pins_the_exact_version_tag_and_commit(tmp_path):
+    _copy_release_manifest_inputs(tmp_path)
+    project = tomllib.loads((tmp_path / "pyproject.toml").read_text(encoding="utf-8"))
+    tag = f"v{project['project']['version']}"
+    commit = "a" * 40
+    original_manifest = (tmp_path / "flatpak/io.github.yeager.wifi-analyzer.json").read_text(encoding="utf-8")
+
+    output = prepare(tmp_path, tag, commit)
+
+    manifest = json.loads(output.read_text(encoding="utf-8"))
+    source = manifest["modules"][0]["sources"][0]
+    assert source["tag"] == tag
+    assert source["commit"] == commit
+    assert (tmp_path / "flatpak/io.github.yeager.wifi-analyzer.json").read_text(encoding="utf-8") == original_manifest
+    _app_id, _version, errors = validate(tmp_path, output)
+    assert errors == []
+
+
+def test_release_manifest_rejects_a_tag_that_does_not_match_project_version(tmp_path):
+    _copy_release_manifest_inputs(tmp_path)
+
+    with pytest.raises(ValueError, match="does not match project version"):
+        prepare(tmp_path, "v9.9.9", "a" * 40)
+
+
+def test_release_manifest_rejects_an_unpinned_commit(tmp_path):
+    _copy_release_manifest_inputs(tmp_path)
+    project = tomllib.loads((tmp_path / "pyproject.toml").read_text(encoding="utf-8"))
+    tag = f"v{project['project']['version']}"
+
+    with pytest.raises(ValueError, match="full lowercase Git hash"):
+        prepare(tmp_path, tag, "not-a-commit")

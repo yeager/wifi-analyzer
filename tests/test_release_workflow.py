@@ -18,11 +18,14 @@ def test_every_checkout_uses_the_selected_release_tag_when_dispatching():
     assert selected_ref_count == checkout_count
 
 
-def test_flatpak_job_skips_tag_releases_and_manual_tag_dispatches():
+def test_flatpak_job_builds_exact_release_tags_and_includes_them_in_releases():
     workflow = (ROOT / ".github/workflows/packages.yml").read_text(encoding="utf-8")
 
-    assert "github.ref_type != 'tag' &&" in workflow
-    assert "github.event_name != 'workflow_dispatch' || inputs.release_tag == ''" in workflow
+    assert "scripts/prepare_flatpak_release_manifest.py \"$release_tag\"" in workflow
+    assert "check_flatpak_manifest.py --manifest flatpak/release-manifest.json" in workflow
+    assert "needs: [screenshot, flatpak, debian, rpm]" in workflow
+    assert "name: wifi-analyzer-flatpak" in workflow
+    assert "-name '*.flatpak'" in workflow
 
 
 def test_release_workflow_checks_the_selected_version_tag_before_uploading():
