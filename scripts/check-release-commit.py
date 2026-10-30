@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -21,7 +22,21 @@ def validate_release_commit(tag: str, root: Path = ROOT) -> tuple[bool, str]:
         cwd=root, capture_output=True, text=True, check=False,
     )
     if resolved.returncode != 0:
-        return False, f"Could not resolve release tag {tag!r} to a commit"
+        event_ref = os.environ.get("GITHUB_REF", "")
+        event_sha = os.environ.get("GITHUB_SHA", "")
+        checked_out = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD^{commit}"],
+            cwd=root, capture_output=True, text=True, check=False,
+        )
+        if event_ref != f"refs/tags/{tag}" or checked_out.returncode != 0:
+            detail = resolved.stderr.strip()
+            return False, f"Could not resolve release tag {tag!r} to a commit: {detail}"
+        checked_out_sha = checked_out.stdout.strip()
+        if not event_sha or checked_out_sha != event_sha:
+            return False, f"Checkout does not match GitHub's commit for release tag {tag!r}"
+        resolved_sha = checked_out_sha
+    else:
+        resolved_sha = resolved.stdout.strip()
     fetched = subprocess.run(
         ["git", "fetch", "--no-tags", "origin", "main"],
         cwd=root, capture_output=True, text=True, check=False,
@@ -29,7 +44,7 @@ def validate_release_commit(tag: str, root: Path = ROOT) -> tuple[bool, str]:
     if fetched.returncode != 0:
         return False, f"Could not fetch origin/main: {fetched.stderr.strip()}"
     ancestry = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", resolved.stdout.strip(), "FETCH_HEAD"],
+        ["git", "merge-base", "--is-ancestor", resolved_sha, "FETCH_HEAD"],
         cwd=root, capture_output=True, text=True, check=False,
     )
     if ancestry.returncode != 0:

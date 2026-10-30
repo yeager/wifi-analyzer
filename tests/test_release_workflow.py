@@ -73,6 +73,7 @@ def test_release_commit_checker_accepts_main_and_rejects_unmerged_tag(tmp_path):
     git("push", "-u", "origin", "main")
     git("tag", "v1.2.3")
     git("push", "origin", "v1.2.3")
+    main_sha = git("rev-parse", "HEAD")
 
     checker = ROOT / "scripts/check-release-commit.py"
     (work / "scripts").mkdir()
@@ -83,6 +84,20 @@ def test_release_commit_checker_accepts_main_and_rejects_unmerged_tag(tmp_path):
         check=False, capture_output=True, text=True,
     )
     assert accepted.returncode == 0, accepted.stdout + accepted.stderr
+
+    git("tag", "-d", "v1.2.3")
+    event_environment = dict(
+        os.environ,
+        GITHUB_REF="refs/tags/v1.2.3",
+        GITHUB_SHA=main_sha,
+    )
+    accepted_without_local_tag = subprocess.run(
+        [sys.executable, str(checker), "v1.2.3"], cwd=work,
+        env=event_environment, check=False, capture_output=True, text=True,
+    )
+    assert accepted_without_local_tag.returncode == 0, (
+        accepted_without_local_tag.stdout + accepted_without_local_tag.stderr
+    )
 
     git("checkout", "-b", "unmerged")
     (work / "unmerged").write_text("unmerged\n", encoding="utf-8")
@@ -243,6 +258,6 @@ def test_release_tag_checker_accepts_matching_version():
 
 
 def test_release_tag_checker_rejects_a_different_or_malformed_version():
-    for tag in ("v0.1.28", "0.1.29", "v0.1.29-rc1"):
+    for tag in ("v0.0.0", "0.1.30", "v0.1.30-rc1"):
         result = run_release_tag_check(tag)
         assert result.returncode != 0, tag

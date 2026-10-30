@@ -1,3 +1,9 @@
+wifi-analyzer (0.1.30) unstable; urgency=medium
+
+  * Resolve release commits from the verified GitHub event when a local tag ref is unavailable.
+
+ -- Daniel Nylander <po@danielnylander.se>  Fri, 30 Oct 2026 03:20:00 +0100
+
 wifi-analyzer (0.1.29) unstable; urgency=medium
 
   * Escape untrusted values in diagnostic reports.
