@@ -77,6 +77,14 @@ msgstr ""
 "Aktivera Wi-Fi i systeminställningarna, stäng av flygplansläge och "
 "kontrollera adapterns drivrutin."
 
+#: src/wifi_analyzer/app.py:346
+msgid "No access points found"
+msgstr "Inga åtkomstpunkter hittades"
+
+#: src/wifi_analyzer/app.py:348
+msgid "No nearby access points were found in this scan. Check that Wi-Fi is enabled, airplane mode is off, and move closer to the router before scanning again. Hidden networks may not appear."
+msgstr "Inga närliggande åtkomstpunkter hittades vid den här sökningen. Kontrollera att Wi-Fi är aktiverat och att flygplansläget är av. Gå närmare routern och sök igen. Dolda nätverk kanske inte visas."
+
 #: src/wifi_analyzer/app.py:345
 msgid "Wi-Fi signal is weak"
 msgstr "Wi-Fi-signalen är svag"

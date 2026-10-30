@@ -69,6 +69,14 @@ msgid ""
 "adapter driver."
 msgstr ""
 
+#: src/wifi_analyzer/app.py:346
+msgid "No access points found"
+msgstr ""
+
+#: src/wifi_analyzer/app.py:348
+msgid "No nearby access points were found in this scan. Check that Wi-Fi is enabled, airplane mode is off, and move closer to the router before scanning again. Hidden networks may not appear."
+msgstr ""
+
 #: src/wifi_analyzer/app.py:345
 msgid "Wi-Fi signal is weak"
 msgstr ""

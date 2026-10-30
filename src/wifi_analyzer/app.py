@@ -340,6 +340,16 @@ def wifi_problem(networks, previous=()):
     if any(net.get("error_code") == "no-device" for net in networks):
         return ("no-device", _("No Wi-Fi device found"),
                 _("Enable Wi-Fi in system settings, disable airplane mode, and check the adapter driver."))
+    if not networks:
+        return (
+            "no-access-points",
+            _("No access points found"),
+            _(
+                "No nearby access points were found in this scan. Check that Wi-Fi is enabled, "
+                "airplane mode is off, and move closer to the router before scanning again. "
+                "Hidden networks may not appear."
+            ),
+        )
     connected = next((net for net in networks if net.get("connected")), None)
     if connected and connected.get("signal_pct", 0) < 25:
         return ("weak-signal", _("Wi-Fi signal is weak"),
@@ -1177,6 +1187,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self.statusbar.set_margin_start(12); self.statusbar.set_margin_end(12)
         self.statusbar.set_margin_top(4); self.statusbar.set_margin_bottom(4)
         self.statusbar.add_css_class("dim-label")
+        self.statusbar.set_wrap(True)
         main_box.append(self.statusbar)
 
         self.set_content(main_box)
@@ -1300,6 +1311,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             net["access_point_count"] = counts.get(net.get("ssid"), 1)
         self.networks = sorted(nets, key=lambda n: n["signal_pct"], reverse=True)
         scan_error = next((net for net in self.networks if net.get("error_code") == "scan-failed"), None)
+        problem = wifi_problem(self.networks, previous)
         history_saved = None
         if any(net.get("bssid") for net in self.networks):
             history_saved = save_history_snapshot(
@@ -1317,6 +1329,8 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             message = _("Found {count} networks{suffix}").format(
                 count=len(self.networks), suffix=suffix,
             )
+            if problem and problem[0] == "no-access-points":
+                message += " · " + problem[2]
             if history_saved is False:
                 message += " · " + _("Local scan history could not be saved")
             self._set_status(message)
@@ -1325,7 +1339,6 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             notification.set_body(_("{new} new, {gone} gone, {changed} changed access points").format(
                 new=len(changes["new"]), gone=len(changes["gone"]), changed=len(changes["changed"])))
             self.get_application().send_notification("wifi-scan-change", notification)
-        problem = wifi_problem(self.networks, previous)
         if problem:
             code, title, remedy = problem
             if code != self._last_problem_code:

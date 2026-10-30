@@ -623,8 +623,49 @@ def test_wifi_problem_includes_a_remedy():
     assert wifi_problem([{"ssid": "Office", "connected": True, "signal_pct": 70}]) is None
 
 
+def test_empty_successful_scan_gives_specific_access_point_troubleshooting():
+    problem = wifi_problem([])
+
+    assert problem and problem[0] == "no-access-points"
+    assert problem[1] == "No access points found"
+    assert "Wi-Fi is enabled" in problem[2]
+    assert "airplane mode is off" in problem[2]
+    assert "move closer" in problem[2]
+    assert "Hidden networks may not appear" in problem[2]
+
+
+def test_empty_scan_shows_remedy_in_status_and_notification(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    fake_gio = Mock()
+    monkeypatch.setattr(app_module, "Gio", fake_gio)
+    window = WifiAnalyzerWindow.__new__(WifiAnalyzerWindow)
+    window.networks = []
+    window.regulatory_ranges = []
+    window._last_problem_code = None
+    window.profile_entry = Mock()
+    window.profile_entry.get_text.return_value = "Home"
+    window._update_ui = Mock()
+    window._set_status = Mock()
+    application = Mock()
+    window.get_application = Mock(return_value=application)
+
+    window._on_scan_done([])
+
+    status = window._set_status.call_args.args[0]
+    assert "Found 0 networks" in status
+    assert "airplane mode is off" in status
+    application.send_notification.assert_called_once_with("wifi-problem", fake_gio.Notification.new.return_value)
+    fake_gio.Notification.new.assert_called_once_with("No access points found")
+    fake_gio.Notification.new.return_value.set_body.assert_called_once_with(
+        "No nearby access points were found in this scan. Check that Wi-Fi is enabled, "
+        "airplane mode is off, and move closer to the router before scanning again. "
+        "Hidden networks may not appear."
+    )
+
+
 def test_empty_scan_does_not_claim_wifi_device_is_missing():
-    assert wifi_problem([]) is None
+    assert wifi_problem([])[0] == "no-access-points"
     no_device = wifi_problem([{"error_code": "no-device"}])
     assert no_device and no_device[0] == "no-device"
 
