@@ -67,6 +67,15 @@ def test_regulatory_ranges_mark_dfs_and_unavailable_channels():
     assert "Unavailable" in channel_status(5180, 36, ranges)
 
 
+def test_regulatory_parser_preserves_transmit_restriction_flags():
+    ranges = parse_regulatory_ranges(
+        "\t(5180 - 5200 @ 80), (N/A, 20), (N/A), NO-IR\n"
+    )
+
+    assert len(ranges) == 1
+    assert "NO-IR" in ranges[0][2]
+
+
 def test_network_search_matches_displayed_fields_case_insensitively():
     network = {
         "ssid": "Office WiFi",
