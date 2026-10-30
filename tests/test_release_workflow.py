@@ -165,6 +165,14 @@ def test_rpm_build_pins_fedora_and_installs_pyproject_build_backend():
     assert any("setuptools-scm" in requirement for requirement in build_system["requires"])
 
 
+def test_iw_is_optional_for_rpm_and_recommended_for_extra_radio_details():
+    spec = (ROOT / "packaging/rpm/wifi-analyzer.spec").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "Recommends:      iw" in spec
+    assert "Requires:        iw" not in spec
+    assert "does not require `iw`" in readme
+
+
 def run_release_publisher(tmp_path, release_exists):
     bin_directory = tmp_path / "bin"
     bin_directory.mkdir()

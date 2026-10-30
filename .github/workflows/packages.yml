@@ -228,6 +228,11 @@ jobs:
           rpmbuild -ba packaging/rpm/wifi-analyzer.spec
           package=$(find "$HOME/rpmbuild/RPMS" -type f -name 'wifi-analyzer-*.noarch.rpm' -print -quit)
           test -n "$package"
+          if rpm -qpR "$package" | grep -Eq '^iw([[:space:]]|$)'; then
+            echo "The RPM must not require the optional iw utility" >&2
+            exit 1
+          fi
+          rpm -qp --recommends "$package" | grep -Eq '^iw([[:space:]]|$)'
           for path in \
             /usr/share/applications/io.github.yeager.wifi-analyzer.desktop \
             /usr/share/metainfo/io.github.yeager.wifi-analyzer.metainfo.xml \

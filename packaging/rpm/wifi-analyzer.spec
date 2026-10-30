@@ -18,7 +18,7 @@ BuildRequires:   python3dist(setuptools)
 BuildRequires:   python3dist(setuptools-scm)
 BuildRequires:   xorg-x11-server-Xvfb
 Requires:        NetworkManager
-Requires:        iw
+Recommends:      iw
 Requires:        libadwaita
 Requires:        python3-cairo
 Requires:        python3-gobject

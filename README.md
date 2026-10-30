@@ -87,6 +87,8 @@ dpkg-buildpackage -us -uc -b
 The release includes an RPM built on Fedora 44. Download it from
 [GitHub Releases](https://github.com/yeager/wifi-analyzer/releases/latest)
 and install it on Fedora 44 with `sudo dnf install ./wifi-analyzer-*.rpm`.
+The `iw` utility is recommended for extra radio-link and regulatory details;
+basic access-point scanning uses NetworkManager and does not require `iw`.
 
 Build the source RPM with:
 
