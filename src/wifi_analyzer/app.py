@@ -470,10 +470,11 @@ def _find_wifi_device_path(nm_proxy):
     return None
 
 
-def scan_networks_dbus():
+def scan_networks_dbus(regulatory_ranges=None):
     """Scan WiFi networks via NetworkManager D-Bus"""
     networks = []
-    regulatory_ranges = local_regulatory_ranges()
+    if regulatory_ranges is None:
+        regulatory_ranges = local_regulatory_ranges()
     try:
         nm_proxy = Gio.DBusProxy.new_for_bus_sync(
             Gio.BusType.SYSTEM, Gio.DBusProxyFlags.NONE, None,
@@ -918,6 +919,7 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title=_("WiFi Analyzer"), default_width=950, default_height=750)
         self.networks = []
+        self.regulatory_ranges = []
         self.dark_mode = False
         self._last_problem_code = None
         self._scanning = False
@@ -1116,12 +1118,14 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self._set_status(_("Scanning..."))
         def worker():
             try:
-                nets = scan_networks_dbus()
+                regulatory_ranges = local_regulatory_ranges()
+                nets = scan_networks_dbus(regulatory_ranges=regulatory_ranges)
             except Exception as error:  # Preserve a usable UI for unforeseen D-Bus failures.
+                regulatory_ranges = []
                 nets = [{"ssid": f"Error: {error}", "bssid": "", "freq": 0,
                          "channel": 0, "signal_pct": 0, "dbm": -100, "security": "", "band": "",
                          "error_code": "scan-failed", "error_message": str(error)}]
-            GLib.idle_add(self._on_scan_done, nets)
+            GLib.idle_add(self._on_scan_done, nets, regulatory_ranges)
         threading.Thread(target=worker, daemon=True).start()
 
     def _toggle_monitor(self, button):
@@ -1137,8 +1141,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self._scan()
         return True
 
-    def _on_scan_done(self, nets):
+    def _on_scan_done(self, nets, regulatory_ranges=()):
         self._scanning = False
+        self.regulatory_ranges = regulatory_ranges
         previous = self.networks
         counts = {}
         for net in nets:
@@ -1210,7 +1215,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             if net["band"] == band and net["channel"] > 0
         ]
         self.channel_chart.set_networks(filtered, band, selectable_channels)
-        recommendations = recommend_channels(self.networks, band)
+        recommendations = recommend_channels(
+            self.networks, band, getattr(self, "regulatory_ranges", ()),
+        )
         recommendation, explanation = channel_recommendation_text(recommendations)
         self.recommendation.set_label(recommendation)
         self.recommendation_detail.set_label(explanation)

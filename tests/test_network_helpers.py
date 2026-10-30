@@ -2,6 +2,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from unittest.mock import Mock
 
 from wifi_analyzer.app import (
     band_for_frequency,
@@ -121,6 +122,43 @@ def test_channel_recommendations_respect_detected_regulatory_ranges():
     assert {channel for channel, _score in recommend_channels(networks, "2.4 GHz", ranges)} == {6}
     assert {channel for channel, _score in recommend_channels(networks, "5 GHz", ranges)} == {36, 40}
     assert {channel for channel, _score in recommend_channels(networks, "6 GHz", ranges)} == {1, 5}
+
+
+def test_main_view_channel_recommendations_use_latest_scan_regulatory_ranges(monkeypatch):
+    from wifi_analyzer import app as app_module
+
+    networks = [{
+        "ssid": "Example", "bssid": "aa:bb", "band": "5 GHz", "channel": 36,
+        "dbm": -50, "signal_pct": 100, "security": "WPA3",
+    }]
+    ranges = [(5180, 5200, "")]
+    recommend = Mock(return_value=[(36, 0.0)])
+    monkeypatch.setattr(app_module, "recommend_channels", recommend)
+
+    window = app_module.WifiAnalyzerWindow.__new__(app_module.WifiAnalyzerWindow)
+    window.networks = networks
+    window.regulatory_ranges = ranges
+    window.selected_channel = None
+    window._get_band = lambda: "5 GHz"
+    window.listbox = Mock()
+    window.listbox.get_first_child.return_value = None
+    window.security_filter = Mock()
+    window.security_filter.get_selected_item.return_value.get_string.return_value = "All security"
+    window.signal_threshold = Mock()
+    window.signal_threshold.get_value_as_int.return_value = -100
+    window.hidden_filter = Mock()
+    window.hidden_filter.get_active.return_value = False
+    window.search_entry = Mock()
+    window.search_entry.get_text.return_value = ""
+    window.sort_filter = Mock()
+    window.sort_filter.get_selected_item.return_value.get_string.return_value = "Signal"
+    window.channel_chart = Mock()
+    window.recommendation = Mock()
+    window.recommendation_detail = Mock()
+
+    window._update_ui()
+
+    recommend.assert_called_once_with(networks, "5 GHz", ranges)
 
 
 def test_history_is_bounded_and_can_be_cleared(tmp_path, monkeypatch):
