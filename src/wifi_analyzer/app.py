@@ -1,5 +1,6 @@
 """WiFi Analyzer — WiFi Network Analysis Tool."""
 import gettext
+import ipaddress
 import json
 import math
 import os
@@ -285,8 +286,21 @@ def interference_contributors(network, networks):
 
 def parse_connection_diagnostics(route_output, dns_output, address_output="", link_output=""):
     """Extract gateway and DNS servers without retaining unrelated system data."""
-    gateway = next((line.split()[2] for line in route_output.splitlines()
-                    if line.startswith("default ") and len(line.split()) >= 3), "")
+    gateway = ""
+    for line in route_output.splitlines():
+        fields = line.split()
+        if not fields or fields[0] != "default" or "via" not in fields:
+            continue
+        via_index = fields.index("via")
+        if via_index + 1 >= len(fields):
+            continue
+        candidate = fields[via_index + 1]
+        try:
+            ipaddress.ip_address(candidate)
+        except ValueError:
+            continue
+        gateway = candidate
+        break
     servers = re.findall(r"(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{3,}", dns_output)
     addresses = re.findall(r"(?:\d{1,3}\.){3}\d{1,3}(?:/\d{1,2})?|[0-9a-fA-F:]{3,}(?:/\d{1,3})?", address_output)
     rates = re.findall(r"(?:tx|rx) bitrate:\s*([^\n]+)", link_output, re.IGNORECASE)
@@ -297,6 +311,7 @@ def parse_connection_diagnostics(route_output, dns_output, address_output="", li
 def connection_diagnostics():
     try:
         route = subprocess.run(["ip", "route"], capture_output=True, text=True, timeout=2, check=False).stdout
+        route6 = subprocess.run(["ip", "-6", "route"], capture_output=True, text=True, timeout=2, check=False).stdout
         dns = subprocess.run(["resolvectl", "dns"], capture_output=True, text=True, timeout=2, check=False).stdout
         addresses = subprocess.run(["ip", "-brief", "address"], capture_output=True, text=True, timeout=2, check=False).stdout
     except (FileNotFoundError, subprocess.SubprocessError):
@@ -323,7 +338,7 @@ def connection_diagnostics():
             ).stdout
         except (FileNotFoundError, subprocess.SubprocessError):
             pass
-    return parse_connection_diagnostics(route, dns, addresses, link)
+    return parse_connection_diagnostics(f"{route}\n{route6}", dns, addresses, link)
 
 
 def wifi_problem(networks, previous=()):

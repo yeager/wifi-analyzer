@@ -582,6 +582,10 @@ def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
                                         "rx bitrate: 866.7 MBit/s") == {
         "gateway": "192.0.2.1", "dns_servers": ["1.1.1.1", "2001:db8::1"],
         "ip_addresses": ["192.0.2.10/24", "2001:db8::2/64"], "link_rates": ["866.7 MBit/s"]}
+    assert parse_connection_diagnostics(
+        "default dev ppp0\ndefault via fe80::1 dev wlan0 proto ra", "",
+    )["gateway"] == "fe80::1"
+    assert parse_connection_diagnostics("default via not-an-ip dev wlan0", "")["gateway"] == ""
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     save_history_snapshot([{"ssid": "AP", "bssid": "a", "signal_pct": 42, "channel": 6}], now="now", profile="Home")
     assert load_signal_history("a", "Home") == [{"scanned_at": "now", "signal_pct": 42, "channel": 6}]
@@ -593,6 +597,7 @@ def test_connection_diagnostics_uses_networkmanager_active_wifi_interface(monkey
     calls = []
     outputs = {
         ("ip", "route"): "default via 192.0.2.1 dev wlan1",
+        ("ip", "-6", "route"): "default via fe80::1 dev wlan1 proto ra",
         ("resolvectl", "dns"): "Link 2 (wlan1): 1.1.1.1",
         ("ip", "-brief", "address"): "wlan1 UP 192.0.2.10/24",
         ("iw", "dev", "wlan1", "link"): "Connected to aa:bb:cc:dd:ee:ff (on wlan1)\nrx bitrate: 866.7 MBit/s",
@@ -611,6 +616,7 @@ def test_connection_diagnostics_uses_networkmanager_active_wifi_interface(monkey
 
     assert diagnostics["link_rates"] == ["866.7 MBit/s"]
     assert diagnostics["gateway"] == "192.0.2.1"
+    assert ("ip", "-6", "route") in calls
     assert ("iw", "dev", "wlan1", "link") in calls
     assert ("iw", "dev") not in calls
 
