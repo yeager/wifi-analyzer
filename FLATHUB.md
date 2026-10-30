@@ -1,8 +1,9 @@
 # Flathub submission
 
-The manifest intended for Flathub is
+The upstream Flatpak manifest used for local builds and CI is
 [`flatpak/io.github.yeager.wifi-analyzer.json`](flatpak/io.github.yeager.wifi-analyzer.json).
-It pins a public upstream release tag and commit so builds are reproducible.
+It pins a public upstream release tag and commit so builds are reproducible. It
+is not a Flathub submission manifest.
 
 ## Before a human submission
 
@@ -16,9 +17,7 @@ and review a compliant manifest independently.
 The current public [submission guide](https://docs.flathub.org/docs/for-app-authors/submission)
 asks maintainers to build and run the app, run the Flathub linter, then create
 the submission pull request through GitHub's web interface against the `new-pr`
-branch. The guide does not list a video as a submission requirement. An earlier
-project note mentions a Linux video and checklist; confirm whether a separate
-Flathub request applies before treating that as a current requirement.
+branch. The guide does not list a video as a submission requirement.
 
 Before a human maintainer submits, they should confirm the release and commit,
 build and run the Flatpak, run `flatpak-builder-lint`, and explain each
