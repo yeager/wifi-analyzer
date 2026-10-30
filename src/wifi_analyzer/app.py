@@ -437,6 +437,59 @@ def load_signal_history(bssid, profile=None):
     return points
 
 
+def signal_history_summary(points):
+    """Summarize valid signal values for sighted and screen-reader users."""
+    signals = [
+        float(signal)
+        for point in points
+        if isinstance(point, dict)
+        for signal in [point.get("signal_pct")]
+        if not isinstance(signal, bool)
+        and isinstance(signal, (int, float))
+        and math.isfinite(signal)
+        and 0 <= signal <= 100
+    ]
+    if not signals:
+        return _("No local signal history yet")
+    return _(
+        "Signal history: {count} measurements, range {minimum}% to {maximum}%, "
+        "latest {latest}%."
+    ).format(
+        count=len(signals),
+        minimum=f"{min(signals):.0f}",
+        maximum=f"{max(signals):.0f}",
+        latest=f"{signals[-1]:.0f}",
+    )
+
+
+def set_signal_history_accessibility(widget, points):
+    """Expose the signal plot's role, name and non-visual summary."""
+    widget.set_accessible_role(Gtk.AccessibleRole.IMG)
+    widget.update_property(
+        [Gtk.AccessibleProperty.LABEL, Gtk.AccessibleProperty.DESCRIPTION],
+        [_("Signal history"), signal_history_summary(points)],
+    )
+
+
+def format_signal_history_time(value):
+    """Format stored local scan times, keeping malformed legacy values safe."""
+    try:
+        return datetime.fromisoformat(value).astimezone().strftime("%x %X")
+    except (TypeError, ValueError, OverflowError):
+        return str(value)[:32]
+
+
+def format_signal_history_measurements(points):
+    """Return localized measurement rows, with the latest scan first."""
+    return [
+        _("{time}: {signal}%").format(
+            time=format_signal_history_time(point.get("scanned_at")),
+            signal=f"{float(point['signal_pct']):.0f}",
+        )
+        for point in reversed(points)
+    ]
+
+
 def compare_scans(previous, current):
     """Return APs that appeared, disappeared, or changed channel/signal."""
     before = {net.get("bssid"): net for net in previous if net.get("bssid")}
@@ -933,6 +986,7 @@ class SignalHistoryDrawingArea(Gtk.DrawingArea):
         super().__init__()
         self.points = points
         self.set_content_height(220)
+        set_signal_history_accessibility(self, points)
         self.set_draw_func(self._draw)
 
     def _draw(self, _area, cr, width, height):
@@ -1156,7 +1210,30 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         page = Adw.StatusPage()
         page.set_title(network.get("ssid") or _("<Hidden>"))
         page.set_description(_("Local history for profile: {profile}").format(profile=profile))
-        page.set_child(SignalHistoryDrawingArea(points))
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content.append(SignalHistoryDrawingArea(points))
+        if points:
+            history_label = Gtk.Label(label=_("Recent measurements"), xalign=0)
+            history_label.add_css_class("heading")
+            content.append(history_label)
+            history_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
+            history_list.add_css_class("boxed-list")
+            for label in format_signal_history_measurements(points):
+                measurement = Gtk.Label(
+                    label=label,
+                    xalign=0,
+                )
+                measurement.set_margin_start(12)
+                measurement.set_margin_end(12)
+                measurement.set_margin_top(6)
+                measurement.set_margin_bottom(6)
+                history_list.append(measurement)
+            history_scroll = Gtk.ScrolledWindow(
+                vexpand=True, min_content_height=100,
+            )
+            history_scroll.set_child(history_list)
+            content.append(history_scroll)
+        page.set_child(content)
         dialog.set_child(page)
         dialog.present(self)
 

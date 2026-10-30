@@ -8,7 +8,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, GLib, Gtk
 
-from wifi_analyzer.app import ChannelDrawingArea
+from wifi_analyzer.app import ChannelDrawingArea, SignalHistoryDrawingArea
 
 
 class TestChannelChartAccessibility:
@@ -45,6 +45,13 @@ class TestChannelChartAccessibility:
         chart = ChannelDrawingArea()
 
         assert chart.get_focusable()
+        assert chart.get_accessible_role() == Gtk.AccessibleRole.IMG
+
+    def test_signal_history_chart_has_an_image_accessible_role(self):
+        chart = SignalHistoryDrawingArea([
+            {"scanned_at": "2026-10-30T12:00:00+02:00", "signal_pct": 75},
+        ])
+
         assert chart.get_accessible_role() == Gtk.AccessibleRole.IMG
 
     def test_arrow_keys_cycle_all_channels_and_enter_filters_them(self):

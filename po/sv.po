@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: wifi-analyzer\n"
 "Report-Msgid-Bugs-To: https://github.com/yeager/wifi-analyzer/issues\n"
-"POT-Creation-Date: 2026-10-29 23:43+0100\n"
+"POT-Creation-Date: 2026-10-30 03:47+0100\n"
 "PO-Revision-Date: 2026-10-29 01:27+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>, 2026\n"
 "Language-Team: Swedish\n"
@@ -16,27 +16,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/wifi_analyzer/app.py:173
+#: src/wifi_analyzer/app.py:191
 msgid "Unavailable in the detected regulatory domain"
 msgstr "Inte tillgänglig i den upptäckta regleringsdomänen"
 
-#: src/wifi_analyzer/app.py:175
+#: src/wifi_analyzer/app.py:193
 msgid "DFS — radar detection may interrupt this channel"
 msgstr "DFS — radardetektering kan avbryta denna kanal"
 
-#: src/wifi_analyzer/app.py:177
+#: src/wifi_analyzer/app.py:195
 msgid "DFS — availability depends on local regulations"
 msgstr "DFS — tillgängligheten beror på lokala regler"
 
-#: src/wifi_analyzer/app.py:242
+#: src/wifi_analyzer/app.py:260
 msgid "No channel recommendation available"
 msgstr "Ingen kanal kunde rekommenderas"
 
-#: src/wifi_analyzer/app.py:243
+#: src/wifi_analyzer/app.py:261
 msgid "Scan this band to compare nearby access points."
 msgstr "Sök efter nätverk på det här bandet för att jämföra dem."
 
-#: src/wifi_analyzer/app.py:247
+#: src/wifi_analyzer/app.py:265
 #, python-brace-format
 msgid ""
 "Lowest estimated overlap in this scan: channel {channel} (score {score})"
@@ -44,7 +44,7 @@ msgstr ""
 "Lägst beräknad överlappning i den här skanningen: kanal {channel} (poäng "
 "{score})"
 
-#: src/wifi_analyzer/app.py:250
+#: src/wifi_analyzer/app.py:268
 msgid ""
 "Lower scores mean less estimated overlap. Only access points found in this "
 "scan count; client traffic and hidden networks are not measured."
@@ -53,11 +53,11 @@ msgstr ""
 "nätverk som hittas vid skanningen och tar inte med trafik eller dolda "
 "nätverk."
 
-#: src/wifi_analyzer/app.py:298
+#: src/wifi_analyzer/app.py:334
 msgid "Wi-Fi scan failed"
 msgstr "Det gick inte att söka efter Wi-Fi-nätverk"
 
-#: src/wifi_analyzer/app.py:300
+#: src/wifi_analyzer/app.py:336
 msgid ""
 "Check that NetworkManager is running and your Wi-Fi adapter is enabled. For "
 "Flatpak, make sure the app can access NetworkManager."
@@ -65,11 +65,11 @@ msgstr ""
 "Kontrollera att NetworkManager är igång och att wifi-adaptern är på. I "
 "Flatpak måste appen få ansluta till NetworkManager."
 
-#: src/wifi_analyzer/app.py:305 src/wifi_analyzer/app.py:482
+#: src/wifi_analyzer/app.py:341 src/wifi_analyzer/app.py:596
 msgid "No Wi-Fi device found"
 msgstr "Ingen Wi-Fi-enhet hittades"
 
-#: src/wifi_analyzer/app.py:306
+#: src/wifi_analyzer/app.py:342
 msgid ""
 "Enable Wi-Fi in system settings, disable airplane mode, and check the "
 "adapter driver."
@@ -77,11 +77,11 @@ msgstr ""
 "Aktivera Wi-Fi i systeminställningarna, stäng av flygplansläge och "
 "kontrollera adapterns drivrutin."
 
-#: src/wifi_analyzer/app.py:309
+#: src/wifi_analyzer/app.py:345
 msgid "Wi-Fi signal is weak"
 msgstr "Wi-Fi-signalen är svag"
 
-#: src/wifi_analyzer/app.py:310
+#: src/wifi_analyzer/app.py:346
 msgid ""
 "Move closer to the access point, reduce obstructions, or select a less "
 "congested channel."
@@ -89,11 +89,11 @@ msgstr ""
 "Flytta dig närmare åtkomstpunkten, minska antalet hinder mellan dig och den "
 "eller välj en mindre belastad kanal."
 
-#: src/wifi_analyzer/app.py:313
+#: src/wifi_analyzer/app.py:349
 msgid "Wi-Fi connection was lost"
 msgstr "Wi-Fi-anslutningen bröts"
 
-#: src/wifi_analyzer/app.py:314
+#: src/wifi_analyzer/app.py:350
 msgid ""
 "Check the access point, reconnect from system settings, and inspect the "
 "gateway and DNS diagnostics."
@@ -101,11 +101,11 @@ msgstr ""
 "Kontrollera åtkomstpunkten, återanslut i systeminställningarna och granska "
 "gateway- och DNS-diagnostiken."
 
-#: src/wifi_analyzer/app.py:316
+#: src/wifi_analyzer/app.py:352
 msgid "Wi-Fi access point changed"
 msgstr "Wi-Fi-åtkomstpunkten ändrades"
 
-#: src/wifi_analyzer/app.py:317
+#: src/wifi_analyzer/app.py:353
 msgid ""
 "Roaming can be normal. If it causes interruptions, compare signal history "
 "and access-point overlap."
@@ -114,16 +114,38 @@ msgstr ""
 "avbrott kan du jämföra signalhistoriken och se hur åtkomstpunkterna "
 "överlappas."
 
-#: src/wifi_analyzer/app.py:480
+#: src/wifi_analyzer/app.py:453 src/wifi_analyzer/app.py:999
+msgid "No local signal history yet"
+msgstr "Ingen lokal signalhistorik ännu"
+
+#: src/wifi_analyzer/app.py:455
+#, python-brace-format
+msgid ""
+"Signal history: {count} measurements, range {minimum}% to {maximum}%, latest "
+"{latest}%."
+msgstr ""
+"Signalhistorik: {count} mätningar, mellan {minimum} och {maximum} %. Senaste "
+"värdet är {latest} %."
+
+#: src/wifi_analyzer/app.py:470 src/wifi_analyzer/app.py:1208
+msgid "Signal history"
+msgstr "Signalhistorik"
+
+#: src/wifi_analyzer/app.py:485
+#, python-brace-format
+msgid "{time}: {signal}%"
+msgstr "{time}: {signal} %"
+
+#: src/wifi_analyzer/app.py:594
 msgid "Error: no WiFi device found"
 msgstr "Fel: ingen Wi-Fi-enhet hittades"
 
-#: src/wifi_analyzer/app.py:521 src/wifi_analyzer/app.py:1102
-#: src/wifi_analyzer/app.py:1191
+#: src/wifi_analyzer/app.py:628 src/wifi_analyzer/app.py:1211
+#: src/wifi_analyzer/app.py:1326
 msgid "<Hidden>"
 msgstr "<Dold>"
 
-#: src/wifi_analyzer/app.py:590
+#: src/wifi_analyzer/app.py:697
 msgid ""
 "Focus the chart and use the Left and Right Arrow keys to choose a channel. "
 "Press Home or End to jump to the first or last channel. Press Enter or Space "
@@ -134,41 +156,41 @@ msgstr ""
 "sista kanalen. Tryck på Retur eller blanksteg för att filtrera "
 "nätverkslistan. Rulla för att ändra zoomnivån."
 
-#: src/wifi_analyzer/app.py:593
+#: src/wifi_analyzer/app.py:700
 msgid "Channel overlap chart"
 msgstr "Diagram över kanalöverlappning"
 
-#: src/wifi_analyzer/app.py:641
+#: src/wifi_analyzer/app.py:748
 #, python-brace-format
 msgid "Channel {channel}. Press Enter to filter the network list."
 msgstr "Kanal {channel}. Tryck på Retur för att filtrera nätverkslistan."
 
-#: src/wifi_analyzer/app.py:651
+#: src/wifi_analyzer/app.py:758
 msgid "Channel filter cleared."
 msgstr "Kanalfiltreringen har rensats."
 
-#: src/wifi_analyzer/app.py:653
+#: src/wifi_analyzer/app.py:760
 #, python-brace-format
 msgid "Filtering access points by channel {channel}."
 msgstr "Visar åtkomstpunkter på kanal {channel}."
 
-#: src/wifi_analyzer/app.py:717
+#: src/wifi_analyzer/app.py:824
 msgid "No networks found"
 msgstr "Inga nätverk hittades"
 
-#: src/wifi_analyzer/app.py:850
+#: src/wifi_analyzer/app.py:957
 msgid "measured"
 msgstr "uppmätt"
 
-#: src/wifi_analyzer/app.py:850
+#: src/wifi_analyzer/app.py:957
 msgid "estimated"
 msgstr "uppskattad"
 
-#: src/wifi_analyzer/app.py:853
+#: src/wifi_analyzer/app.py:960
 msgid " · Connected"
 msgstr " · Ansluten"
 
-#: src/wifi_analyzer/app.py:854
+#: src/wifi_analyzer/app.py:961
 #, python-brace-format
 msgid ""
 "Ch {channel} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · "
@@ -177,192 +199,188 @@ msgstr ""
 "Kanal {channel} · {frequency} MHz{width}{active} · {dbm} dBm · {security} · "
 "{bssid}"
 
-#: src/wifi_analyzer/app.py:856 src/wifi_analyzer/app.py:997
-#: src/wifi_analyzer/app.py:1189
+#: src/wifi_analyzer/app.py:963 src/wifi_analyzer/app.py:1106
+#: src/wifi_analyzer/app.py:1324
 msgid "Open"
 msgstr "Öppet nätverk"
 
-#: src/wifi_analyzer/app.py:891
-msgid "No local signal history yet"
-msgstr "Ingen lokal signalhistorik ännu"
-
-#: src/wifi_analyzer/app.py:915 src/wifi_analyzer/app.py:1324
+#: src/wifi_analyzer/app.py:1023 src/wifi_analyzer/app.py:1461
 msgid "WiFi Analyzer"
 msgstr "WiFi Analyzer"
 
-#: src/wifi_analyzer/app.py:924
+#: src/wifi_analyzer/app.py:1033
 msgid "Toggle theme"
 msgstr "Byt tema"
 
-#: src/wifi_analyzer/app.py:929 src/wifi_analyzer/app.py:1244
+#: src/wifi_analyzer/app.py:1038 src/wifi_analyzer/app.py:1381
 msgid "Export CSV"
 msgstr "Exportera CSV"
 
-#: src/wifi_analyzer/app.py:930 src/wifi_analyzer/app.py:1251
+#: src/wifi_analyzer/app.py:1039 src/wifi_analyzer/app.py:1388
 msgid "Export JSON"
 msgstr "Exportera JSON"
 
-#: src/wifi_analyzer/app.py:931 src/wifi_analyzer/app.py:1254
-#: src/wifi_analyzer/app.py:1268
+#: src/wifi_analyzer/app.py:1040 src/wifi_analyzer/app.py:1391
+#: src/wifi_analyzer/app.py:1405
 msgid "Export anonymized JSON"
 msgstr "Exportera anonymiserad JSON"
 
-#: src/wifi_analyzer/app.py:932 src/wifi_analyzer/app.py:1282
+#: src/wifi_analyzer/app.py:1041 src/wifi_analyzer/app.py:1419
 msgid "Export diagnostic report"
 msgstr "Exportera diagnostikrapport"
 
-#: src/wifi_analyzer/app.py:933 src/wifi_analyzer/app.py:1289
+#: src/wifi_analyzer/app.py:1042 src/wifi_analyzer/app.py:1426
 msgid "Connection diagnostics"
 msgstr "Anslutningsdiagnostik"
 
-#: src/wifi_analyzer/app.py:934
+#: src/wifi_analyzer/app.py:1043
 msgid "Clear local history"
 msgstr "Rensa lokal historik"
 
-#: src/wifi_analyzer/app.py:935
+#: src/wifi_analyzer/app.py:1044
 msgid "About"
 msgstr "Om"
 
-#: src/wifi_analyzer/app.py:939
+#: src/wifi_analyzer/app.py:1048
 msgid "Scan"
 msgstr "Skanna"
 
-#: src/wifi_analyzer/app.py:942
+#: src/wifi_analyzer/app.py:1051
 msgid "Monitor"
 msgstr "Övervaka"
 
-#: src/wifi_analyzer/app.py:942
+#: src/wifi_analyzer/app.py:1051
 msgid "Scan every 60 seconds and notify about changes"
 msgstr "Skanna var 60:e sekund och meddela när nätverken ändras"
 
-#: src/wifi_analyzer/app.py:977
+#: src/wifi_analyzer/app.py:1086
 msgid "Filter by name, BSSID, channel or security"
 msgstr "Filtrera efter namn, BSSID, kanal eller säkerhetstyp"
 
-#: src/wifi_analyzer/app.py:986
+#: src/wifi_analyzer/app.py:1095
 msgid "Minimum signal"
 msgstr "Minsta signalstyrka"
 
-#: src/wifi_analyzer/app.py:990
+#: src/wifi_analyzer/app.py:1099
 msgid "Only show access points at or above this estimated dBm value"
 msgstr ""
 "Visa bara åtkomstpunkter med minst den här uppskattade signalstyrkan (dBm)"
 
-#: src/wifi_analyzer/app.py:994 src/wifi_analyzer/app.py:1007
-#: src/wifi_analyzer/app.py:1196
+#: src/wifi_analyzer/app.py:1103 src/wifi_analyzer/app.py:1116
+#: src/wifi_analyzer/app.py:1331
 msgid "Security"
 msgstr "Säkerhet"
 
-#: src/wifi_analyzer/app.py:997 src/wifi_analyzer/app.py:1188
+#: src/wifi_analyzer/app.py:1106 src/wifi_analyzer/app.py:1323
 msgid "All security"
 msgstr "Alla säkerhetstyper"
 
-#: src/wifi_analyzer/app.py:1002
+#: src/wifi_analyzer/app.py:1111
 msgid "Hidden SSIDs only"
 msgstr "Endast dolda SSID:er"
 
-#: src/wifi_analyzer/app.py:1006
+#: src/wifi_analyzer/app.py:1115
 msgid "Sort"
 msgstr "Sortera"
 
-#: src/wifi_analyzer/app.py:1007
+#: src/wifi_analyzer/app.py:1116
 msgid "Signal"
 msgstr "Signal"
 
-#: src/wifi_analyzer/app.py:1007 src/wifi_analyzer/app.py:1194
+#: src/wifi_analyzer/app.py:1116 src/wifi_analyzer/app.py:1329
 msgid "Channel"
 msgstr "Kanal"
 
-#: src/wifi_analyzer/app.py:1010
+#: src/wifi_analyzer/app.py:1119
 msgid "Profile"
 msgstr "Profil"
 
-#: src/wifi_analyzer/app.py:1012
+#: src/wifi_analyzer/app.py:1121
 msgid "Keep local scan history separate for this location"
 msgstr "Spara separat skanningshistorik för den här profilen"
 
-#: src/wifi_analyzer/app.py:1046
+#: src/wifi_analyzer/app.py:1155
 msgid "Ready — click Scan"
 msgstr "Redo — välj Skanna"
 
-#: src/wifi_analyzer/app.py:1090
+#: src/wifi_analyzer/app.py:1199
 #, python-brace-format
 msgid "Main overlapping access points: {names}"
 msgstr "Åtkomstpunkter med störst överlappning: {names}"
 
-#: src/wifi_analyzer/app.py:1092
+#: src/wifi_analyzer/app.py:1201
 msgid "No overlapping access points detected"
 msgstr "Inga överlappande åtkomstpunkter hittades"
 
-#: src/wifi_analyzer/app.py:1099
-msgid "Signal history"
-msgstr "Signalhistorik"
-
-#: src/wifi_analyzer/app.py:1103
+#: src/wifi_analyzer/app.py:1212
 #, python-brace-format
 msgid "Local history for profile: {profile}"
 msgstr "Lokal historik för profil: {profile}"
 
-#: src/wifi_analyzer/app.py:1112
+#: src/wifi_analyzer/app.py:1216
+msgid "Recent measurements"
+msgstr "Senaste mätningarna"
+
+#: src/wifi_analyzer/app.py:1244
 msgid "Scanning..."
 msgstr "Skannar..."
 
-#: src/wifi_analyzer/app.py:1126
+#: src/wifi_analyzer/app.py:1260
 msgid "Monitoring enabled; scanning every 60 seconds"
 msgstr "Övervakning aktiverad; söker av var 60:e sekund"
 
-#: src/wifi_analyzer/app.py:1130
+#: src/wifi_analyzer/app.py:1264
 msgid "Monitoring disabled"
 msgstr "Övervakning inaktiverad"
 
-#: src/wifi_analyzer/app.py:1151
+#: src/wifi_analyzer/app.py:1286
 #, python-brace-format
 msgid " · {new} new, {gone} gone"
 msgstr " · nya: {new}, försvunna: {gone}"
 
-#: src/wifi_analyzer/app.py:1155
+#: src/wifi_analyzer/app.py:1290
 #, python-brace-format
 msgid "Scan failed: {error}"
 msgstr "Skanningen misslyckades: {error}"
 
-#: src/wifi_analyzer/app.py:1157
+#: src/wifi_analyzer/app.py:1292
 #, python-brace-format
 msgid "Found {count} networks{suffix}"
 msgstr "Hittade {count} nätverk{suffix}"
 
-#: src/wifi_analyzer/app.py:1159
+#: src/wifi_analyzer/app.py:1294
 msgid "WiFi scan changed"
 msgstr "Wi-Fi-nätverken har ändrats"
 
-#: src/wifi_analyzer/app.py:1160
+#: src/wifi_analyzer/app.py:1295
 #, python-brace-format
 msgid "{new} new, {gone} gone, {changed} changed access points"
 msgstr "{new} nya, {gone} försvunna, {changed} ändrade åtkomstpunkter"
 
-#: src/wifi_analyzer/app.py:1221
+#: src/wifi_analyzer/app.py:1358
 msgid "Export"
 msgstr "Exportera"
 
-#: src/wifi_analyzer/app.py:1221 src/wifi_analyzer/app.py:1256
+#: src/wifi_analyzer/app.py:1358 src/wifi_analyzer/app.py:1393
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: src/wifi_analyzer/app.py:1233
+#: src/wifi_analyzer/app.py:1370
 #, python-brace-format
 msgid "Export failed: {error}"
 msgstr "Exporten misslyckades: {error}"
 
-#: src/wifi_analyzer/app.py:1243
+#: src/wifi_analyzer/app.py:1380
 #, python-brace-format
 msgid "Exported CSV to {path}"
 msgstr "CSV-filen exporterades till {path}"
 
-#: src/wifi_analyzer/app.py:1250
+#: src/wifi_analyzer/app.py:1387
 #, python-brace-format
 msgid "Exported JSON to {path}"
 msgstr "JSON-filen exporterades till {path}"
 
-#: src/wifi_analyzer/app.py:1255
+#: src/wifi_analyzer/app.py:1392
 msgid ""
 "This export hides network names (SSIDs), access point MAC addresses (BSSIDs) "
 "and connection-specific details. It keeps band, frequency, channel, signal, "
@@ -375,26 +393,26 @@ msgstr ""
 "kvar. Uppgifterna kan ändå avslöja var du befinner dig. Granska filen innan "
 "du delar den."
 
-#: src/wifi_analyzer/app.py:1257
+#: src/wifi_analyzer/app.py:1394
 msgid "Continue to export"
 msgstr "Fortsätt exportera"
 
-#: src/wifi_analyzer/app.py:1264
+#: src/wifi_analyzer/app.py:1401
 #, python-brace-format
 msgid "Exported anonymized JSON to {path}"
 msgstr "Den anonymiserade JSON-filen exporterades till {path}"
 
-#: src/wifi_analyzer/app.py:1281
+#: src/wifi_analyzer/app.py:1418
 #, python-brace-format
 msgid "Exported diagnostic report to {path}"
 msgstr "Diagnostikrapporten exporterades till {path}"
 
-#: src/wifi_analyzer/app.py:1286 src/wifi_analyzer/app.py:1287
-#: src/wifi_analyzer/app.py:1288 src/wifi_analyzer/app.py:1291
+#: src/wifi_analyzer/app.py:1423 src/wifi_analyzer/app.py:1424
+#: src/wifi_analyzer/app.py:1425 src/wifi_analyzer/app.py:1428
 msgid "unavailable"
 msgstr "inte tillgänglig"
 
-#: src/wifi_analyzer/app.py:1290
+#: src/wifi_analyzer/app.py:1427
 #, python-brace-format
 msgid ""
 "Gateway: {gateway}\n"
@@ -407,39 +425,39 @@ msgstr ""
 "IP-adresser: {addresses}\n"
 "Länkhastighet: {rates}"
 
-#: src/wifi_analyzer/app.py:1292
+#: src/wifi_analyzer/app.py:1429
 msgid "Close"
 msgstr "Stäng"
 
-#: src/wifi_analyzer/app.py:1297
+#: src/wifi_analyzer/app.py:1434
 msgid "Cleared local scan history"
 msgstr "Den lokala skanningshistoriken har rensats"
 
-#: src/wifi_analyzer/app.py:1311
+#: src/wifi_analyzer/app.py:1448
 msgid "WiFi Network Analysis Tool"
 msgstr "Verktyg för analys av Wi-Fi-nätverk"
 
-#: src/wifi_analyzer/app.py:1313
+#: src/wifi_analyzer/app.py:1450
 msgid "Created by"
 msgstr "Skapad av"
 
-#: src/wifi_analyzer/app.py:1314
+#: src/wifi_analyzer/app.py:1451
 msgid "With thanks to"
 msgstr "Med tack till"
 
-#: src/wifi_analyzer/app.py:1317
+#: src/wifi_analyzer/app.py:1454
 msgid "Project on GitHub"
 msgstr "Projekt på GitHub"
 
-#: src/wifi_analyzer/app.py:1349
+#: src/wifi_analyzer/app.py:1486
 msgid "Welcome"
 msgstr "Välkommen"
 
-#: src/wifi_analyzer/app.py:1354
+#: src/wifi_analyzer/app.py:1491
 msgid "Welcome to WiFi Analyzer"
 msgstr "Välkommen till WiFi Analyzer"
 
-#: src/wifi_analyzer/app.py:1355
+#: src/wifi_analyzer/app.py:1492
 msgid ""
 "Analyze WiFi networks.\n"
 "\n"
@@ -453,7 +471,7 @@ msgstr ""
 "✓ Övervakning av signalstyrka\n"
 "✓ Upptäck kanalöverlappning"
 
-#: src/wifi_analyzer/app.py:1356
+#: src/wifi_analyzer/app.py:1493
 msgid "Get Started"
 msgstr "Kom igång"
 

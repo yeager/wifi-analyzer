@@ -26,6 +26,10 @@ from wifi_analyzer.app import (
     interference_contributors,
     parse_connection_diagnostics,
     load_signal_history,
+    signal_history_summary,
+    set_signal_history_accessibility,
+    format_signal_history_time,
+    format_signal_history_measurements,
     wifi_problem,
 )
 
@@ -205,6 +209,52 @@ def test_history_recovers_from_wrong_json_shape_and_ignores_bad_records(tmp_path
     assert load_signal_history("aa:bb", "Office") == [
         {"scanned_at": "valid", "signal_pct": 60, "channel": 40},
     ]
+
+
+def test_signal_history_accessibility_summary_covers_valid_values_and_ignores_bad_data():
+    points = [
+        {"signal_pct": 42},
+        {"signal_pct": 81.5},
+        {"signal_pct": True},
+        {"signal_pct": float("nan")},
+        {"signal_pct": 101},
+        {"signal_pct": "90"},
+        None,
+    ]
+
+    assert signal_history_summary(points) == (
+        "Signal history: 2 measurements, range 42% to 82%, latest 82%."
+    )
+    assert signal_history_summary([]) == "No local signal history yet"
+
+
+def test_signal_history_chart_exposes_accessible_name_and_summary():
+    from gi.repository import Gtk
+
+    widget = Mock()
+    points = [{"signal_pct": 60}, {"signal_pct": 75}]
+
+    set_signal_history_accessibility(widget, points)
+
+    widget.set_accessible_role.assert_called_once_with(Gtk.AccessibleRole.IMG)
+    properties, values = widget.update_property.call_args.args
+    assert properties == [Gtk.AccessibleProperty.LABEL, Gtk.AccessibleProperty.DESCRIPTION]
+    assert values == [
+        "Signal history",
+        "Signal history: 2 measurements, range 60% to 75%, latest 75%.",
+    ]
+
+
+def test_signal_history_time_formats_iso_values_and_keeps_bad_legacy_values_safe():
+    assert format_signal_history_time("not-a-time") == "not-a-time"
+    assert format_signal_history_time(None) == "None"
+
+
+def test_signal_history_measurements_are_formatted_newest_first():
+    assert format_signal_history_measurements([
+        {"scanned_at": "old", "signal_pct": 40},
+        {"scanned_at": "new", "signal_pct": 75},
+    ]) == ["new: 75%", "old: 40%"]
 
 
 def test_scan_comparison_width_parsing_and_anonymization():
