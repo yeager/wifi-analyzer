@@ -62,6 +62,11 @@ pipx install --system-site-packages wifi-analyzer
 
 `wifi-analyzer` is distributed through the [Danne L10n Suite APT repository](https://github.com/yeager/debian-repo), not the default Debian or Ubuntu repositories. Add the repository before installing:
 
+The repository key's primary fingerprint is
+`7CEE83C9C621B18667DD1BFECAED4975DAB053A8`. After downloading the key, check
+it with `gpg --show-keys --with-fingerprint /tmp/yeager-repo-key.asc` before
+installing it.
+
 ```bash
 wget -qO /tmp/yeager-repo-key.asc https://yeager.github.io/debian-repo/yeager-repo-key.asc
 sudo install -m 0644 /tmp/yeager-repo-key.asc /usr/share/keyrings/yeager-repo.asc

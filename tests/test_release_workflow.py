@@ -173,6 +173,12 @@ def test_iw_is_optional_for_rpm_and_recommended_for_extra_radio_details():
     assert "does not require `iw`" in readme
 
 
+def test_apt_repository_instructions_include_the_primary_key_fingerprint_check():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "7CEE83C9C621B18667DD1BFECAED4975DAB053A8" in readme
+    assert "gpg --show-keys --with-fingerprint /tmp/yeager-repo-key.asc" in readme
+
+
 def run_release_publisher(tmp_path, release_exists):
     bin_directory = tmp_path / "bin"
     bin_directory.mkdir()
