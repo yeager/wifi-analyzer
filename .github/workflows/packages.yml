@@ -207,6 +207,10 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.release_tag || github.ref }}
+      - name: Verify release tag matches package metadata
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: python3 scripts/check-release-tag.py "$RELEASE_TAG"
       - uses: actions/download-artifact@v7
         with:
           name: wifi-analyzer-deb
