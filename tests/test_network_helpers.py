@@ -51,9 +51,16 @@ def test_security_labels_distinguish_owe_and_wpa3_enterprise():
     assert _security_string(0, 0, 0x0800) == "Enhanced Open (OWE)"
     assert _security_string(0, 0, 0x1000) == "Enhanced Open (OWE)"
     assert _security_string(0, 0, 0x0200) == "Enterprise (802.1X)"
-    assert _security_string(0, 0, 0x2200) == "WPA3 Enterprise"
+    assert _security_string(0, 0, 0x2200) == "WPA2/WPA3 Enterprise"
     assert _security_string(0, 0, 0x0100) == "WPA2"
     assert _security_string(0, 0, 0x0400) == "WPA3"
+
+
+def test_security_labels_show_advertised_transition_modes():
+    assert _security_string(0, 0, 0x0500) == "WPA2/WPA3 Personal"
+    assert _security_string(0, 0, 0x2000) == "WPA3 Enterprise"
+    assert _security_string(0, 0, 0x2200) == "WPA2/WPA3 Enterprise"
+    assert _security_string(0, 0x0100, 0x0100) == "WPA1/WPA2"
 
 
 def test_frequency_helpers_cover_all_supported_bands():

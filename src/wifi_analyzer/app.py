@@ -574,14 +574,20 @@ NM_WIRELESS_IFACE = "org.freedesktop.NetworkManager.Device.Wireless"
 NM_AP_IFACE = "org.freedesktop.NetworkManager.AccessPoint"
 NM_DEVICE_TYPE_WIFI = 2
 NM_AP_SEC_KEY_MGMT_802_1X = 0x0200
+NM_AP_SEC_KEY_MGMT_PSK = 0x0100
 NM_AP_SEC_KEY_MGMT_SAE = 0x0400
 NM_AP_SEC_KEY_MGMT_OWE = 0x0800
 NM_AP_SEC_KEY_MGMT_OWE_TM = 0x1000
 NM_AP_SEC_KEY_MGMT_EAP_SUITE_B_192 = 0x2000
 
 def _security_string(flags, wpa_flags, rsn_flags):
+    if (rsn_flags & NM_AP_SEC_KEY_MGMT_EAP_SUITE_B_192
+            and rsn_flags & NM_AP_SEC_KEY_MGMT_802_1X):
+        return "WPA2/WPA3 Enterprise"
     if rsn_flags & NM_AP_SEC_KEY_MGMT_EAP_SUITE_B_192:
         return "WPA3 Enterprise"
+    if rsn_flags & NM_AP_SEC_KEY_MGMT_SAE and rsn_flags & NM_AP_SEC_KEY_MGMT_PSK:
+        return "WPA2/WPA3 Personal"
     if rsn_flags & NM_AP_SEC_KEY_MGMT_SAE:
         return "WPA3"
     if rsn_flags & (NM_AP_SEC_KEY_MGMT_OWE | NM_AP_SEC_KEY_MGMT_OWE_TM):
@@ -591,7 +597,7 @@ def _security_string(flags, wpa_flags, rsn_flags):
             # RSN with 802.1X does not by itself reveal whether an AP supports
             # WPA2 Enterprise, WPA3 Enterprise, or a transition configuration.
             return "Enterprise (802.1X)"
-        return "WPA2"
+        return "WPA1/WPA2" if wpa_flags else "WPA2"
     if wpa_flags:
         if wpa_flags & 0x200:
             return "WPA Enterprise"
@@ -1169,8 +1175,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         security_label = Gtk.Label(label=_("Security"))
         filter_box.append(security_label)
         self.security_filter = Gtk.DropDown.new_from_strings([
-            _("All security"), _("Open"), "WEP", "WPA1", "WPA2",
-            "Enterprise (802.1X)", "WPA3", "WPA3 Enterprise", "Enhanced Open (OWE)",
+            _("All security"), _("Open"), "WEP", "WPA1", "WPA2", "WPA1/WPA2",
+            "Enterprise (802.1X)", "WPA2/WPA3 Personal", "WPA2/WPA3 Enterprise",
+            "WPA3", "WPA3 Enterprise", "Enhanced Open (OWE)",
         ])
         self.security_filter.update_property(
             [Gtk.AccessibleProperty.LABEL], [_("Security")],
