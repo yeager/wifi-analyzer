@@ -255,7 +255,9 @@ def recommend_channels(networks, band, regulatory_ranges=()):
         score = 0.0
         for net in observed:
             distance = abs(candidate - net["channel"])
-            span = max(net.get("width_mhz", 20) / 5, 1)
+            # Compare observed APs against a 20 MHz candidate channel. Center
+            # channel overlap ends when the channels' half-widths no longer meet.
+            span = max((net.get("width_mhz", 20) + 20) / 10, 1)
             if distance < span:
                 score += net.get("signal_pct", 0) * (1 - distance / span)
         scored.append((candidate, round(score, 1)))
@@ -274,7 +276,7 @@ def channel_recommendation_text(recommendations):
         _("Lowest estimated overlap in this scan: channel {channel} (score {score})").format(
             channel=channel, score=score,
         ),
-        _("Lower scores mean less estimated overlap. Only access points found in this scan count; client traffic and hidden networks are not measured."),
+        _("Lower scores mean less estimated overlap. The candidate is estimated at 20 MHz; reported access point widths are used when available. Only access points found in this scan count; client traffic and hidden networks are not measured."),
     )
 
 
@@ -285,7 +287,7 @@ def interference_contributors(network, networks):
         if other is network or other.get("band") != network.get("band"):
             continue
         distance = abs(other.get("channel", 0) - network.get("channel", 0))
-        span = max(other.get("width_mhz", 20) / 5, 1)
+        span = max((network.get("width_mhz", 20) + other.get("width_mhz", 20)) / 10, 1)
         if distance < span:
             impact = round(other.get("signal_pct", 0) * (1 - distance / span), 1)
             contributors.append((other.get("ssid", "<Hidden>"), other.get("bssid", ""), impact))

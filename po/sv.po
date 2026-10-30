@@ -46,12 +46,14 @@ msgstr ""
 
 #: src/wifi_analyzer/app.py:268
 msgid ""
-"Lower scores mean less estimated overlap. Only access points found in this "
-"scan count; client traffic and hidden networks are not measured."
+"Lower scores mean less estimated overlap. The candidate is estimated at 20 "
+"MHz; reported access point widths are used when available. Only access points "
+"found in this scan count; client traffic and hidden networks are not measured."
 msgstr ""
-"Lägre poäng betyder mindre beräknad överlappning. Bedömningen räknar bara "
-"nätverk som hittas vid skanningen och tar inte med trafik eller dolda "
-"nätverk."
+"Lägre poäng betyder mindre beräknad överlappning. Bedömningen räknar med 20 "
+"MHz för den föreslagna kanalen och använder rapporterad bredd för "
+"åtkomstpunkter när den finns. Den räknar bara nätverk som hittas vid "
+"skanningen och tar inte med trafik eller dolda nätverk."
 
 #: src/wifi_analyzer/app.py:334
 msgid "Wi-Fi scan failed"

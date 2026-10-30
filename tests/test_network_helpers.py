@@ -118,6 +118,18 @@ def test_channel_recommendation_avoids_the_strongest_overlap():
     assert recommend_channels([], "6 GHz") == []
 
 
+def test_channel_recommendation_accounts_for_both_channel_widths():
+    network_20 = [{"band": "2.4 GHz", "channel": 6, "signal_pct": 90, "width_mhz": 20}]
+    network_40 = [{"band": "2.4 GHz", "channel": 6, "signal_pct": 90, "width_mhz": 40}]
+
+    scores_20 = dict(recommend_channels(network_20, "2.4 GHz"))
+    scores_40 = dict(recommend_channels(network_40, "2.4 GHz"))
+
+    assert scores_20[1] == 0
+    assert scores_40[1] > 0
+    assert scores_40[1] == scores_40[11]
+
+
 def test_channel_recommendation_explains_the_limits_of_the_scan_score():
     summary, explanation = channel_recommendation_text([(6, 0.0)])
 
@@ -673,6 +685,9 @@ def test_interference_diagnostics_and_connection_parsing(tmp_path, monkeypatch):
     target = {"ssid": "Target", "bssid": "a", "band": "5 GHz", "channel": 36, "width_mhz": 20}
     other = {"ssid": "Neighbour", "bssid": "b", "band": "5 GHz", "channel": 36, "width_mhz": 20, "signal_pct": 70}
     assert interference_contributors(target, [target, other])[0][0] == "Neighbour"
+    wide_target = {**target, "width_mhz": 40}
+    near_other = {**other, "channel": 41}
+    assert interference_contributors(wide_target, [wide_target, near_other])
     assert parse_connection_diagnostics("default via 192.0.2.1 dev wlan0", "Link 2: 1.1.1.1 2001:db8::1",
                                         "wlan0 UP 192.0.2.10/24 2001:db8::2/64",
                                         "rx bitrate: 866.7 MBit/s") == {
