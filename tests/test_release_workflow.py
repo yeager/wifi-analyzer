@@ -22,6 +22,7 @@ def test_flatpak_job_builds_exact_release_tags_and_includes_them_in_releases():
     workflow = (ROOT / ".github/workflows/packages.yml").read_text(encoding="utf-8")
 
     assert "scripts/prepare_flatpak_release_manifest.py \"$release_tag\"" in workflow
+    assert "mv flatpak/release-manifest.json flatpak/release/io.github.yeager.wifi-analyzer.json" in workflow
     assert "check_flatpak_manifest.py --manifest flatpak/release/io.github.yeager.wifi-analyzer.json" in workflow
     assert "needs: [screenshot, flatpak, debian, rpm]" in workflow
     assert "name: wifi-analyzer-flatpak" in workflow

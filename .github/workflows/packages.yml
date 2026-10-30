@@ -80,6 +80,10 @@ jobs:
             exit 0
           fi
           python3 scripts/prepare_flatpak_release_manifest.py "$release_tag"
+          mkdir -p flatpak/release
+          if [ -f flatpak/release-manifest.json ]; then
+            mv flatpak/release-manifest.json flatpak/release/io.github.yeager.wifi-analyzer.json
+          fi
           python3 scripts/check_flatpak_manifest.py --manifest flatpak/release/io.github.yeager.wifi-analyzer.json
           echo "path=flatpak/release/io.github.yeager.wifi-analyzer.json" >> "$GITHUB_OUTPUT"
       - name: Install Flatpak build tools
