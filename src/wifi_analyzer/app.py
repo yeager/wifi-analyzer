@@ -1158,6 +1158,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         signal_label = Gtk.Label(label=_("Minimum signal"))
         filter_box.append(signal_label)
         self.signal_threshold = Gtk.SpinButton.new_with_range(-100, 0, 5)
+        self.signal_threshold.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Minimum signal")],
+        )
         self.signal_threshold.set_value(-100)
         self.signal_threshold.set_tooltip_text(_("Only show access points at or above this estimated dBm value"))
         self.signal_threshold.connect("value-changed", self._on_filter_changed)
@@ -1169,6 +1172,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
             _("All security"), _("Open"), "WEP", "WPA1", "WPA2",
             "Enterprise (802.1X)", "WPA3", "WPA3 Enterprise", "Enhanced Open (OWE)",
         ])
+        self.security_filter.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Security")],
+        )
         self.security_filter.connect("notify::selected", self._on_filter_changed)
         filter_box.append(self.security_filter)
 
@@ -1176,8 +1182,12 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self.hidden_filter.connect("toggled", self._on_filter_changed)
         filter_box.append(self.hidden_filter)
 
-        filter_box.append(Gtk.Label(label=_("Sort")))
+        sort_label = Gtk.Label(label=_("Sort"))
+        filter_box.append(sort_label)
         self.sort_filter = Gtk.DropDown.new_from_strings([_("Signal"), _("Channel"), _("Security")])
+        self.sort_filter.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Sort")],
+        )
         self.sort_filter.connect("notify::selected", self._on_filter_changed)
         filter_box.append(self.sort_filter)
         filter_box.append(Gtk.Label(label=_("Profile")))
