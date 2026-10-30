@@ -225,7 +225,9 @@ def recommend_channels(networks, band, regulatory_ranges=()):
         return []
 
     candidates_by_band = {
-        "2.4 GHz": [1, 6, 11],
+        # When the regulatory domain is known, consider every permitted
+        # 2.4 GHz primary channel. Without it, stay with the common 1/6/11 set.
+        "2.4 GHz": list(CHANNEL_FREQ_24) if regulatory_ranges else [1, 6, 11],
         "5 GHz": sorted(CHANNEL_FREQ_5),
         # 20 MHz 6 GHz primary channels.  Regulatory status remains a host
         # responsibility and is shown separately in the UI.

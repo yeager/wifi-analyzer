@@ -159,6 +159,25 @@ def test_channel_recommendations_respect_detected_regulatory_ranges():
     assert {channel for channel, _score in recommend_channels(networks, "6 GHz", ranges)} == {1, 5}
 
 
+def test_24ghz_recommendations_use_all_channels_allowed_by_known_domain():
+    network = {"band": "2.4 GHz", "channel": 6, "signal_pct": 90, "width_mhz": 20}
+    ranges = [(2412, 2472, "")]
+
+    recommendations = recommend_channels([network], "2.4 GHz", ranges)
+
+    assert {channel for channel, _score in recommendations} == set(range(1, 14))
+    assert recommendations[0][0] in {1, 11, 13}
+
+
+def test_24ghz_recommendations_exclude_channels_restricted_from_beaconing():
+    network = {"band": "2.4 GHz", "channel": 6, "signal_pct": 90, "width_mhz": 20}
+    ranges = [(2412, 2467, ""), (2472, 2472, "NO-IR")]
+
+    recommendations = recommend_channels([network], "2.4 GHz", ranges)
+
+    assert 13 not in {channel for channel, _score in recommendations}
+
+
 def test_channel_recommendations_skip_channels_that_cannot_initiate_transmission():
     network = {"band": "5 GHz", "channel": 36, "signal_pct": 70, "width_mhz": 20}
     ranges = [
