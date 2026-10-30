@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   test:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
     container: debian:stable
     steps:
@@ -19,6 +20,14 @@ jobs:
             ca-certificates git gettext python3-gi python3-gi-cairo python3-cairo \
             gir1.2-gtk-4.0 gir1.2-adw-1 python3-pytest xvfb
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Verify release tag and commit
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python3 scripts/check-release-tag.py "$RELEASE_TAG"
+          python3 scripts/check-release-commit.py "$RELEASE_TAG"
       - name: Compile translations
         run: python3 scripts/compile_translations.py
       - name: Run tests
@@ -28,12 +37,21 @@ jobs:
 
   publish:
     needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
     environment: pypi
     permissions:
       id-token: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Verify release tag and commit
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python3 scripts/check-release-tag.py "$RELEASE_TAG"
+          python3 scripts/check-release-commit.py "$RELEASE_TAG"
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

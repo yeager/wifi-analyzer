@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -26,10 +27,73 @@ def test_flatpak_job_skips_tag_releases_and_manual_tag_dispatches():
 def test_release_workflow_checks_the_selected_version_tag_before_uploading():
     workflow = (ROOT / ".github/workflows/packages.yml").read_text(encoding="utf-8")
     assert "python3 scripts/check-release-tag.py \"$RELEASE_TAG\"" in workflow
+    assert "python3 scripts/check-release-commit.py \"$RELEASE_TAG\"" in workflow
     assert workflow.index("Verify release tag matches package metadata") < workflow.index(
         "actions/download-artifact@v7",
         workflow.index("  release:"),
     )
+
+
+def test_pypi_release_checks_tag_version_and_main_ancestry_before_publish():
+    workflow = (ROOT / ".github/workflows/pypi-publish.yml").read_text(encoding="utf-8")
+    assert workflow.count("python3 scripts/check-release-tag.py \"$RELEASE_TAG\"") == 2
+    assert workflow.count("python3 scripts/check-release-commit.py \"$RELEASE_TAG\"") == 2
+    assert workflow.count("fetch-depth: 0") == 2
+    assert workflow.count("if: startsWith(github.ref, 'refs/tags/v')") == 2
+
+
+def test_release_commit_checker_rejects_a_non_semver_tag_without_git_access():
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/check-release-commit.py"), "not-a-tag"],
+        cwd=ROOT, check=False, capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    assert "vMAJOR.MINOR.PATCH" in result.stdout
+
+
+def test_release_commit_checker_accepts_main_and_rejects_unmerged_tag(tmp_path):
+    work = tmp_path / "work"
+    remote = tmp_path / "origin.git"
+    work.mkdir()
+
+    def git(*arguments):
+        return subprocess.run(
+            ["git", *arguments], cwd=work, capture_output=True, text=True, check=True,
+        ).stdout.strip()
+
+    subprocess.run(["git", "init", "--bare", str(remote)], check=True, capture_output=True)
+    git("init", "-b", "main")
+    git("config", "user.name", "Test")
+    git("config", "user.email", "test@example.invalid")
+    (work / "state").write_text("main\n", encoding="utf-8")
+    git("add", "state")
+    git("commit", "-m", "main")
+    git("remote", "add", "origin", str(remote))
+    git("push", "-u", "origin", "main")
+    git("tag", "v1.2.3")
+    git("push", "origin", "v1.2.3")
+
+    checker = ROOT / "scripts/check-release-commit.py"
+    (work / "scripts").mkdir()
+    shutil.copyfile(checker, work / "scripts/check-release-commit.py")
+    checker = work / "scripts/check-release-commit.py"
+    accepted = subprocess.run(
+        [sys.executable, str(checker), "v1.2.3"], cwd=work,
+        check=False, capture_output=True, text=True,
+    )
+    assert accepted.returncode == 0, accepted.stdout + accepted.stderr
+
+    git("checkout", "-b", "unmerged")
+    (work / "unmerged").write_text("unmerged\n", encoding="utf-8")
+    git("add", "unmerged")
+    git("commit", "-m", "unmerged")
+    git("tag", "v1.2.4")
+    rejected = subprocess.run(
+        [sys.executable, str(checker), "v1.2.4"], cwd=work,
+        check=False, capture_output=True, text=True,
+    )
+    assert rejected.returncode != 0
+    assert "not point to a commit contained in origin/main" in rejected.stdout
 
 
 def test_release_workflow_updates_assets_when_the_release_already_exists():
