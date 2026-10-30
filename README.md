@@ -63,11 +63,12 @@ pipx install --system-site-packages wifi-analyzer
 
 `wifi-analyzer` is distributed through the [Danne L10n Suite APT repository](https://github.com/yeager/debian-repo), not the default Debian or Ubuntu repositories. Add the repository before installing:
 
-The APT signing key was rotated on 2026-10-30. Its primary fingerprint is
-`497A39BE28C8389ED4BBAE39CB94F175B0803158`. After downloading the key, compare
-its primary fingerprint from `gpg --show-keys --with-fingerprint /tmp/yeager-repo-key.asc`
-with the value above. Existing users must replace their key file before
-running `sudo apt update`.
+APT metadata is dual-signed during the key transition. The key bundle contains
+the previous key (`497A39BE28C8389ED4BBAE39CB94F175B0803158`) and the
+replacement key (`C7982569D1DCC5468A072D94D7B45ED27B9EBB63`). Compare both
+fingerprints from `gpg --show-keys --with-fingerprint /tmp/yeager-repo-key.asc`
+with these values. Existing users can continue updating during the transition;
+install the combined keyring before the previous key is retired.
 
 ```bash
 wget -qO /tmp/yeager-repo-key.asc https://yeager.github.io/debian-repo/yeager-repo-key.asc
