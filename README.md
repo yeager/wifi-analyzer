@@ -18,7 +18,7 @@ Built with GTK4/Adwaita. Part of the [Danne L10n Suite](https://github.com/yeage
 
 ## Features
 
-- Scan access points through NetworkManager D-Bus; no privileged shell command is required.
+- Scan access points through NetworkManager D-Bus only after selecting Scan; no privileged shell command is required.
 - Prefer the adapter with an active NetworkManager connection when the computer has multiple Wi-Fi devices. Active-link width and Wi-Fi generation are read from that interface.
 - Filter results by network name, BSSID, channel or security type.
 - Show cautious security advice for open, Enhanced Open, or older security modes on the connected network.

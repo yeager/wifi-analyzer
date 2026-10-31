@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.36
+Version:        0.1.37
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
@@ -70,6 +70,9 @@ GSK_RENDERER=cairo xvfb-run -a env PYTHONPATH=src pytest -q
 %{_datadir}/locale/*/LC_MESSAGES/wifi-analyzer.mo
 
 %changelog
+* Sat Oct 31 2026 Daniel Nylander <po@danielnylander.se> - 0.1.37-1
+- Require an explicit Scan action before querying nearby Wi-Fi networks.
+
 * Fri Oct 30 2026 Daniel Nylander <po@danielnylander.se> - 0.1.36-1
 - Document the replacement APT signing key and required client update.
 

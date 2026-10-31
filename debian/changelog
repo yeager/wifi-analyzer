@@ -1,3 +1,9 @@
+wifi-analyzer (0.1.37) unstable; urgency=medium
+
+  * Require an explicit Scan action before querying nearby Wi-Fi networks.
+
+ -- Daniel Nylander <po@danielnylander.se>  Sat, 31 Oct 2026 09:05:00 +0100
+
 wifi-analyzer (0.1.36) unstable; urgency=medium
 
   * Document the replacement APT signing key and required client update.

@@ -1368,7 +1368,6 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
 
         self.set_content(main_box)
         self.accessibility = AccessibilityManager(self, app)
-        self._scan()
 
     def _set_status(self, msg):
         ts = datetime.now().strftime("%H:%M:%S")

@@ -25,6 +25,12 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.37" date="2026-10-31">
+      <description>
+        <p>Requires an explicit Scan action before querying nearby Wi-Fi networks.</p>
+        <p xml:lang="sv">Kräver ett tydligt val av Sök innan programmet frågar efter närliggande Wi-Fi-nätverk.</p>
+      </description>
+    </release>
     <release version="0.1.36" date="2026-10-30">
       <description>
         <p>Document the replacement APT signing key and required client update.</p>

@@ -1,3 +1,4 @@
+import ast
 import json
 import subprocess
 import sys
@@ -49,6 +50,43 @@ def test_app_module_loads_when_executed_as_a_script():
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_window_startup_does_not_trigger_a_wifi_scan():
+    """Opening the app must not probe nearby networks without a user action."""
+    from wifi_analyzer import app as app_module
+
+    tree = ast.parse(Path(app_module.__file__).read_text(encoding="utf-8"))
+    window_class = next(
+        node for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "WifiAnalyzerWindow"
+    )
+    initializer = next(
+        node for node in window_class.body
+        if isinstance(node, ast.FunctionDef) and node.name == "__init__"
+    )
+    class DirectScanCallVisitor(ast.NodeVisitor):
+        def __init__(self):
+            self.calls = []
+
+        def visit_Lambda(self, _node):
+            # A lambda is a user-triggered callback, not initialization work.
+            return
+
+        def visit_Call(self, node):
+            if (
+                isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "self"
+                and node.func.attr == "_scan"
+            ):
+                self.calls.append(node)
+            self.generic_visit(node)
+
+    visitor = DirectScanCallVisitor()
+    visitor.visit(initializer)
+
+    assert not visitor.calls
 
 
 def test_security_labels_distinguish_owe_and_wpa3_enterprise():
