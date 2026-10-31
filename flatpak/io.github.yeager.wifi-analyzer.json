@@ -28,8 +28,8 @@
         {
           "type": "git",
           "url": "https://github.com/yeager/wifi-analyzer.git",
-          "tag": "v0.1.36",
-          "commit": "44c7c6a1f6089d50b749b71e728dcf506b0d45b9"
+          "tag": "v0.1.37",
+          "commit": "e31a5de153fc2d7044323d6016b4ef2f1fb3d5d3"
         }
       ]
     }
