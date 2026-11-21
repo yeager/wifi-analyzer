@@ -229,6 +229,8 @@ jobs:
       - name: Build RPM package
         run: |
           set -eu
+          version=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          sed -i -E "s/^Version:[[:space:]]+.*/Version:        $version/" packaging/rpm/wifi-analyzer.spec
           rpmbuild -ba packaging/rpm/wifi-analyzer.spec
           package=$(find "$HOME/rpmbuild/RPMS" -type f -name 'wifi-analyzer-*.noarch.rpm' -print -quit)
           test -n "$package"
