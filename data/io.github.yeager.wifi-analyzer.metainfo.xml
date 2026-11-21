@@ -25,6 +25,12 @@
   <url type="bugtracker">https://github.com/yeager/wifi-analyzer/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.1.38" date="2026-11-21">
+      <description>
+        <p>Clarify scanning and monitoring controls, improve the filter layout, and highlight connected and repeated access points.</p>
+        <p xml:lang="sv">Förtydliga sökning och övervakning, förbättra filterlayouten och markera anslutna nätverk och nätverk med flera åtkomstpunkter.</p>
+      </description>
+    </release>
     <release version="0.1.37" date="2026-10-31">
       <description>
         <p>Requires an explicit Scan action before querying nearby Wi-Fi networks.</p>

@@ -1139,6 +1139,8 @@ class NetworkRow(Gtk.ListBoxRow):
         ssid_label = Gtk.Label(label=net["ssid"], xalign=0)
         ssid_label.add_css_class("heading")
         ssid_label.set_tooltip_text(net.get("bssid", ""))
+        if net.get("connected"):
+            ssid_label.add_css_class("accent")
         vbox.append(ssid_label)
         width = net.get("width_mhz", 0)
         width_source = _("measured") if net.get("width_source") == "measured" else _("estimated")
@@ -1152,6 +1154,13 @@ class NetworkRow(Gtk.ListBoxRow):
         sub = Gtk.Label(label=detail, xalign=0)
         sub.add_css_class("dim-label")
         vbox.append(sub)
+        if net.get("access_point_count", 1) > 1:
+            count_label = Gtk.Label(
+                label=_("{count} access points share this network name").format(count=net["access_point_count"]),
+                xalign=0,
+            )
+            count_label.add_css_class("dim-label")
+            vbox.append(count_label)
         if net.get("channel_status"):
             status = Gtk.Label(label=net["channel_status"], xalign=0)
             status.add_css_class("warning")
@@ -1232,7 +1241,9 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         menu_btn = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu)
         header.pack_end(menu_btn)
         # Refresh
-        refresh_btn = Gtk.Button(icon_name="view-refresh-symbolic", tooltip_text=_("Scan"))
+        refresh_btn = Gtk.Button(label=_("Scan now"), icon_name="view-refresh-symbolic")
+        refresh_btn.add_css_class("suggested-action")
+        refresh_btn.set_tooltip_text(_("Scan nearby Wi-Fi networks now"))
         refresh_btn.connect("clicked", lambda b: self._scan())
         header.pack_end(refresh_btn)
         self.monitor_button = Gtk.ToggleButton(label=_("Monitor"), tooltip_text=_("Scan every 60 seconds and notify about changes"))
@@ -1276,9 +1287,18 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         self.search_entry.connect("search-changed", self._on_search_changed)
         main_box.append(self.search_entry)
 
-        filter_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        filter_box.set_margin_start(12); filter_box.set_margin_end(12)
-        filter_box.set_margin_top(6)
+        filters_expander = Gtk.Expander(label=_("Filters and profile"))
+        filters_expander.set_margin_start(12); filters_expander.set_margin_end(12)
+        filters_expander.set_margin_top(6)
+        filter_box = Gtk.FlowBox()
+        filter_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        filter_box.set_homogeneous(False)
+        filter_box.set_row_spacing(8)
+        filter_box.set_column_spacing(12)
+        filter_box.set_min_children_per_line(1)
+        filter_box.set_max_children_per_line(5)
+        filter_box.set_margin_top(8)
+        filter_box.set_margin_bottom(8)
         signal_label = Gtk.Label(label=_("Minimum signal"))
         filter_box.append(signal_label)
         self.signal_threshold = Gtk.SpinButton.new_with_range(-100, 0, 5)
@@ -1324,7 +1344,8 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
         )
         self.profile_entry.set_tooltip_text(_("Keep local scan history separate for this location"))
         filter_box.append(self.profile_entry)
-        main_box.append(filter_box)
+        filters_expander.set_child(filter_box)
+        main_box.append(filters_expander)
 
         recommendation_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         recommendation_box.set_margin_start(12); recommendation_box.set_margin_end(12)
@@ -1464,10 +1485,13 @@ class WifiAnalyzerWindow(Adw.ApplicationWindow):
     def _toggle_monitor(self, button):
         if button.get_active():
             self._monitor_source = GLib.timeout_add_seconds(60, self._monitor_scan)
-            self._set_status(_("Monitoring enabled; scanning every 60 seconds"))
+            self._monitor_scan()
+            button.set_label(_("Monitoring · 60 s"))
+            self._set_status(_("Monitoring enabled; scanning now and every 60 seconds"))
         elif getattr(self, "_monitor_source", None):
             GLib.source_remove(self._monitor_source)
             self._monitor_source = None
+            button.set_label(_("Monitor"))
             self._set_status(_("Monitoring disabled"))
 
     def _monitor_scan(self):

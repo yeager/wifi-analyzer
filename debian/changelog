@@ -1,3 +1,11 @@
+wifi-analyzer (0.1.38) unstable; urgency=medium
+
+  * Clarify the Scan now action and start monitoring with an immediate scan.
+  * Improve filter layout and identify connected and repeated access points.
+  * Update the Swedish translation and translation template.
+
+ -- Daniel Nylander <po@danielnylander.se>  Sat, 21 Nov 2026 21:00:00 +0100
+
 wifi-analyzer (0.1.37) unstable; urgency=medium
 
   * Require an explicit Scan action before querying nearby Wi-Fi networks.
