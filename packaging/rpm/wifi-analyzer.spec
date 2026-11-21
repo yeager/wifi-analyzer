@@ -1,5 +1,5 @@
 Name:           wifi-analyzer
-Version:        0.1.37
+Version:        0.1.38
 Release:        1%{?dist}
 Summary:        GTK application for inspecting nearby Wi-Fi networks
 License:        GPL-3.0-or-later
